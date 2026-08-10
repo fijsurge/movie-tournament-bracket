@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { createBracket, type CreateBracketState } from "@/app/admin/brackets/new/actions";
 import { PersonPicker } from "@/components/admin/PersonPicker";
+import { Spinner } from "@/components/shared/Spinner";
 import { TMDB_GENRES } from "@/lib/genres";
 
 interface PersonValue {
@@ -230,7 +231,13 @@ export function NewBracketForm() {
         disabled={pending}
         className="self-start rounded-full bg-gold px-6 py-2.5 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
       >
-        {pending ? "Creating…" : "Create bracket"}
+        {pending ? (
+          <span className="inline-flex items-center gap-2">
+            <Spinner className="h-4 w-4" /> Creating…
+          </span>
+        ) : (
+          "Create bracket"
+        )}
       </button>
     </form>
   );

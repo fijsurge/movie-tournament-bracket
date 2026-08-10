@@ -118,6 +118,7 @@ model Voter {
   bracket        Bracket  @relation(fields: [bracketId], references: [id], onDelete: Cascade)
   name           String
   normalizedName String
+  avatar         String? // emoji preset, or a data: URI for an uploaded photo
   createdAt      DateTime @default(now())
 
   nominatedMovies Movie[]

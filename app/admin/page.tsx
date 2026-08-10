@@ -2,6 +2,9 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/db";
 import { PageNav } from "@/components/shared/PageNav";
+import { SubmitButton } from "@/components/shared/SubmitButton";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { LogOutIcon } from "@/components/shared/Icons";
 import { logoutAdmin } from "./actions";
 
 export default async function AdminHomePage() {
@@ -16,9 +19,12 @@ export default async function AdminHomePage() {
         backLabel="Home"
         action={
           <form action={logoutAdmin}>
-            <button type="submit" className="text-cream-dim underline underline-offset-2">
-              Log out
-            </button>
+            <SubmitButton
+              pendingLabel="…"
+              className="flex items-center gap-1.5 text-cream-dim transition hover:text-gold"
+            >
+              <LogOutIcon className="h-4 w-4" /> Log out
+            </SubmitButton>
           </form>
         }
       />
@@ -26,7 +32,7 @@ export default async function AdminHomePage() {
         <h1 className="font-display text-3xl tracking-wide text-gold uppercase">Brackets</h1>
         <Link
           href="/admin/brackets/new"
-          className="rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim"
+          className="rounded-full bg-gold px-4 py-2 font-medium text-ink shadow-[0_4px_16px_-4px_rgba(232,163,61,0.5)] transition hover:bg-gold-dim"
         >
           + New bracket
         </Link>
@@ -35,15 +41,15 @@ export default async function AdminHomePage() {
       {brackets.length === 0 ? (
         <p className="text-cream-dim">No brackets yet — create one to get started.</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-3">
           {brackets.map((b) => (
             <li key={b.id}>
               <Link
                 href={`/admin/brackets/${b.slug}`}
-                className="flex items-center justify-between rounded border border-gold/20 bg-surface px-4 py-3 transition hover:border-gold/40"
+                className="flex items-center justify-between rounded-lg border border-gold/15 bg-surface px-5 py-4 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)] transition hover:border-gold/40 hover:shadow-[0_8px_24px_-8px_rgba(232,163,61,0.25)]"
               >
-                <span>{b.name}</span>
-                <span className="text-sm text-cream-dim">{b.status}</span>
+                <span className="font-medium">{b.name}</span>
+                <StatusBadge status={b.status} />
               </Link>
             </li>
           ))}

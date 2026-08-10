@@ -1,56 +1,70 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { identifyVoter, type IdentifyVoterState } from "@/app/b/[slug]/actions";
+import { Spinner } from "@/components/shared/Spinner";
+import { Avatar } from "@/components/shared/Avatar";
+import { AvatarPicker } from "@/components/voting/AvatarPicker";
 
 const initialState: IdentifyVoterState = { error: null };
 
 export function VoterIdentify({
   bracketId,
   redirectTo,
-  existingVoterNames,
+  existingVoters,
 }: {
   bracketId: string;
   redirectTo: string;
-  existingVoterNames: string[];
+  existingVoters: { name: string; avatar: string | null }[];
 }) {
   const [state, formAction, pending] = useActionState(identifyVoter, initialState);
+  const [newName, setNewName] = useState("");
 
   return (
     <div className="flex flex-col gap-4">
       <h2 className="font-display text-xl tracking-wide text-gold uppercase">Who are you?</h2>
 
-      {existingVoterNames.length > 0 && (
+      {existingVoters.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {existingVoterNames.map((name) => (
-            <form action={formAction} key={name}>
+          {existingVoters.map((voter) => (
+            <form action={formAction} key={voter.name}>
               <input type="hidden" name="bracketId" value={bracketId} />
               <input type="hidden" name="redirectTo" value={redirectTo} />
-              <input type="hidden" name="name" value={name} />
-              <button type="submit" className="rounded-full border border-gold/40 px-3 py-1 text-sm transition hover:border-gold">
-                {name}
+              <input type="hidden" name="name" value={voter.name} />
+              <button
+                type="submit"
+                disabled={pending}
+                className="flex items-center gap-2 rounded-full border border-gold/40 py-1 pr-3 pl-1 text-sm transition hover:border-gold disabled:opacity-50"
+              >
+                <Avatar name={voter.name} avatar={voter.avatar} size="sm" />
+                {voter.name}
               </button>
             </form>
           ))}
         </div>
       )}
 
-      <form action={formAction} className="flex gap-2">
+      <form action={formAction} className="flex flex-col gap-3">
         <input type="hidden" name="bracketId" value={bracketId} />
         <input type="hidden" name="redirectTo" value={redirectTo} />
-        <input
-          name="name"
-          placeholder="Type your name"
-          required
-          className="flex-1 rounded border border-gold/25 bg-surface px-3 py-2 text-cream placeholder:text-cream-dim/50 focus:border-gold focus:outline-none"
-        />
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
-        >
-          {pending ? "…" : "Go"}
-        </button>
+        <AvatarPicker name="avatar" displayName={newName} />
+        <div className="flex gap-2">
+          <input
+            name="name"
+            placeholder="Type your name"
+            required
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            className="flex-1 rounded border border-gold/25 bg-surface px-3 py-2 text-cream placeholder:text-cream-dim/50 focus:border-gold focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
+          >
+            {pending ? <Spinner className="h-4 w-4 text-ink" /> : "Go"}
+          </button>
+        </div>
       </form>
       {state.error && <p className="text-sm text-error">{state.error}</p>}
     </div>

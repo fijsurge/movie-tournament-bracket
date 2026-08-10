@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { BracketState } from "@/types/bracket";
+import { Avatar } from "@/components/shared/Avatar";
 
 export function NominationPool({ state }: { state: BracketState }) {
   const { bracket, movies, draft } = state;
@@ -31,11 +32,29 @@ export function NominationPool({ state }: { state: BracketState }) {
 
       <ul className="mx-auto grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-3">
         {movies.map((m) => (
-          <li key={m.id} className="flex items-center gap-2 rounded-lg border border-gold/15 bg-surface px-3 py-2">
-            {m.posterUrl && <Image src={m.posterUrl} alt="" width={28} height={42} className="rounded" />}
+          <li
+            key={m.id}
+            className="flex items-center gap-3 rounded-lg bg-surface px-3 py-2.5 shadow-[0_10px_24px_-14px_rgba(0,0,0,0.75)]"
+          >
+            {m.posterUrl ? (
+              <Image
+                src={m.posterUrl}
+                alt=""
+                width={42}
+                height={63}
+                className="rounded shadow-[0_4px_10px_-4px_rgba(0,0,0,0.7)]"
+              />
+            ) : (
+              <div className="h-[63px] w-[42px] shrink-0 rounded bg-surface-raised" />
+            )}
             <div className="min-w-0">
               <p className="truncate text-sm">{m.title}</p>
-              {m.nominatedByName && <p className="truncate text-xs text-cream-dim">{m.nominatedByName}</p>}
+              {m.nominatedByName && (
+                <p className="flex items-center gap-1 truncate text-xs text-cream-dim">
+                  <Avatar name={m.nominatedByName} avatar={m.nominatedByAvatar} size="sm" />
+                  {m.nominatedByName}
+                </p>
+              )}
             </div>
           </li>
         ))}

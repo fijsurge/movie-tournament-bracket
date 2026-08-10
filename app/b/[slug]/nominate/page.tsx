@@ -48,7 +48,7 @@ export default async function NominatePage({ params }: { params: Promise<{ slug:
         <VoterIdentify
           bracketId={bracket.id}
           redirectTo={`/b/${bracket.slug}/nominate`}
-          existingVoterNames={bracket.voters.map((v) => v.name)}
+          existingVoters={bracket.voters.map((v) => ({ name: v.name, avatar: v.avatar }))}
         />
       )}
     </main>

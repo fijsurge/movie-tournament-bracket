@@ -29,6 +29,7 @@ export interface BracketStateMovie {
   title: string;
   posterUrl: string | null;
   nominatedByName: string | null;
+  nominatedByAvatar: string | null;
   seed: number | null;
   seedVoteCount: number;
   seedVoteAverage: number | null;
@@ -39,8 +40,8 @@ export interface BracketStateMatchup {
   position: number;
   isBye: boolean;
   status: "PENDING" | "OPEN" | "CLOSED" | "NEEDS_MANUAL_TIEBREAK" | "RESOLVED";
-  movieA: { id: string; title: string; posterUrl: string | null } | null;
-  movieB: { id: string; title: string; posterUrl: string | null } | null;
+  movieA: { id: string; title: string; posterUrl: string | null; seed: number | null } | null;
+  movieB: { id: string; title: string; posterUrl: string | null; seed: number | null } | null;
   winnerMovieId: string | null;
   winnerTitle: string | null;
 }

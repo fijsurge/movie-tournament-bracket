@@ -52,7 +52,7 @@ export default async function SeedPage({ params }: { params: Promise<{ slug: str
         <VoterIdentify
           bracketId={bracket.id}
           redirectTo={`/b/${bracket.slug}/seed`}
-          existingVoterNames={bracket.voters.map((v) => v.name)}
+          existingVoters={bracket.voters.map((v) => ({ name: v.name, avatar: v.avatar }))}
         />
       )}
     </main>

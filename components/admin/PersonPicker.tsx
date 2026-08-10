@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { Spinner } from "@/components/shared/Spinner";
 
 interface PersonResult {
   personId: number;
@@ -55,7 +56,11 @@ export function PersonPicker({
         placeholder="Search for an actor/director…"
         className="rounded border border-gold/25 bg-surface px-3 py-2 text-cream placeholder:text-cream-dim/50 focus:border-gold focus:outline-none"
       />
-      {loading && <p className="text-sm text-cream-dim">Searching…</p>}
+      {loading && (
+        <p className="flex items-center gap-2 text-sm text-cream-dim">
+          <Spinner className="h-4 w-4" /> Searching…
+        </p>
+      )}
       {results.length > 0 && (
         <ul className="flex flex-col gap-1">
           {results.map((p) => (

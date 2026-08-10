@@ -5,12 +5,20 @@ import { useState, useTransition } from "react";
 import Image from "next/image";
 import { MovieSearch, type MovieSearchResult } from "./MovieSearch";
 import { submitDraftPick } from "@/app/b/[slug]/draft/actions";
+import { Avatar } from "@/components/shared/Avatar";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface StateResponse {
   bracket: { status: string; poolTargetSize: number | null; hasFilters: boolean; filterSummary: string | null };
-  movies: { id: string; tmdbId: number; title: string; posterUrl: string | null; nominatedByName: string | null }[];
+  movies: {
+    id: string;
+    tmdbId: number;
+    title: string;
+    posterUrl: string | null;
+    nominatedByName: string | null;
+    nominatedByAvatar: string | null;
+  }[];
   draft: {
     currentVoterName: string | null;
     participantNames: string[];
@@ -90,16 +98,28 @@ export function DraftBoard({
         <h2 className="font-display text-lg tracking-wide text-rose uppercase">Draft board</h2>
         <ul className="mt-2 flex flex-col gap-2">
           {movies.map((m) => (
-            <li key={m.id} className="flex items-center gap-3">
+            <li
+              key={m.id}
+              className="flex items-center gap-3 rounded-lg bg-surface p-2 shadow-[0_8px_20px_-14px_rgba(0,0,0,0.7)]"
+            >
               {m.posterUrl ? (
-                <Image src={m.posterUrl} alt="" width={32} height={48} className="rounded" />
+                <Image
+                  src={m.posterUrl}
+                  alt=""
+                  width={48}
+                  height={72}
+                  className="rounded shadow-[0_4px_10px_-4px_rgba(0,0,0,0.7)]"
+                />
               ) : (
-                <div className="h-12 w-8 shrink-0 rounded bg-surface-raised" />
+                <div className="h-[72px] w-12 shrink-0 rounded bg-surface-raised" />
               )}
-              <span>
-                {m.title}{" "}
+              <span className="flex items-center gap-1.5">
+                {m.title}
                 {m.nominatedByName && (
-                  <span className="text-sm text-cream-dim">— picked by {m.nominatedByName}</span>
+                  <span className="flex items-center gap-1 text-sm text-cream-dim">
+                    — picked by <Avatar name={m.nominatedByName} avatar={m.nominatedByAvatar} size="sm" />
+                    {m.nominatedByName}
+                  </span>
                 )}
               </span>
             </li>

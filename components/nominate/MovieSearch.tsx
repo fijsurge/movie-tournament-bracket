@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { Spinner } from "@/components/shared/Spinner";
 
 export interface MovieSearchResult {
   tmdbId: number;
@@ -54,7 +55,11 @@ export function MovieSearch({
         disabled={disabled}
         className="rounded border border-gold/25 bg-surface px-3 py-2 text-cream placeholder:text-cream-dim/50 focus:border-gold focus:outline-none disabled:opacity-50"
       />
-      {loading && <p className="text-sm text-cream-dim">Searching…</p>}
+      {loading && (
+        <p className="flex items-center gap-2 text-sm text-cream-dim">
+          <Spinner className="h-4 w-4" /> Searching…
+        </p>
+      )}
       {results.length > 0 && (
         <ul className="flex flex-col gap-1">
           {results.map((movie) => {
@@ -69,12 +74,18 @@ export function MovieSearch({
                     setQuery("");
                     setResults([]);
                   }}
-                  className="flex w-full items-center gap-3 rounded border border-gold/15 p-2 text-left transition hover:border-gold/40 hover:bg-surface disabled:opacity-40"
+                  className="flex w-full items-center gap-3 rounded-lg bg-surface p-2 text-left shadow-[0_6px_16px_-8px_rgba(0,0,0,0.6)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_20px_-8px_rgba(232,163,61,0.25)] disabled:opacity-40 disabled:hover:translate-y-0"
                 >
                   {movie.posterUrl ? (
-                    <Image src={movie.posterUrl} alt="" width={40} height={60} className="rounded" />
+                    <Image
+                      src={movie.posterUrl}
+                      alt=""
+                      width={48}
+                      height={72}
+                      className="rounded shadow-[0_4px_10px_-4px_rgba(0,0,0,0.7)]"
+                    />
                   ) : (
-                    <div className="h-[60px] w-10 shrink-0 rounded bg-surface-raised" />
+                    <div className="h-[72px] w-12 shrink-0 rounded bg-surface-raised" />
                   )}
                   <span>
                     {movie.title} {movie.year && <span className="text-cream-dim">({movie.year})</span>}

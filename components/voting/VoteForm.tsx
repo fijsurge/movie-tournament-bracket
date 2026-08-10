@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Image from "next/image";
 import { submitVote } from "@/app/b/[slug]/vote/actions";
+import { Spinner } from "@/components/shared/Spinner";
 
 interface Category {
   key: string;
@@ -100,15 +101,31 @@ export function VoteForm({
   }
 
   return (
-    <div className="rounded border border-gold/20 bg-surface p-4">
-      <div className="mb-3 flex items-center justify-center gap-4 text-center">
-        <div className="flex flex-col items-center gap-1">
-          {movieA.posterUrl && <Image src={movieA.posterUrl} alt="" width={56} height={84} className="rounded" />}
+    <div className="rounded-xl bg-surface p-4 shadow-[0_16px_36px_-16px_rgba(0,0,0,0.75)]">
+      <div className="mb-4 flex items-center justify-center gap-4 text-center">
+        <div className="flex flex-col items-center gap-2">
+          {movieA.posterUrl && (
+            <Image
+              src={movieA.posterUrl}
+              alt=""
+              width={84}
+              height={126}
+              className="rounded-md shadow-[0_10px_22px_-8px_rgba(0,0,0,0.8)]"
+            />
+          )}
           <span className="font-medium">{movieA.title}</span>
         </div>
         <span className="font-display text-rose">vs</span>
-        <div className="flex flex-col items-center gap-1">
-          {movieB.posterUrl && <Image src={movieB.posterUrl} alt="" width={56} height={84} className="rounded" />}
+        <div className="flex flex-col items-center gap-2">
+          {movieB.posterUrl && (
+            <Image
+              src={movieB.posterUrl}
+              alt=""
+              width={84}
+              height={126}
+              className="rounded-md shadow-[0_10px_22px_-8px_rgba(0,0,0,0.8)]"
+            />
+          )}
           <span className="font-medium">{movieB.title}</span>
         </div>
       </div>
@@ -126,7 +143,15 @@ export function VoteForm({
         disabled={!complete || pending}
         className="mt-4 w-full rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
       >
-        {submitted ? "Update vote" : pending ? "Submitting…" : "Submit vote"}
+        {pending ? (
+          <span className="inline-flex items-center gap-2">
+            <Spinner className="h-4 w-4" /> Submitting…
+          </span>
+        ) : submitted ? (
+          "Update vote"
+        ) : (
+          "Submit vote"
+        )}
       </button>
       {submitted && <p className="mt-1 text-center text-xs text-cream-dim">Vote recorded — you can change it until the round closes.</p>}
     </div>

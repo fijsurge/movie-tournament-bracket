@@ -67,6 +67,7 @@ export const createBracketSchema = z
 export const identifyVoterSchema = z.object({
   bracketId: z.string().min(1),
   name: z.string().trim().min(1).max(60),
+  avatar: z.string().max(200_000).optional(),
 });
 
 export const submitNominationSchema = z.object({

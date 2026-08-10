@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/db";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { SubmitButton } from "@/components/shared/SubmitButton";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Avatar } from "@/components/shared/Avatar";
 import { TMDB_GENRES } from "@/lib/genres";
 import {
   openNominations,
@@ -75,10 +78,12 @@ export default async function AdminBracketDashboard({
     <main className="mx-auto max-w-2xl p-6">
       <AdminNav />
       <h1 className="font-display text-3xl tracking-wide text-gold uppercase">{bracket.name}</h1>
-      <p className="mt-1 text-sm text-cream-dim">
-        Status: <span className="font-medium text-cream">{bracket.status}</span> · Nomination mode:{" "}
-        <span className="font-medium text-cream">{bracket.nominationMode}</span>
-      </p>
+      <div className="mt-2 flex items-center gap-3">
+        <StatusBadge status={bracket.status} />
+        <span className="text-sm text-cream-dim">
+          Nomination mode: <span className="font-medium text-cream">{bracket.nominationMode}</span>
+        </span>
+      </div>
 
       <section className="mt-6">
         <h2 className="text-lg font-medium text-rose">Categories</h2>
@@ -103,9 +108,9 @@ export default async function AdminBracketDashboard({
 
         {bracket.status === "SETUP" && (
           <form action={openNominationsForBracket} className="mt-3">
-            <button type="submit" className={PRIMARY_BUTTON}>
+            <SubmitButton pendingLabel="Opening…" className={PRIMARY_BUTTON}>
               Open nominations
-            </button>
+            </SubmitButton>
           </form>
         )}
 
@@ -115,15 +120,30 @@ export default async function AdminBracketDashboard({
               {bracket.movies.length} movie(s) nominated · {bracket.voters.length} voter(s) joined
             </p>
 
+            {bracket.voters.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {bracket.voters.map((v) => (
+                  <span
+                    key={v.id}
+                    className="flex items-center gap-1.5 rounded-full border border-gold/15 bg-surface py-1 pr-3 pl-1 text-sm"
+                  >
+                    <Avatar name={v.name} avatar={v.avatar} size="sm" />
+                    {v.name}
+                  </span>
+                ))}
+              </div>
+            )}
+
             {bracket.nominationMode === "DRAFT" && !bracket.draftState && (
               <div>
-                <p className="mb-2 text-sm text-cream-dim">
-                  Joined: {bracket.voters.map((v) => v.name).join(", ") || "no one yet"}
-                </p>
                 <form action={startDraftForBracket}>
-                  <button type="submit" disabled={bracket.voters.length < 1} className={PRIMARY_BUTTON}>
+                  <SubmitButton
+                    disabled={bracket.voters.length < 1}
+                    pendingLabel="Starting…"
+                    className={PRIMARY_BUTTON}
+                  >
                     Start draft
-                  </button>
+                  </SubmitButton>
                 </form>
               </div>
             )}
@@ -134,17 +154,21 @@ export default async function AdminBracketDashboard({
                   Current turn: <span className="font-medium text-gold">{currentTurnVoterName}</span>
                 </p>
                 <form action={skipDraftTurnForBracket}>
-                  <button type="submit" className={SECONDARY_BUTTON}>
+                  <SubmitButton pendingLabel="…" className={SECONDARY_BUTTON}>
                     Skip turn
-                  </button>
+                  </SubmitButton>
                 </form>
               </div>
             )}
 
             <form action={closeNominationsForBracket}>
-              <button type="submit" disabled={bracket.movies.length < 2} className={PRIMARY_BUTTON}>
+              <SubmitButton
+                disabled={bracket.movies.length < 2}
+                pendingLabel="Closing…"
+                className={PRIMARY_BUTTON}
+              >
                 Close nominations & move to seeding
-              </button>
+              </SubmitButton>
             </form>
           </div>
         )}
@@ -159,9 +183,9 @@ export default async function AdminBracketDashboard({
               ))}
             </ul>
             <form action={closeSeedingForBracket}>
-              <button type="submit" className={PRIMARY_BUTTON}>
+              <SubmitButton pendingLabel="Generating…" className={PRIMARY_BUTTON}>
                 Close seeding & generate bracket
-              </button>
+              </SubmitButton>
             </form>
           </div>
         )}
@@ -178,14 +202,14 @@ export default async function AdminBracketDashboard({
                   {m.status === "NEEDS_MANUAL_TIEBREAK" && (
                     <div className="mt-2 flex gap-2">
                       <form action={resolveTiebreakCoinFlip.bind(null, m.id)}>
-                        <button type="submit" className={`${SECONDARY_BUTTON} px-2 py-1 text-xs`}>
+                        <SubmitButton pendingLabel="Flipping…" className={`${SECONDARY_BUTTON} px-2 py-1 text-xs`}>
                           Coin flip
-                        </button>
+                        </SubmitButton>
                       </form>
                       <form action={reopenForRevote.bind(null, m.id)}>
-                        <button type="submit" className={`${SECONDARY_BUTTON} px-2 py-1 text-xs`}>
+                        <SubmitButton pendingLabel="Reopening…" className={`${SECONDARY_BUTTON} px-2 py-1 text-xs`}>
                           Reopen for revote
-                        </button>
+                        </SubmitButton>
                       </form>
                     </div>
                   )}
@@ -193,9 +217,9 @@ export default async function AdminBracketDashboard({
               ))}
             </ul>
             <form action={closeRoundForBracket}>
-              <button type="submit" className={PRIMARY_BUTTON}>
+              <SubmitButton pendingLabel="Closing round…" className={PRIMARY_BUTTON}>
                 Close round & advance
-              </button>
+              </SubmitButton>
             </form>
           </div>
         )}

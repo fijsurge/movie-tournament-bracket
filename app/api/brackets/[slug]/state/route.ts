@@ -78,6 +78,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       title: m.title,
       posterUrl: m.posterUrl,
       nominatedByName: m.nominatedByVoter?.name ?? null,
+      nominatedByAvatar: m.nominatedByVoter?.avatar ?? null,
       seed: m.seed,
       seedVoteCount: m.seedVotes.length,
       seedVoteAverage:
@@ -95,8 +96,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
         position: m.position,
         isBye: m.isBye,
         status: m.status,
-        movieA: m.movieA ? { id: m.movieA.id, title: m.movieA.title, posterUrl: m.movieA.posterUrl } : null,
-        movieB: m.movieB ? { id: m.movieB.id, title: m.movieB.title, posterUrl: m.movieB.posterUrl } : null,
+        movieA: m.movieA
+          ? { id: m.movieA.id, title: m.movieA.title, posterUrl: m.movieA.posterUrl, seed: m.movieA.seed }
+          : null,
+        movieB: m.movieB
+          ? { id: m.movieB.id, title: m.movieB.title, posterUrl: m.movieB.posterUrl, seed: m.movieB.seed }
+          : null,
         winnerMovieId: m.winnerMovieId,
         winnerTitle: m.winnerMovie?.title ?? null,
       })),
