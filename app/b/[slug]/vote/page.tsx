@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getVoterId } from "@/lib/voter-cookie";
 import { VoterIdentify } from "@/components/voting/VoterIdentify";
+import { BracketNav } from "@/components/voting/BracketNav";
 import { VoteForm } from "@/components/voting/VoteForm";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
 
@@ -19,11 +20,14 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
       include: { winnerMovie: true },
     });
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-2 p-6 text-center">
-        <h1 className="text-2xl font-semibold">{bracket.name}</h1>
-        <p className="text-lg">
-          🏆 Champion: <span className="font-semibold">{championMatchup?.winnerMovie?.title}</span>
-        </p>
+      <main className="mx-auto flex min-h-screen max-w-md flex-col p-6">
+        <BracketNav slug={bracket.slug} bracketName={bracket.name} />
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
+          <h1 className="text-2xl font-semibold">{bracket.name}</h1>
+          <p className="text-lg">
+            🏆 Champion: <span className="font-semibold">{championMatchup?.winnerMovie?.title}</span>
+          </p>
+        </div>
       </main>
     );
   }
@@ -31,6 +35,7 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
   if (bracket.status !== "ACTIVE") {
     return (
       <main className="mx-auto max-w-xl p-6">
+        <BracketNav slug={bracket.slug} bracketName={bracket.name} />
         <p>Voting isn&apos;t open for this bracket right now (status: {bracket.status}).</p>
       </main>
     );
@@ -49,6 +54,7 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
 
   return (
     <main className="mx-auto max-w-xl p-6">
+      <BracketNav slug={bracket.slug} bracketName={bracket.name} />
       <h1 className="mb-4 text-2xl font-semibold">
         {bracket.name}: Round {bracket.currentRound} voting
       </h1>

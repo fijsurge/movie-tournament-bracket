@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getVoterId } from "@/lib/voter-cookie";
 import { VoterIdentify } from "@/components/voting/VoterIdentify";
+import { BracketNav } from "@/components/voting/BracketNav";
 import { DraftBoard } from "@/components/nominate/DraftBoard";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
 
@@ -13,6 +14,7 @@ export default async function DraftPage({ params }: { params: Promise<{ slug: st
   if (bracket.nominationMode !== "DRAFT") {
     return (
       <main className="mx-auto max-w-xl p-6">
+        <BracketNav slug={bracket.slug} bracketName={bracket.name} />
         <p>This bracket uses open nominations. Head to the nominate page instead.</p>
       </main>
     );
@@ -21,6 +23,7 @@ export default async function DraftPage({ params }: { params: Promise<{ slug: st
   if (bracket.status === "SETUP") {
     return (
       <main className="mx-auto max-w-xl p-6">
+        <BracketNav slug={bracket.slug} bracketName={bracket.name} />
         <p>The draft hasn&apos;t opened yet — check back soon.</p>
       </main>
     );
@@ -31,6 +34,7 @@ export default async function DraftPage({ params }: { params: Promise<{ slug: st
 
   return (
     <main className="mx-auto max-w-xl p-6">
+      <BracketNav slug={bracket.slug} bracketName={bracket.name} />
       <h1 className="mb-4 text-2xl font-semibold">{bracket.name}: Draft</h1>
       {voter ? (
         <div className="flex flex-col gap-4">

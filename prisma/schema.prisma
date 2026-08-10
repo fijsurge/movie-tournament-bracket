@@ -54,6 +54,11 @@ model Bracket {
   nominationCapPerVoter Int?
   poolTargetSize        Int?
   currentRound          Int?
+  filterPersonId        Int?
+  filterPersonName      String?
+  filterGenreIds        String? // JSON-encoded array of TMDb genre ids
+  filterYearMin         Int?
+  filterYearMax         Int?
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 

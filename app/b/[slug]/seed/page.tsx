@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getVoterId } from "@/lib/voter-cookie";
 import { VoterIdentify } from "@/components/voting/VoterIdentify";
+import { BracketNav } from "@/components/voting/BracketNav";
 import { SeedRatingPanel } from "@/components/seed/SeedRatingPanel";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
 
@@ -16,6 +17,7 @@ export default async function SeedPage({ params }: { params: Promise<{ slug: str
   if (bracket.status !== "SEEDING") {
     return (
       <main className="mx-auto max-w-xl p-6">
+        <BracketNav slug={bracket.slug} bracketName={bracket.name} />
         <p>Seeding isn&apos;t open for this bracket right now (status: {bracket.status}).</p>
       </main>
     );
@@ -32,6 +34,7 @@ export default async function SeedPage({ params }: { params: Promise<{ slug: str
 
   return (
     <main className="mx-auto max-w-xl p-6">
+      <BracketNav slug={bracket.slug} bracketName={bracket.name} />
       <h1 className="mb-4 text-2xl font-semibold">{bracket.name}: Seed the bracket</h1>
       {voter ? (
         <div className="flex flex-col gap-4">

@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/db";
+import { AdminNav } from "@/components/admin/AdminNav";
+import { TMDB_GENRES } from "@/lib/genres";
 import {
   openNominations,
   startDraft,
@@ -47,6 +49,17 @@ export default async function AdminBracketDashboard({
 
   const currentRoundData = bracket.rounds.find((r) => r.roundNumber === bracket.currentRound);
 
+  const genreIds = bracket.filterGenreIds ? (JSON.parse(bracket.filterGenreIds) as number[]) : [];
+  const filterParts = [
+    bracket.filterPersonName,
+    genreIds.length > 0
+      ? genreIds.map((id) => TMDB_GENRES.find((g) => g.id === id)?.name).filter(Boolean).join("/")
+      : null,
+    bracket.filterYearMin || bracket.filterYearMax
+      ? `${bracket.filterYearMin ?? "…"}-${bracket.filterYearMax ?? "…"}`
+      : null,
+  ].filter(Boolean);
+
   const turnOrder = bracket.draftState ? (JSON.parse(bracket.draftState.turnOrder) as string[]) : [];
   const votersById = new Map(bracket.voters.map((v) => [v.id, v.name]));
   const currentTurnVoterName = bracket.draftState
@@ -55,6 +68,7 @@ export default async function AdminBracketDashboard({
 
   return (
     <main className="mx-auto max-w-2xl p-6">
+      <AdminNav />
       <h1 className="text-2xl font-semibold">{bracket.name}</h1>
       <p className="mt-1 text-sm text-neutral-500">
         Status: <span className="font-medium">{bracket.status}</span> · Nomination mode:{" "}
@@ -71,6 +85,13 @@ export default async function AdminBracketDashboard({
           ))}
         </ul>
       </section>
+
+      {filterParts.length > 0 && (
+        <section className="mt-6">
+          <h2 className="text-lg font-medium">Search filter</h2>
+          <p className="mt-1 text-sm text-neutral-500">{filterParts.join(" · ")}</p>
+        </section>
+      )}
 
       <section className="mt-6 rounded border border-neutral-200 p-4 dark:border-neutral-800">
         <h2 className="text-lg font-medium">Bracket controls</h2>

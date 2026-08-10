@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getVoterId } from "@/lib/voter-cookie";
 import { VoterIdentify } from "@/components/voting/VoterIdentify";
+import { BracketNav } from "@/components/voting/BracketNav";
 import { OpenNominationPanel } from "@/components/nominate/OpenNominationPanel";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
 
@@ -13,6 +14,7 @@ export default async function NominatePage({ params }: { params: Promise<{ slug:
   if (bracket.nominationMode !== "OPEN") {
     return (
       <main className="mx-auto max-w-xl p-6">
+        <BracketNav slug={bracket.slug} bracketName={bracket.name} />
         <p>This bracket uses draft-style nominations. Head to the draft page instead.</p>
       </main>
     );
@@ -21,6 +23,7 @@ export default async function NominatePage({ params }: { params: Promise<{ slug:
   if (bracket.status !== "NOMINATING") {
     return (
       <main className="mx-auto max-w-xl p-6">
+        <BracketNav slug={bracket.slug} bracketName={bracket.name} />
         <p>Nominations aren&apos;t open for this bracket right now (status: {bracket.status}).</p>
       </main>
     );
@@ -31,6 +34,7 @@ export default async function NominatePage({ params }: { params: Promise<{ slug:
 
   return (
     <main className="mx-auto max-w-xl p-6">
+      <BracketNav slug={bracket.slug} bracketName={bracket.name} />
       <h1 className="mb-4 text-2xl font-semibold">{bracket.name}: Nominate movies</h1>
       {voter ? (
         <div className="flex flex-col gap-4">

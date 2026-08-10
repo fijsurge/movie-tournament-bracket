@@ -1,14 +1,32 @@
 import { NextResponse } from "next/server";
-import { searchMovies } from "@/lib/tmdb";
+import { prisma } from "@/lib/db";
+import { searchFilteredMovies, type MovieFilters } from "@/lib/tmdb";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q") ?? "";
+  const bracketId = searchParams.get("bracketId");
+
+  let filters: MovieFilters = {};
+  if (bracketId) {
+    const bracket = await prisma.bracket.findUnique({
+      where: { id: bracketId },
+      select: { filterPersonId: true, filterGenreIds: true, filterYearMin: true, filterYearMax: true },
+    });
+    if (bracket) {
+      filters = {
+        personId: bracket.filterPersonId,
+        genreIds: bracket.filterGenreIds ? (JSON.parse(bracket.filterGenreIds) as number[]) : null,
+        yearMin: bracket.filterYearMin,
+        yearMax: bracket.filterYearMax,
+      };
+    }
+  }
 
   try {
-    const results = await searchMovies(query);
+    const results = await searchFilteredMovies(query, filters);
     return NextResponse.json({ results });
   } catch {
     return NextResponse.json({ results: [], error: "Search failed" }, { status: 502 });

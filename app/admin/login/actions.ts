@@ -15,5 +15,5 @@ export async function loginAdmin(_prevState: LoginState, formData: FormData): Pr
   }
 
   await setAdminCookie();
-  redirect("/admin/brackets/new");
+  redirect("/admin");
 }

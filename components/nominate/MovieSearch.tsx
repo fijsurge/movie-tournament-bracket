@@ -11,13 +11,17 @@ export interface MovieSearchResult {
 }
 
 export function MovieSearch({
+  bracketId,
   onPick,
   disabled,
   excludeTmdbIds = [],
+  hasFilters = false,
 }: {
+  bracketId: string;
   onPick: (movie: MovieSearchResult) => void;
   disabled?: boolean;
   excludeTmdbIds?: number[];
+  hasFilters?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<MovieSearchResult[]>([]);
@@ -25,25 +29,28 @@ export function MovieSearch({
 
   useEffect(() => {
     const handle = setTimeout(() => {
-      if (!query.trim()) {
+      // With no filters configured, an empty query has nothing meaningful to
+      // browse (all of TMDb), so skip the request until the user types.
+      if (!hasFilters && !query.trim()) {
         setResults([]);
         return;
       }
       setLoading(true);
-      fetch(`/api/movies/search?q=${encodeURIComponent(query)}`)
+      const params = new URLSearchParams({ bracketId, q: query });
+      fetch(`/api/movies/search?${params}`)
         .then((res) => res.json())
         .then((data) => setResults(data.results ?? []))
         .finally(() => setLoading(false));
     }, 350);
     return () => clearTimeout(handle);
-  }, [query]);
+  }, [query, bracketId, hasFilters]);
 
   return (
     <div className="flex flex-col gap-2">
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search for a movie…"
+        placeholder={hasFilters ? "Search within the filtered list…" : "Search for a movie…"}
         disabled={disabled}
         className="rounded border border-neutral-300 px-3 py-2 disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-900"
       />

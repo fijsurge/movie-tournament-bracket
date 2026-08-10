@@ -9,7 +9,12 @@ import { submitNomination } from "@/app/b/[slug]/nominate/actions";
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface StateResponse {
-  bracket: { status: string; nominationCapPerVoter: number | null };
+  bracket: {
+    status: string;
+    nominationCapPerVoter: number | null;
+    hasFilters: boolean;
+    filterSummary: string | null;
+  };
   movies: { id: string; tmdbId: number; title: string; posterUrl: string | null; nominatedByName: string | null }[];
 }
 
@@ -51,13 +56,21 @@ export function OpenNominationPanel({
         {cap !== null && ` of ${cap}`}.
       </p>
 
+      {data?.bracket.filterSummary && (
+        <p className="text-sm text-neutral-500">
+          Search is scoped to: <span className="font-medium">{data.bracket.filterSummary}</span>
+        </p>
+      )}
+
       {atCap ? (
         <p className="text-sm text-neutral-500">You&apos;ve used all your nominations. Waiting on everyone else…</p>
       ) : (
         <MovieSearch
+          bracketId={bracketId}
           onPick={handlePick}
           disabled={pending}
           excludeTmdbIds={movies.map((m) => m.tmdbId)}
+          hasFilters={data?.bracket.hasFilters ?? false}
         />
       )}
       {error && <p className="text-sm text-red-600">{error}</p>}

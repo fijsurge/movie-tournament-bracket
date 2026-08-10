@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/admin-auth";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { NewBracketForm } from "@/components/admin/NewBracketForm";
 
 export default async function NewBracketPage() {
@@ -6,6 +7,7 @@ export default async function NewBracketPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-6">
+      <AdminNav />
       <h1 className="mb-6 text-2xl font-semibold">New bracket</h1>
       <NewBracketForm />
     </main>

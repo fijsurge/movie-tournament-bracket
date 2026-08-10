@@ -69,6 +69,8 @@ export interface BracketState {
     nominationMode: "OPEN" | "DRAFT";
     nominationCapPerVoter: number | null;
     poolTargetSize: number | null;
+    hasFilters: boolean;
+    filterSummary: string | null;
   };
   categories: { key: string; label: string; isTiebreaker: boolean }[];
   movies: BracketStateMovie[];

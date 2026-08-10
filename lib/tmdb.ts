@@ -2,6 +2,7 @@ import "server-only";
 
 const TMDB_API_BASE = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w342";
+const TMDB_PROFILE_BASE = "https://image.tmdb.org/t/p/w92";
 
 export interface TmdbMovieResult {
   tmdbId: number;
@@ -10,41 +11,126 @@ export interface TmdbMovieResult {
   posterUrl: string | null;
 }
 
-interface TmdbSearchResponseResult {
+export interface TmdbPersonResult {
+  personId: number;
+  name: string;
+  profileUrl: string | null;
+}
+
+export interface MovieFilters {
+  personId?: number | null;
+  genreIds?: number[] | null;
+  yearMin?: number | null;
+  yearMax?: number | null;
+}
+
+interface TmdbRawMovie {
   id: number;
   title: string;
   release_date?: string;
   poster_path?: string | null;
+  genre_ids?: number[];
 }
 
-interface TmdbSearchResponse {
-  results: TmdbSearchResponseResult[];
-}
-
-export async function searchMovies(query: string): Promise<TmdbMovieResult[]> {
+function getApiKey(): string {
   const apiKey = process.env.TMDB_API_KEY;
   if (!apiKey) {
     throw new Error("TMDB_API_KEY environment variable is not set");
   }
-  if (!query.trim()) {
+  return apiKey;
+}
+
+function toResult(m: TmdbRawMovie): TmdbMovieResult {
+  return {
+    tmdbId: m.id,
+    title: m.title,
+    year: m.release_date ? m.release_date.slice(0, 4) : null,
+    posterUrl: m.poster_path ? `${TMDB_IMAGE_BASE}${m.poster_path}` : null,
+  };
+}
+
+function matchesFilters(m: TmdbRawMovie, filters: MovieFilters): boolean {
+  if (filters.genreIds && filters.genreIds.length > 0) {
+    const genres = m.genre_ids ?? [];
+    if (!filters.genreIds.some((g) => genres.includes(g))) return false;
+  }
+  const year = m.release_date ? Number(m.release_date.slice(0, 4)) : null;
+  if (filters.yearMin && (year === null || year < filters.yearMin)) return false;
+  if (filters.yearMax && (year === null || year > filters.yearMax)) return false;
+  return true;
+}
+
+async function tmdbGet<T>(path: string, params: Record<string, string>): Promise<T> {
+  const url = new URL(`${TMDB_API_BASE}${path}`);
+  url.searchParams.set("api_key", getApiKey());
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`TMDb request failed: ${res.status}`);
+  }
+  return (await res.json()) as T;
+}
+
+/**
+ * Searches for movies, honoring a bracket's optional cast/genre/year filters.
+ * - A person filter restricts candidates to that person's on-screen credits.
+ * - Otherwise, a text query hits TMDb's title search; an empty query with no
+ *   text falls back to Discover (sorted by popularity) so admins can still
+ *   browse a genre/year-scoped list without knowing exact titles.
+ * - Genre and year filters are applied as a local pass afterward, since
+ *   neither the search nor person-credits endpoints support them directly.
+ */
+export async function searchFilteredMovies(query: string, filters: MovieFilters): Promise<TmdbMovieResult[]> {
+  const trimmed = query.trim();
+  let candidates: TmdbRawMovie[];
+
+  if (filters.personId) {
+    const data = await tmdbGet<{ cast: TmdbRawMovie[] }>(`/person/${filters.personId}/movie_credits`, {});
+    candidates = data.cast;
+    if (trimmed) {
+      const q = trimmed.toLowerCase();
+      candidates = candidates.filter((m) => m.title.toLowerCase().includes(q));
+    }
+  } else if (trimmed) {
+    const data = await tmdbGet<{ results: TmdbRawMovie[] }>("/search/movie", {
+      query: trimmed,
+      include_adult: "false",
+    });
+    candidates = data.results;
+  } else if ((filters.genreIds && filters.genreIds.length > 0) || filters.yearMin || filters.yearMax) {
+    const data = await tmdbGet<{ results: TmdbRawMovie[] }>("/discover/movie", {
+      sort_by: "popularity.desc",
+      include_adult: "false",
+      ...(filters.genreIds && filters.genreIds.length > 0
+        ? { with_genres: filters.genreIds.join(",") }
+        : {}),
+      ...(filters.yearMin ? { "primary_release_date.gte": `${filters.yearMin}-01-01` } : {}),
+      ...(filters.yearMax ? { "primary_release_date.lte": `${filters.yearMax}-12-31` } : {}),
+    });
+    candidates = data.results;
+  } else {
     return [];
   }
 
-  const url = new URL(`${TMDB_API_BASE}/search/movie`);
-  url.searchParams.set("api_key", apiKey);
-  url.searchParams.set("query", query);
-  url.searchParams.set("include_adult", "false");
+  return candidates
+    .filter((m) => matchesFilters(m, filters))
+    .slice(0, 20)
+    .map(toResult);
+}
 
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) {
-    throw new Error(`TMDb search failed: ${res.status}`);
-  }
-  const data = (await res.json()) as TmdbSearchResponse;
+export async function searchPeople(query: string): Promise<TmdbPersonResult[]> {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
 
-  return data.results.slice(0, 8).map((r) => ({
-    tmdbId: r.id,
-    title: r.title,
-    year: r.release_date ? r.release_date.slice(0, 4) : null,
-    posterUrl: r.poster_path ? `${TMDB_IMAGE_BASE}${r.poster_path}` : null,
+  const data = await tmdbGet<{
+    results: { id: number; name: string; profile_path?: string | null; known_for_department?: string }[];
+  }>("/search/person", { query: trimmed });
+
+  return data.results.slice(0, 8).map((p) => ({
+    personId: p.id,
+    name: p.name,
+    profileUrl: p.profile_path ? `${TMDB_PROFILE_BASE}${p.profile_path}` : null,
   }));
 }

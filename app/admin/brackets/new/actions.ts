@@ -24,6 +24,15 @@ export async function createBracket(
       ? Number(formData.get("nominationCapPerVoter"))
       : undefined,
     poolTargetSize: formData.get("poolTargetSize") ? Number(formData.get("poolTargetSize")) : undefined,
+    filterPersonId: formData.get("filterPersonId") ? Number(formData.get("filterPersonId")) : undefined,
+    filterPersonName: formData.get("filterPersonName")
+      ? String(formData.get("filterPersonName"))
+      : undefined,
+    filterGenreIds: formData.get("filterGenreIdsJson")
+      ? (JSON.parse(String(formData.get("filterGenreIdsJson"))) as number[])
+      : undefined,
+    filterYearMin: formData.get("filterYearMin") ? Number(formData.get("filterYearMin")) : undefined,
+    filterYearMax: formData.get("filterYearMax") ? Number(formData.get("filterYearMax")) : undefined,
   };
 
   const parsed = createBracketSchema.safeParse(raw);
@@ -39,6 +48,12 @@ export async function createBracket(
       nominationMode: data.nominationMode,
       nominationCapPerVoter: data.nominationCapPerVoter ?? null,
       poolTargetSize: data.poolTargetSize ?? null,
+      filterPersonId: data.filterPersonId ?? null,
+      filterPersonName: data.filterPersonName ?? null,
+      filterGenreIds:
+        data.filterGenreIds && data.filterGenreIds.length > 0 ? JSON.stringify(data.filterGenreIds) : null,
+      filterYearMin: data.filterYearMin ?? null,
+      filterYearMax: data.filterYearMax ?? null,
       categories: {
         create: data.categories.map((c, i) => ({
           key: c.key,

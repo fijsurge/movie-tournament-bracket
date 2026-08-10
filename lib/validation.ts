@@ -18,6 +18,11 @@ export const createBracketSchema = z
     nominationMode: z.enum(["OPEN", "DRAFT"]),
     nominationCapPerVoter: z.number().int().min(1).max(10).optional(),
     poolTargetSize: z.number().int().min(2).max(64).optional(),
+    filterPersonId: z.number().int().positive().optional(),
+    filterPersonName: z.string().trim().min(1).optional(),
+    filterGenreIds: z.array(z.number().int().positive()).max(18).optional(),
+    filterYearMin: z.number().int().min(1888).max(2100).optional(),
+    filterYearMax: z.number().int().min(1888).max(2100).optional(),
   })
   .superRefine((data, ctx) => {
     const tiebreakers = data.categories.filter((c) => c.isTiebreaker).length;
@@ -44,6 +49,17 @@ export const createBracketSchema = z
         code: "custom",
         message: "Draft mode needs a target pool size",
         path: ["poolTargetSize"],
+      });
+    }
+    if (
+      data.filterYearMin &&
+      data.filterYearMax &&
+      data.filterYearMin > data.filterYearMax
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Year range minimum must be before the maximum",
+        path: ["filterYearMin"],
       });
     }
   });

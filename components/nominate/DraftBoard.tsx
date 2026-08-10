@@ -9,7 +9,7 @@ import { submitDraftPick } from "@/app/b/[slug]/draft/actions";
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface StateResponse {
-  bracket: { status: string; poolTargetSize: number | null };
+  bracket: { status: string; poolTargetSize: number | null; hasFilters: boolean; filterSummary: string | null };
   movies: { id: string; tmdbId: number; title: string; posterUrl: string | null; nominatedByName: string | null }[];
   draft: {
     currentVoterName: string | null;
@@ -69,8 +69,20 @@ export function DraftBoard({
         </p>
       </div>
 
+      {data.bracket.filterSummary && (
+        <p className="text-center text-sm text-neutral-500">
+          Search is scoped to: <span className="font-medium">{data.bracket.filterSummary}</span>
+        </p>
+      )}
+
       {isMyTurn && (
-        <MovieSearch onPick={handlePick} disabled={pending} excludeTmdbIds={movies.map((m) => m.tmdbId)} />
+        <MovieSearch
+          bracketId={bracketId}
+          onPick={handlePick}
+          disabled={pending}
+          excludeTmdbIds={movies.map((m) => m.tmdbId)}
+          hasFilters={data.bracket.hasFilters}
+        />
       )}
       {error && <p className="text-sm text-red-600">{error}</p>}
 
