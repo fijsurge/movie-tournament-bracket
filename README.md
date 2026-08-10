@@ -8,17 +8,20 @@ categories until a champion is crowned. Project the `/tv` page during a watch pa
 
 ```bash
 npm install
-npx prisma migrate dev
+npx prisma migrate deploy
 npm run dev
 ```
 
 Copy `.env.example` to `.env` and fill in:
 
+- `DATABASE_URL` — a Postgres connection string. A free
+  [Neon](https://neon.tech) or Vercel Postgres branch works well for local dev.
 - `ADMIN_PASSWORD` — shared password that gates `/admin/*` routes.
 - `TMDB_API_KEY` — free key from [themoviedb.org](https://www.themoviedb.org/settings/api), used to search movies and fetch posters.
 
-Local dev uses SQLite (`prisma/dev.db`) via `@prisma/adapter-better-sqlite3` — zero
-setup required. Production uses Postgres; see [Deploying](#deploying) below.
+The app uses Postgres everywhere (via `@prisma/adapter-pg`) — the same connection
+string works for local dev and production, so there's no separate local database
+setup beyond pointing `DATABASE_URL` at a real instance.
 
 > **Windows + non-NTFS drives:** both Turbopack and webpack call `fs.readlink` during
 > the build in ways exFAT/FAT32 don't support correctly, so `next build` fails on
@@ -54,9 +57,4 @@ bye handling for non-power-of-2 pool sizes) and matchup resolution
 2. In the Vercel project → **Storage**, add a Postgres database (auto-injects
    `DATABASE_URL`).
 3. Set `ADMIN_PASSWORD` and `TMDB_API_KEY` as Vercel environment variables.
-4. Switch the Prisma datasource to Postgres before deploying — in
-   `prisma/schema.prisma` change `provider = "sqlite"` to `provider = "postgresql"`,
-   then replace the `@prisma/adapter-better-sqlite3` usage in `lib/db.ts` with
-   `@prisma/adapter-pg` (`npm install @prisma/adapter-pg pg`), pointed at
-   `process.env.DATABASE_URL`.
-5. Deploy — the build script runs `prisma migrate deploy` automatically.
+4. Deploy — the build script runs `prisma migrate deploy` automatically.
