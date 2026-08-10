@@ -35,7 +35,7 @@ export default async function SeedPage({ params }: { params: Promise<{ slug: str
   return (
     <main className="mx-auto max-w-xl p-6">
       <BracketNav slug={bracket.slug} bracketName={bracket.name} />
-      <h1 className="mb-4 text-2xl font-semibold">{bracket.name}: Seed the bracket</h1>
+      <h1 className="mb-4 font-display text-2xl tracking-wide text-gold uppercase">{bracket.name}: Seed the bracket</h1>
       {voter ? (
         <div className="flex flex-col gap-4">
           <FirstTimeTip id="seed">

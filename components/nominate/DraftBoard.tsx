@@ -32,13 +32,13 @@ export function DraftBoard({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  if (!data) return <p className="text-neutral-500">Loading…</p>;
+  if (!data) return <p className="text-cream-dim">Loading…</p>;
 
   if (data.bracket.status !== "NOMINATING") {
-    return <p className="text-neutral-500">The draft has finished — on to seeding next.</p>;
+    return <p className="text-cream-dim">The draft has finished — on to seeding next.</p>;
   }
   if (!data.draft) {
-    return <p className="text-neutral-500">Waiting for the admin to start the draft…</p>;
+    return <p className="text-cream-dim">Waiting for the admin to start the draft…</p>;
   }
 
   const isMyTurn = data.draft.currentVoterName === voterName;
@@ -55,23 +55,23 @@ export function DraftBoard({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded border border-neutral-200 p-3 text-center dark:border-neutral-800">
+      <div className="rounded border border-gold/20 bg-surface p-3 text-center">
         {isMyTurn ? (
-          <p className="text-lg font-medium">It&apos;s your turn — pick a movie!</p>
+          <p className="font-display text-lg tracking-wide text-gold uppercase">It&apos;s your turn — pick a movie!</p>
         ) : (
           <p>
-            Waiting on <span className="font-medium">{data.draft.currentVoterName}</span>…
+            Waiting on <span className="font-medium text-gold">{data.draft.currentVoterName}</span>…
           </p>
         )}
-        <p className="mt-1 text-sm text-neutral-500">
+        <p className="mt-1 text-sm text-cream-dim">
           {movies.length}
           {data.bracket.poolTargetSize && ` / ${data.bracket.poolTargetSize}`} picked
         </p>
       </div>
 
       {data.bracket.filterSummary && (
-        <p className="text-center text-sm text-neutral-500">
-          Search is scoped to: <span className="font-medium">{data.bracket.filterSummary}</span>
+        <p className="text-center text-sm text-cream-dim">
+          Search is scoped to: <span className="font-medium text-gold">{data.bracket.filterSummary}</span>
         </p>
       )}
 
@@ -84,22 +84,22 @@ export function DraftBoard({
           hasFilters={data.bracket.hasFilters}
         />
       )}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-error">{error}</p>}
 
       <div>
-        <h2 className="text-lg font-medium">Draft board</h2>
+        <h2 className="font-display text-lg tracking-wide text-rose uppercase">Draft board</h2>
         <ul className="mt-2 flex flex-col gap-2">
           {movies.map((m) => (
             <li key={m.id} className="flex items-center gap-3">
               {m.posterUrl ? (
                 <Image src={m.posterUrl} alt="" width={32} height={48} className="rounded" />
               ) : (
-                <div className="h-12 w-8 shrink-0 rounded bg-neutral-200 dark:bg-neutral-800" />
+                <div className="h-12 w-8 shrink-0 rounded bg-surface-raised" />
               )}
               <span>
                 {m.title}{" "}
                 {m.nominatedByName && (
-                  <span className="text-sm text-neutral-500">— picked by {m.nominatedByName}</span>
+                  <span className="text-sm text-cream-dim">— picked by {m.nominatedByName}</span>
                 )}
               </span>
             </li>

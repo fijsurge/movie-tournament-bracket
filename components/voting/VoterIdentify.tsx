@@ -18,7 +18,7 @@ export function VoterIdentify({
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-medium">Who are you?</h2>
+      <h2 className="font-display text-xl tracking-wide text-gold uppercase">Who are you?</h2>
 
       {existingVoterNames.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -27,10 +27,7 @@ export function VoterIdentify({
               <input type="hidden" name="bracketId" value={bracketId} />
               <input type="hidden" name="redirectTo" value={redirectTo} />
               <input type="hidden" name="name" value={name} />
-              <button
-                type="submit"
-                className="rounded-full border border-neutral-300 px-3 py-1 text-sm dark:border-neutral-700"
-              >
+              <button type="submit" className="rounded-full border border-gold/40 px-3 py-1 text-sm transition hover:border-gold">
                 {name}
               </button>
             </form>
@@ -45,17 +42,17 @@ export function VoterIdentify({
           name="name"
           placeholder="Type your name"
           required
-          className="flex-1 rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+          className="flex-1 rounded border border-gold/25 bg-surface px-3 py-2 text-cream placeholder:text-cream-dim/50 focus:border-gold focus:outline-none"
         />
         <button
           type="submit"
           disabled={pending}
-          className="rounded bg-neutral-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+          className="rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
         >
           {pending ? "…" : "Go"}
         </button>
       </form>
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && <p className="text-sm text-error">{state.error}</p>}
     </div>
   );
 }

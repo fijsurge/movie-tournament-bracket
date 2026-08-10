@@ -8,7 +8,7 @@ export default async function NewBracketPage() {
   return (
     <main className="mx-auto max-w-2xl p-6">
       <AdminNav />
-      <h1 className="mb-6 text-2xl font-semibold">New bracket</h1>
+      <h1 className="mb-6 font-display text-3xl tracking-wide text-gold uppercase">New bracket</h1>
       <NewBracketForm />
     </main>
   );

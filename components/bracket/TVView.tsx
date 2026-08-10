@@ -15,14 +15,14 @@ export function TVView({ slug }: { slug: string }) {
   });
 
   if (!data) {
-    return <p className="flex flex-1 items-center justify-center text-2xl text-neutral-500">Loading…</p>;
+    return <p className="flex flex-1 items-center justify-center text-2xl text-cream-dim">Loading…</p>;
   }
 
   const { bracket, rounds, voterNames } = data;
 
   if (bracket.status === "SETUP") {
     return (
-      <p className="flex flex-1 items-center justify-center text-2xl text-neutral-400">
+      <p className="flex flex-1 items-center justify-center text-2xl text-cream-dim">
         Waiting for the host to open nominations…
       </p>
     );

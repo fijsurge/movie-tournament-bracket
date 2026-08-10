@@ -23,9 +23,9 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
       <main className="mx-auto flex min-h-screen max-w-md flex-col p-6">
         <BracketNav slug={bracket.slug} bracketName={bracket.name} />
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-          <h1 className="text-2xl font-semibold">{bracket.name}</h1>
+          <h1 className="font-display text-2xl tracking-wide text-gold uppercase">{bracket.name}</h1>
           <p className="text-lg">
-            🏆 Champion: <span className="font-semibold">{championMatchup?.winnerMovie?.title}</span>
+            🏆 Champion: <span className="font-semibold text-gold">{championMatchup?.winnerMovie?.title}</span>
           </p>
         </div>
       </main>
@@ -55,7 +55,7 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
   return (
     <main className="mx-auto max-w-xl p-6">
       <BracketNav slug={bracket.slug} bracketName={bracket.name} />
-      <h1 className="mb-4 text-2xl font-semibold">
+      <h1 className="mb-4 font-display text-2xl tracking-wide text-gold uppercase">
         {bracket.name}: Round {bracket.currentRound} voting
       </h1>
       {voter ? (
@@ -65,7 +65,7 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
             are ever shown. Ties are broken by the tiebreaker category, then a coin flip or revote.
           </FirstTimeTip>
           {openMatchups.length === 0 ? (
-            <p className="text-neutral-500">No matchups need your vote right now — check back soon.</p>
+            <p className="text-cream-dim">No matchups need your vote right now — check back soon.</p>
           ) : (
             openMatchups.map((m) => {
               if (!m.movieA || !m.movieB) return null;

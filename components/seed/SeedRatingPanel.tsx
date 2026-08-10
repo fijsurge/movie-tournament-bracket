@@ -38,10 +38,10 @@ export function SeedRatingPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-cream-dim">
         You&apos;ve rated {ratedCount} of {movies.length} movies.
       </p>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-error">{error}</p>}
 
       <ul className="flex flex-col gap-4">
         {movies.map((movie) => (
@@ -49,7 +49,7 @@ export function SeedRatingPanel({
             {movie.posterUrl ? (
               <Image src={movie.posterUrl} alt="" width={40} height={60} className="rounded" />
             ) : (
-              <div className="h-[60px] w-10 shrink-0 rounded bg-neutral-200 dark:bg-neutral-800" />
+              <div className="h-[60px] w-10 shrink-0 rounded bg-surface-raised" />
             )}
             <div className="flex flex-1 flex-col gap-1">
               <span className="font-medium">{movie.title}</span>
@@ -61,10 +61,10 @@ export function SeedRatingPanel({
                     disabled={pending}
                     onClick={() => rate(movie.id, score)}
                     aria-pressed={ratings[movie.id] === score}
-                    className={`h-8 w-8 rounded border text-sm disabled:opacity-50 ${
+                    className={`h-8 w-8 rounded border text-sm transition disabled:opacity-50 ${
                       ratings[movie.id] === score
-                        ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900"
-                        : "border-neutral-300 dark:border-neutral-700"
+                        ? "border-gold bg-gold text-ink"
+                        : "border-gold/25 text-cream hover:border-gold/50"
                     }`}
                   >
                     {score}

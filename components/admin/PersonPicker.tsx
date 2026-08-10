@@ -40,7 +40,7 @@ export function PersonPicker({
       <div className="flex items-center gap-2">
         {value.profileUrl && <Image src={value.profileUrl} alt="" width={32} height={32} className="rounded-full" />}
         <span className="text-sm font-medium">{value.name}</span>
-        <button type="button" onClick={() => onChange(null)} className="text-sm text-neutral-500 underline">
+        <button type="button" onClick={() => onChange(null)} className="text-sm text-gold underline underline-offset-2">
           Change
         </button>
       </div>
@@ -53,9 +53,9 @@ export function PersonPicker({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search for an actor/director…"
-        className="rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+        className="rounded border border-gold/25 bg-surface px-3 py-2 text-cream placeholder:text-cream-dim/50 focus:border-gold focus:outline-none"
       />
-      {loading && <p className="text-sm text-neutral-500">Searching…</p>}
+      {loading && <p className="text-sm text-cream-dim">Searching…</p>}
       {results.length > 0 && (
         <ul className="flex flex-col gap-1">
           {results.map((p) => (
@@ -67,12 +67,12 @@ export function PersonPicker({
                   setQuery("");
                   setResults([]);
                 }}
-                className="flex w-full items-center gap-2 rounded border border-neutral-200 p-2 text-left text-sm hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900"
+                className="flex w-full items-center gap-2 rounded border border-gold/15 p-2 text-left text-sm transition hover:border-gold/40 hover:bg-surface"
               >
                 {p.profileUrl ? (
                   <Image src={p.profileUrl} alt="" width={28} height={28} className="rounded-full" />
                 ) : (
-                  <div className="h-7 w-7 shrink-0 rounded-full bg-neutral-200 dark:bg-neutral-800" />
+                  <div className="h-7 w-7 shrink-0 rounded-full bg-surface-raised" />
                 )}
                 {p.name}
               </button>

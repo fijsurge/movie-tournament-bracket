@@ -19,7 +19,7 @@ export function FirstTimeTip({ id, children }: { id: string; children: React.Rea
   if (dismissed) return null;
 
   return (
-    <div className="flex items-start justify-between gap-3 rounded border border-blue-200 bg-blue-50 p-3 text-sm dark:border-blue-900 dark:bg-blue-950">
+    <div className="flex items-start justify-between gap-3 rounded border border-rose/30 bg-velvet/20 p-3 text-sm text-cream">
       <div>{children}</div>
       <button
         type="button"
@@ -28,7 +28,7 @@ export function FirstTimeTip({ id, children }: { id: string; children: React.Rea
           setDismissedOverride(true);
         }}
         aria-label="Dismiss tip"
-        className="shrink-0 text-blue-700 hover:text-blue-900 dark:text-blue-300"
+        className="shrink-0 text-rose hover:text-gold"
       >
         ✕
       </button>

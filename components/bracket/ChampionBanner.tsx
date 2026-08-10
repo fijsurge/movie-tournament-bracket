@@ -11,13 +11,21 @@ export function ChampionBanner({
 }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 p-8 text-center">
-      <p className="text-2xl text-neutral-400">{bracketName}</p>
-      <p className="text-3xl">🏆</p>
+      <p className="font-display text-2xl tracking-wide text-cream-dim uppercase">{bracketName}</p>
+      <p className="text-4xl">🏆</p>
       {posterUrl && (
-        <Image src={posterUrl} alt="" width={220} height={330} className="rounded-lg shadow-2xl" />
+        <Image
+          src={posterUrl}
+          alt=""
+          width={220}
+          height={330}
+          className="rounded-lg shadow-[0_0_60px_-10px_rgba(232,163,61,0.5)]"
+        />
       )}
-      <h1 className="text-5xl font-bold text-emerald-300">{championTitle}</h1>
-      <p className="text-xl text-neutral-400">Champion!</p>
+      <h1 className="font-display text-5xl tracking-wide text-gold uppercase drop-shadow-[0_0_30px_rgba(232,163,61,0.4)]">
+        {championTitle}
+      </h1>
+      <p className="text-xl text-rose">Champion!</p>
     </div>
   );
 }

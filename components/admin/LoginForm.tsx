@@ -16,13 +16,13 @@ export function LoginForm() {
         placeholder="Admin password"
         required
         autoFocus
-        className="rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+        className="rounded border border-gold/25 bg-surface px-3 py-2 text-cream placeholder:text-cream-dim/60 focus:border-gold focus:outline-none"
       />
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && <p className="text-sm text-error">{state.error}</p>}
       <button
         type="submit"
         disabled={pending}
-        className="rounded bg-neutral-900 px-3 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+        className="rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
       >
         {pending ? "Checking…" : "Log in"}
       </button>

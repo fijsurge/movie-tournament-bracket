@@ -52,9 +52,9 @@ export function MovieSearch({
         onChange={(e) => setQuery(e.target.value)}
         placeholder={hasFilters ? "Search within the filtered list…" : "Search for a movie…"}
         disabled={disabled}
-        className="rounded border border-neutral-300 px-3 py-2 disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-900"
+        className="rounded border border-gold/25 bg-surface px-3 py-2 text-cream placeholder:text-cream-dim/50 focus:border-gold focus:outline-none disabled:opacity-50"
       />
-      {loading && <p className="text-sm text-neutral-500">Searching…</p>}
+      {loading && <p className="text-sm text-cream-dim">Searching…</p>}
       {results.length > 0 && (
         <ul className="flex flex-col gap-1">
           {results.map((movie) => {
@@ -69,16 +69,16 @@ export function MovieSearch({
                     setQuery("");
                     setResults([]);
                   }}
-                  className="flex w-full items-center gap-3 rounded border border-neutral-200 p-2 text-left hover:bg-neutral-50 disabled:opacity-40 dark:border-neutral-800 dark:hover:bg-neutral-900"
+                  className="flex w-full items-center gap-3 rounded border border-gold/15 p-2 text-left transition hover:border-gold/40 hover:bg-surface disabled:opacity-40"
                 >
                   {movie.posterUrl ? (
                     <Image src={movie.posterUrl} alt="" width={40} height={60} className="rounded" />
                   ) : (
-                    <div className="h-[60px] w-10 shrink-0 rounded bg-neutral-200 dark:bg-neutral-800" />
+                    <div className="h-[60px] w-10 shrink-0 rounded bg-surface-raised" />
                   )}
                   <span>
-                    {movie.title} {movie.year && <span className="text-neutral-500">({movie.year})</span>}
-                    {alreadyAdded && <span className="ml-2 text-xs text-neutral-500">already in pool</span>}
+                    {movie.title} {movie.year && <span className="text-cream-dim">({movie.year})</span>}
+                    {alreadyAdded && <span className="ml-2 text-xs text-cream-dim">already in pool</span>}
                   </span>
                 </button>
               </li>

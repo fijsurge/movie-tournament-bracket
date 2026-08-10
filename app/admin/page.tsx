@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/db";
+import { PageNav } from "@/components/shared/PageNav";
+import { logoutAdmin } from "./actions";
 
 export default async function AdminHomePage() {
   await requireAdmin();
@@ -9,28 +11,39 @@ export default async function AdminHomePage() {
 
   return (
     <main className="mx-auto max-w-2xl p-6">
+      <PageNav
+        backHref="/"
+        backLabel="Home"
+        action={
+          <form action={logoutAdmin}>
+            <button type="submit" className="text-cream-dim underline underline-offset-2">
+              Log out
+            </button>
+          </form>
+        }
+      />
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Brackets</h1>
+        <h1 className="font-display text-3xl tracking-wide text-gold uppercase">Brackets</h1>
         <Link
           href="/admin/brackets/new"
-          className="rounded bg-neutral-900 px-4 py-2 text-white dark:bg-white dark:text-neutral-900"
+          className="rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim"
         >
           + New bracket
         </Link>
       </div>
 
       {brackets.length === 0 ? (
-        <p className="text-neutral-500">No brackets yet — create one to get started.</p>
+        <p className="text-cream-dim">No brackets yet — create one to get started.</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {brackets.map((b) => (
             <li key={b.id}>
               <Link
                 href={`/admin/brackets/${b.slug}`}
-                className="flex items-center justify-between rounded border border-neutral-200 px-4 py-3 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900"
+                className="flex items-center justify-between rounded border border-gold/20 bg-surface px-4 py-3 transition hover:border-gold/40"
               >
                 <span>{b.name}</span>
-                <span className="text-sm text-neutral-500">{b.status}</span>
+                <span className="text-sm text-cream-dim">{b.status}</span>
               </Link>
             </li>
           ))}

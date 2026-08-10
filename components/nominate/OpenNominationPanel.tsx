@@ -51,19 +51,19 @@ export function OpenNominationPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-cream-dim">
         Hi {voterName} — you&apos;ve nominated {myCount}
         {cap !== null && ` of ${cap}`}.
       </p>
 
       {data?.bracket.filterSummary && (
-        <p className="text-sm text-neutral-500">
-          Search is scoped to: <span className="font-medium">{data.bracket.filterSummary}</span>
+        <p className="text-sm text-cream-dim">
+          Search is scoped to: <span className="font-medium text-gold">{data.bracket.filterSummary}</span>
         </p>
       )}
 
       {atCap ? (
-        <p className="text-sm text-neutral-500">You&apos;ve used all your nominations. Waiting on everyone else…</p>
+        <p className="text-sm text-cream-dim">You&apos;ve used all your nominations. Waiting on everyone else…</p>
       ) : (
         <MovieSearch
           bracketId={bracketId}
@@ -73,22 +73,22 @@ export function OpenNominationPanel({
           hasFilters={data?.bracket.hasFilters ?? false}
         />
       )}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-error">{error}</p>}
 
       <div>
-        <h2 className="text-lg font-medium">Pool so far ({movies.length})</h2>
+        <h2 className="font-display text-lg tracking-wide text-rose uppercase">Pool so far ({movies.length})</h2>
         <ul className="mt-2 flex flex-col gap-2">
           {movies.map((m) => (
             <li key={m.id} className="flex items-center gap-3">
               {m.posterUrl ? (
                 <Image src={m.posterUrl} alt="" width={32} height={48} className="rounded" />
               ) : (
-                <div className="h-12 w-8 shrink-0 rounded bg-neutral-200 dark:bg-neutral-800" />
+                <div className="h-12 w-8 shrink-0 rounded bg-surface-raised" />
               )}
               <span>
                 {m.title}{" "}
                 {m.nominatedByName && (
-                  <span className="text-sm text-neutral-500">— nominated by {m.nominatedByName}</span>
+                  <span className="text-sm text-cream-dim">— nominated by {m.nominatedByName}</span>
                 )}
               </span>
             </li>

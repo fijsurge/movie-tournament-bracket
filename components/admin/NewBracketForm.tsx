@@ -24,6 +24,9 @@ const DEFAULT_CATEGORIES: CategoryRow[] = [
   { key: "cruise-factor", label: "Cruise Factor", isTiebreaker: true },
 ];
 
+const INPUT = "rounded border border-gold/25 bg-surface px-3 py-2 text-cream placeholder:text-cream-dim/50 focus:border-gold focus:outline-none";
+const LEGEND = "font-display text-lg tracking-wide text-gold uppercase";
+
 function keyify(label: string): string {
   return label
     .trim()
@@ -66,22 +69,14 @@ export function NewBracketForm() {
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <label htmlFor="name" className="text-sm font-medium">
+        <label htmlFor="name" className="text-sm font-medium text-cream-dim">
           Bracket name
         </label>
-        <input
-          id="name"
-          name="name"
-          required
-          placeholder="Tom Cruise Movie Bracket"
-          className="rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
-        />
+        <input id="name" name="name" required placeholder="Tom Cruise Movie Bracket" className={INPUT} />
       </div>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="text-sm font-medium">
-          Rating categories (voters score both movies on each, 1-5)
-        </legend>
+        <legend className={LEGEND}>Rating categories (voters score both movies on each, 1-5)</legend>
         {categories.map((cat, i) => (
           <div key={i} className="flex items-center gap-2">
             <input
@@ -89,14 +84,15 @@ export function NewBracketForm() {
               onChange={(e) => updateLabel(i, e.target.value)}
               placeholder="Category name"
               required
-              className="flex-1 rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+              className={`flex-1 ${INPUT}`}
             />
-            <label className="flex items-center gap-1 text-sm whitespace-nowrap">
+            <label className="flex items-center gap-1 text-sm whitespace-nowrap text-cream-dim">
               <input
                 type="radio"
                 name="tiebreaker"
                 checked={cat.isTiebreaker}
                 onChange={() => setTiebreaker(i)}
+                className="accent-gold"
               />
               Tiebreaker
             </label>
@@ -104,7 +100,7 @@ export function NewBracketForm() {
               <button
                 type="button"
                 onClick={() => removeCategory(i)}
-                className="text-sm text-neutral-500 hover:text-red-600"
+                className="text-sm text-cream-dim hover:text-error"
                 aria-label={`Remove ${cat.label || "category"}`}
               >
                 ✕
@@ -113,7 +109,7 @@ export function NewBracketForm() {
           </div>
         ))}
         {categories.length < 8 && (
-          <button type="button" onClick={addCategory} className="self-start text-sm underline">
+          <button type="button" onClick={addCategory} className="self-start text-sm text-gold underline underline-offset-2">
             + Add category
           </button>
         )}
@@ -121,32 +117,34 @@ export function NewBracketForm() {
       </fieldset>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="text-sm font-medium">How will movies get nominated?</legend>
+        <legend className={LEGEND}>How will movies get nominated?</legend>
         <div className="flex gap-4">
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-sm">
             <input
               type="radio"
               name="nominationMode"
               value="OPEN"
               checked={nominationMode === "OPEN"}
               onChange={() => setNominationMode("OPEN")}
+              className="accent-gold"
             />
             Open pool — everyone nominates a few, any time
           </label>
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-sm">
             <input
               type="radio"
               name="nominationMode"
               value="DRAFT"
               checked={nominationMode === "DRAFT"}
               onChange={() => setNominationMode("DRAFT")}
+              className="accent-gold"
             />
             Round-robin draft — turn-based picks
           </label>
         </div>
 
         {nominationMode === "OPEN" ? (
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm text-cream-dim">
             Nominations per voter
             <input
               type="number"
@@ -155,11 +153,11 @@ export function NewBracketForm() {
               max={10}
               defaultValue={2}
               required
-              className="w-24 rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+              className={`w-24 ${INPUT}`}
             />
           </label>
         ) : (
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm text-cream-dim">
             Target pool size (how many movies total)
             <input
               type="number"
@@ -168,33 +166,33 @@ export function NewBracketForm() {
               max={64}
               defaultValue={16}
               required
-              className="w-24 rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+              className={`w-24 ${INPUT}`}
             />
           </label>
         )}
       </fieldset>
 
       <fieldset className="flex flex-col gap-3">
-        <legend className="text-sm font-medium">
+        <legend className={LEGEND}>
           Restrict the movie search (optional) — keeps nominations in scope, e.g. &ldquo;action movies
           from the 1980s&rdquo;
         </legend>
 
         <div className="flex flex-col gap-1">
-          <span className="text-sm text-neutral-500">Actor or director</span>
+          <span className="text-sm text-cream-dim">Actor or director</span>
           <PersonPicker value={filterPerson} onChange={setFilterPerson} />
         </div>
 
         <div className="flex flex-col gap-1">
-          <span className="text-sm text-neutral-500">Genres</span>
+          <span className="text-sm text-cream-dim">Genres</span>
           <div className="flex flex-wrap gap-2">
             {TMDB_GENRES.map((g) => (
               <label
                 key={g.id}
-                className={`cursor-pointer rounded-full border px-3 py-1 text-sm ${
+                className={`cursor-pointer rounded-full border px-3 py-1 text-sm transition ${
                   filterGenreIds.includes(g.id)
-                    ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900"
-                    : "border-neutral-300 dark:border-neutral-700"
+                    ? "border-gold bg-gold text-ink"
+                    : "border-gold/25 text-cream-dim hover:border-gold/50"
                 }`}
               >
                 <input
@@ -210,27 +208,13 @@ export function NewBracketForm() {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm text-cream-dim">
             From year
-            <input
-              type="number"
-              name="filterYearMin"
-              placeholder="1980"
-              min={1888}
-              max={2100}
-              className="w-24 rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
-            />
+            <input type="number" name="filterYearMin" placeholder="1980" min={1888} max={2100} className={`w-24 ${INPUT}`} />
           </label>
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm text-cream-dim">
             To year
-            <input
-              type="number"
-              name="filterYearMax"
-              placeholder="1989"
-              min={1888}
-              max={2100}
-              className="w-24 rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
-            />
+            <input type="number" name="filterYearMax" placeholder="1989" min={1888} max={2100} className={`w-24 ${INPUT}`} />
           </label>
         </div>
 
@@ -239,12 +223,12 @@ export function NewBracketForm() {
         <input type="hidden" name="filterGenreIdsJson" value={JSON.stringify(filterGenreIds)} />
       </fieldset>
 
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && <p className="text-sm text-error">{state.error}</p>}
 
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded bg-neutral-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+        className="self-start rounded-full bg-gold px-6 py-2.5 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
       >
         {pending ? "Creating…" : "Create bracket"}
       </button>

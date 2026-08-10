@@ -40,10 +40,10 @@ function ScorePicker({
                 type="button"
                 onClick={() => setScores((prev) => ({ ...prev, [cat.key]: score }))}
                 aria-pressed={scores[cat.key] === score}
-                className={`h-7 w-7 rounded border text-xs ${
+                className={`h-7 w-7 rounded border text-xs transition ${
                   scores[cat.key] === score
-                    ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900"
-                    : "border-neutral-300 dark:border-neutral-700"
+                    ? "border-gold bg-gold text-ink"
+                    : "border-gold/25 text-cream hover:border-gold/50"
                 }`}
               >
                 {score}
@@ -52,7 +52,7 @@ function ScorePicker({
           </div>
         </div>
       ))}
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-cream-dim">
         Movie {movie} total: {categories.reduce((sum, c) => sum + (scores[c.key] ?? 0), 0)}
       </p>
     </div>
@@ -100,13 +100,13 @@ export function VoteForm({
   }
 
   return (
-    <div className="rounded border border-neutral-200 p-4 dark:border-neutral-800">
+    <div className="rounded border border-gold/20 bg-surface p-4">
       <div className="mb-3 flex items-center justify-center gap-4 text-center">
         <div className="flex flex-col items-center gap-1">
           {movieA.posterUrl && <Image src={movieA.posterUrl} alt="" width={56} height={84} className="rounded" />}
           <span className="font-medium">{movieA.title}</span>
         </div>
-        <span className="text-neutral-400">vs</span>
+        <span className="font-display text-rose">vs</span>
         <div className="flex flex-col items-center gap-1">
           {movieB.posterUrl && <Image src={movieB.posterUrl} alt="" width={56} height={84} className="rounded" />}
           <span className="font-medium">{movieB.title}</span>
@@ -118,17 +118,17 @@ export function VoteForm({
         <ScorePicker movie="B" categories={categories} scores={scoresB} setScores={setScoresB} />
       </div>
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-error">{error}</p>}
 
       <button
         type="button"
         onClick={handleSubmit}
         disabled={!complete || pending}
-        className="mt-4 w-full rounded bg-neutral-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+        className="mt-4 w-full rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
       >
         {submitted ? "Update vote" : pending ? "Submitting…" : "Submit vote"}
       </button>
-      {submitted && <p className="mt-1 text-center text-xs text-neutral-500">Vote recorded — you can change it until the round closes.</p>}
+      {submitted && <p className="mt-1 text-center text-xs text-cream-dim">Vote recorded — you can change it until the round closes.</p>}
     </div>
   );
 }

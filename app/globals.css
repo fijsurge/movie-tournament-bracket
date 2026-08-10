@@ -1,26 +1,53 @@
 @import "tailwindcss";
 
+/*
+ * Marquee Night — the app commits to one visual world (a theater at night)
+ * rather than adapting to system light/dark preference, the same way the
+ * TV view already did before this pass.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-ink: #1b1420;
+  --color-surface: #251a28;
+  --color-surface-raised: #2f2130;
+  --color-velvet: #7a1f2b;
+  --color-gold: #e8a33d;
+  --color-gold-dim: #b9822f;
+  --color-rose: #c65c6b;
+  --color-cream: #f3e9d2;
+  --color-cream-dim: #b7ae9c;
+  --color-error: #e8626a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-ink: var(--color-ink);
+  --color-surface: var(--color-surface);
+  --color-surface-raised: var(--color-surface-raised);
+  --color-velvet: var(--color-velvet);
+  --color-gold: var(--color-gold);
+  --color-gold-dim: var(--color-gold-dim);
+  --color-rose: var(--color-rose);
+  --color-cream: var(--color-cream);
+  --color-cream-dim: var(--color-cream-dim);
+  --color-error: var(--color-error);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-display: var(--font-anton);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-ink);
+  color: var(--color-cream);
+}
+
+::selection {
+  background: var(--color-gold);
+  color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

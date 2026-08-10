@@ -14,6 +14,11 @@ import {
   reopenForRevote,
 } from "./actions";
 
+const PRIMARY_BUTTON =
+  "rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50";
+const SECONDARY_BUTTON =
+  "rounded-full border border-gold/40 px-3 py-1 text-sm text-cream transition hover:border-gold disabled:opacity-50";
+
 export default async function AdminBracketDashboard({
   params,
 }: {
@@ -69,18 +74,18 @@ export default async function AdminBracketDashboard({
   return (
     <main className="mx-auto max-w-2xl p-6">
       <AdminNav />
-      <h1 className="text-2xl font-semibold">{bracket.name}</h1>
-      <p className="mt-1 text-sm text-neutral-500">
-        Status: <span className="font-medium">{bracket.status}</span> · Nomination mode:{" "}
-        <span className="font-medium">{bracket.nominationMode}</span>
+      <h1 className="font-display text-3xl tracking-wide text-gold uppercase">{bracket.name}</h1>
+      <p className="mt-1 text-sm text-cream-dim">
+        Status: <span className="font-medium text-cream">{bracket.status}</span> · Nomination mode:{" "}
+        <span className="font-medium text-cream">{bracket.nominationMode}</span>
       </p>
 
       <section className="mt-6">
-        <h2 className="text-lg font-medium">Categories</h2>
+        <h2 className="text-lg font-medium text-rose">Categories</h2>
         <ul className="mt-2 flex flex-col gap-1">
           {bracket.categories.map((c) => (
             <li key={c.id} className="text-sm">
-              {c.label} {c.isTiebreaker && <span className="text-neutral-500">(tiebreaker)</span>}
+              {c.label} {c.isTiebreaker && <span className="text-cream-dim">(tiebreaker)</span>}
             </li>
           ))}
         </ul>
@@ -88,17 +93,17 @@ export default async function AdminBracketDashboard({
 
       {filterParts.length > 0 && (
         <section className="mt-6">
-          <h2 className="text-lg font-medium">Search filter</h2>
-          <p className="mt-1 text-sm text-neutral-500">{filterParts.join(" · ")}</p>
+          <h2 className="text-lg font-medium text-rose">Search filter</h2>
+          <p className="mt-1 text-sm text-cream-dim">{filterParts.join(" · ")}</p>
         </section>
       )}
 
-      <section className="mt-6 rounded border border-neutral-200 p-4 dark:border-neutral-800">
-        <h2 className="text-lg font-medium">Bracket controls</h2>
+      <section className="mt-6 rounded border border-gold/20 bg-surface p-4">
+        <h2 className="text-lg font-medium text-rose">Bracket controls</h2>
 
         {bracket.status === "SETUP" && (
           <form action={openNominationsForBracket} className="mt-3">
-            <button type="submit" className="rounded bg-neutral-900 px-4 py-2 text-white dark:bg-white dark:text-neutral-900">
+            <button type="submit" className={PRIMARY_BUTTON}>
               Open nominations
             </button>
           </form>
@@ -112,15 +117,11 @@ export default async function AdminBracketDashboard({
 
             {bracket.nominationMode === "DRAFT" && !bracket.draftState && (
               <div>
-                <p className="mb-2 text-sm text-neutral-500">
+                <p className="mb-2 text-sm text-cream-dim">
                   Joined: {bracket.voters.map((v) => v.name).join(", ") || "no one yet"}
                 </p>
                 <form action={startDraftForBracket}>
-                  <button
-                    type="submit"
-                    disabled={bracket.voters.length < 1}
-                    className="rounded bg-neutral-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
-                  >
+                  <button type="submit" disabled={bracket.voters.length < 1} className={PRIMARY_BUTTON}>
                     Start draft
                   </button>
                 </form>
@@ -130,10 +131,10 @@ export default async function AdminBracketDashboard({
             {bracket.nominationMode === "DRAFT" && bracket.draftState && (
               <div className="flex items-center gap-3">
                 <p className="text-sm">
-                  Current turn: <span className="font-medium">{currentTurnVoterName}</span>
+                  Current turn: <span className="font-medium text-gold">{currentTurnVoterName}</span>
                 </p>
                 <form action={skipDraftTurnForBracket}>
-                  <button type="submit" className="rounded border border-neutral-300 px-3 py-1 text-sm dark:border-neutral-700">
+                  <button type="submit" className={SECONDARY_BUTTON}>
                     Skip turn
                   </button>
                 </form>
@@ -141,11 +142,7 @@ export default async function AdminBracketDashboard({
             )}
 
             <form action={closeNominationsForBracket}>
-              <button
-                type="submit"
-                disabled={bracket.movies.length < 2}
-                className="rounded bg-neutral-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
-              >
+              <button type="submit" disabled={bracket.movies.length < 2} className={PRIMARY_BUTTON}>
                 Close nominations & move to seeding
               </button>
             </form>
@@ -162,10 +159,7 @@ export default async function AdminBracketDashboard({
               ))}
             </ul>
             <form action={closeSeedingForBracket}>
-              <button
-                type="submit"
-                className="rounded bg-neutral-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
-              >
+              <button type="submit" className={PRIMARY_BUTTON}>
                 Close seeding & generate bracket
               </button>
             </form>
@@ -174,22 +168,22 @@ export default async function AdminBracketDashboard({
 
         {bracket.status === "ACTIVE" && currentRoundData && (
           <div className="mt-3 flex flex-col gap-3">
-            <p className="text-sm font-medium">Round {bracket.currentRound}</p>
+            <p className="text-sm font-medium text-gold">Round {bracket.currentRound}</p>
             <ul className="flex flex-col gap-2">
               {currentRoundData.matchups.map((m) => (
-                <li key={m.id} className="rounded border border-neutral-200 p-2 text-sm dark:border-neutral-800">
+                <li key={m.id} className="rounded border border-gold/15 p-2 text-sm">
                   {m.movieA?.title ?? "TBD"} vs {m.movieB?.title ?? "TBD"} —{" "}
-                  <span className="font-medium">{m.status}</span>
+                  <span className="font-medium text-cream">{m.status}</span>
                   {m.status === "RESOLVED" && m.winnerMovie && <> · winner: {m.winnerMovie.title}</>}
                   {m.status === "NEEDS_MANUAL_TIEBREAK" && (
                     <div className="mt-2 flex gap-2">
                       <form action={resolveTiebreakCoinFlip.bind(null, m.id)}>
-                        <button type="submit" className="rounded border border-neutral-300 px-2 py-1 text-xs dark:border-neutral-700">
+                        <button type="submit" className={`${SECONDARY_BUTTON} px-2 py-1 text-xs`}>
                           Coin flip
                         </button>
                       </form>
                       <form action={reopenForRevote.bind(null, m.id)}>
-                        <button type="submit" className="rounded border border-neutral-300 px-2 py-1 text-xs dark:border-neutral-700">
+                        <button type="submit" className={`${SECONDARY_BUTTON} px-2 py-1 text-xs`}>
                           Reopen for revote
                         </button>
                       </form>
@@ -199,7 +193,7 @@ export default async function AdminBracketDashboard({
               ))}
             </ul>
             <form action={closeRoundForBracket}>
-              <button type="submit" className="rounded bg-neutral-900 px-4 py-2 text-white dark:bg-white dark:text-neutral-900">
+              <button type="submit" className={PRIMARY_BUTTON}>
                 Close round & advance
               </button>
             </form>
@@ -207,7 +201,7 @@ export default async function AdminBracketDashboard({
         )}
 
         {bracket.status === "COMPLETE" && (
-          <p className="mt-3 text-sm text-neutral-500">
+          <p className="mt-3 text-sm text-cream-dim">
             🏆 The bracket is complete
             {bracket.rounds.at(-1)?.matchups[0]?.winnerMovie
               ? ` — ${bracket.rounds.at(-1)!.matchups[0].winnerMovie!.title} wins!`
@@ -217,10 +211,10 @@ export default async function AdminBracketDashboard({
       </section>
 
       <section className="mt-6">
-        <h2 className="text-lg font-medium">Share this link</h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          Send everyone to <code className="rounded bg-neutral-100 px-1 dark:bg-neutral-800">/b/{bracket.slug}</code>{" "}
-          to nominate and vote. Project <code className="rounded bg-neutral-100 px-1 dark:bg-neutral-800">/b/{bracket.slug}/tv</code>{" "}
+        <h2 className="text-lg font-medium text-rose">Share this link</h2>
+        <p className="mt-1 text-sm text-cream-dim">
+          Send everyone to <code className="rounded bg-surface px-1 text-gold">/b/{bracket.slug}</code>{" "}
+          to nominate and vote. Project <code className="rounded bg-surface px-1 text-gold">/b/{bracket.slug}/tv</code>{" "}
           on the TV.
         </p>
       </section>
