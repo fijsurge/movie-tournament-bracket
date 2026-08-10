@@ -1,0 +1,189 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum BracketStatus {
+  SETUP
+  NOMINATING
+  SEEDING
+  ACTIVE
+  COMPLETE
+}
+
+enum NominationMode {
+  OPEN
+  DRAFT
+}
+
+enum RoundStatus {
+  PENDING
+  VOTING_OPEN
+  VOTING_CLOSED
+  COMPLETE
+}
+
+enum MatchupStatus {
+  PENDING
+  OPEN
+  CLOSED
+  NEEDS_MANUAL_TIEBREAK
+  RESOLVED
+}
+
+enum ResolutionMethod {
+  SCORE
+  TIEBREAK_CATEGORY
+  COIN_FLIP
+  REVOTE
+}
+
+model Bracket {
+  id                    String         @id @default(cuid())
+  slug                  String         @unique
+  name                  String
+  status                BracketStatus  @default(SETUP)
+  nominationMode        NominationMode @default(OPEN)
+  nominationCapPerVoter Int?
+  poolTargetSize        Int?
+  currentRound          Int?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  categories Category[]
+  movies     Movie[]
+  voters     Voter[]
+  seedVotes  SeedVote[]
+  rounds     Round[]
+  matchups   Matchup[]
+  draftState DraftState?
+}
+
+model Category {
+  id            String  @id @default(cuid())
+  bracketId     String
+  bracket       Bracket @relation(fields: [bracketId], references: [id], onDelete: Cascade)
+  key           String
+  label         String
+  order         Int
+  isTiebreaker  Boolean @default(false)
+
+  @@unique([bracketId, key])
+}
+
+model Movie {
+  id                 String   @id @default(cuid())
+  bracketId          String
+  bracket            Bracket  @relation(fields: [bracketId], references: [id], onDelete: Cascade)
+  tmdbId             Int
+  title              String
+  posterUrl          String?
+  nominatedByVoterId String?
+  nominatedByVoter   Voter?   @relation(fields: [nominatedByVoterId], references: [id])
+  seed               Int?
+  createdAt          DateTime @default(now())
+
+  seedVotes       SeedVote[]
+  matchupsAsA     Matchup[]  @relation("MovieA")
+  matchupsAsB     Matchup[]  @relation("MovieB")
+  matchupsAsWinner Matchup[] @relation("Winner")
+
+  @@unique([bracketId, tmdbId])
+}
+
+model DraftState {
+  id               String   @id @default(cuid())
+  bracketId        String   @unique
+  bracket          Bracket  @relation(fields: [bracketId], references: [id], onDelete: Cascade)
+  turnOrder        String // JSON-encoded array of voter IDs
+  currentTurnIndex Int      @default(0)
+  updatedAt        DateTime @updatedAt
+}
+
+model Voter {
+  id             String   @id @default(cuid())
+  bracketId      String
+  bracket        Bracket  @relation(fields: [bracketId], references: [id], onDelete: Cascade)
+  name           String
+  normalizedName String
+  createdAt      DateTime @default(now())
+
+  nominatedMovies Movie[]
+  seedVotes       SeedVote[]
+  votes           Vote[]
+
+  @@unique([bracketId, normalizedName])
+}
+
+model SeedVote {
+  id        String  @id @default(cuid())
+  bracketId String
+  bracket   Bracket @relation(fields: [bracketId], references: [id], onDelete: Cascade)
+  movieId   String
+  movie     Movie   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  voterId   String
+  voter     Voter   @relation(fields: [voterId], references: [id], onDelete: Cascade)
+  score     Int
+
+  @@unique([movieId, voterId])
+}
+
+model Round {
+  id          String      @id @default(cuid())
+  bracketId   String
+  bracket     Bracket     @relation(fields: [bracketId], references: [id], onDelete: Cascade)
+  roundNumber Int
+  status      RoundStatus @default(PENDING)
+
+  matchups Matchup[]
+
+  @@unique([bracketId, roundNumber])
+}
+
+model Matchup {
+  id               String            @id @default(cuid())
+  bracketId        String
+  bracket          Bracket           @relation(fields: [bracketId], references: [id], onDelete: Cascade)
+  roundId          String
+  round            Round             @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  position         Int
+  movieAId         String?
+  movieA           Movie?            @relation("MovieA", fields: [movieAId], references: [id])
+  movieBId         String?
+  movieB           Movie?            @relation("MovieB", fields: [movieBId], references: [id])
+  isBye            Boolean           @default(false)
+  status           MatchupStatus     @default(PENDING)
+  winnerMovieId    String?
+  winnerMovie      Movie?            @relation("Winner", fields: [winnerMovieId], references: [id])
+  resolutionMethod ResolutionMethod?
+  nextMatchupId    String?
+  nextMatchup      Matchup?          @relation("Advancement", fields: [nextMatchupId], references: [id])
+  previousMatchups Matchup[]         @relation("Advancement")
+  nextMatchupSlot  String? // "A" | "B"
+
+  votes Vote[]
+
+  @@unique([bracketId, roundId, position])
+}
+
+model Vote {
+  id            String  @id @default(cuid())
+  matchupId     String
+  matchup       Matchup @relation(fields: [matchupId], references: [id], onDelete: Cascade)
+  voterId       String
+  voter         Voter   @relation(fields: [voterId], references: [id], onDelete: Cascade)
+  scoresMovieA  String // JSON-encoded { [categoryKey]: 1-5 }
+  scoresMovieB  String // JSON-encoded { [categoryKey]: 1-5 }
+  totalA        Int
+  totalB        Int
+  createdAt     DateTime @default(now())
+
+  @@unique([matchupId, voterId])
+}

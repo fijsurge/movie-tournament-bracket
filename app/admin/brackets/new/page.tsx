@@ -1,0 +1,13 @@
+import { requireAdmin } from "@/lib/admin-auth";
+import { NewBracketForm } from "@/components/admin/NewBracketForm";
+
+export default async function NewBracketPage() {
+  await requireAdmin();
+
+  return (
+    <main className="mx-auto max-w-2xl p-6">
+      <h1 className="mb-6 text-2xl font-semibold">New bracket</h1>
+      <NewBracketForm />
+    </main>
+  );
+}
