@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { MovieSearch, type MovieSearchResult } from "./MovieSearch";
 import { submitDraftPick } from "@/app/b/[slug]/draft/actions";
 import { Avatar } from "@/components/shared/Avatar";
+import { PickAnnouncement } from "@/components/shared/PickAnnouncement";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -101,6 +102,8 @@ export function DraftBoard({
           🎬 You&apos;re up next — get ready!
         </motion.p>
       )}
+
+      <PickAnnouncement movies={movies} />
 
       {data.bracket.filterSummary && (
         <p className="text-center text-sm text-cream-dim">
