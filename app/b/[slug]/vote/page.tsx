@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getVoterId } from "@/lib/voter-cookie";
 import { VoterIdentify } from "@/components/voting/VoterIdentify";
@@ -7,6 +7,7 @@ import { VoteForm } from "@/components/voting/VoteForm";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
 import { PhaseWatcher } from "@/components/shared/PhaseWatcher";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
+import { phaseHref } from "@/lib/phase-nav";
 
 export default async function VotePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -36,6 +37,8 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
   }
 
   if (bracket.status !== "ACTIVE") {
+    const dest = phaseHref(bracket);
+    if (dest) redirect(dest);
     return (
       <main className="mx-auto max-w-xl p-6">
         <BracketNav slug={bracket.slug} bracketName={bracket.name} />
@@ -59,7 +62,7 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
   return (
     <main className="mx-auto max-w-xl p-6">
       <BracketNav slug={bracket.slug} bracketName={bracket.name} />
-      <PhaseWatcher slug={bracket.slug} status={bracket.status} />
+      <PhaseWatcher slug={bracket.slug} status={bracket.status} currentRound={bracket.currentRound} />
       <h1 className="mb-4 font-display text-2xl tracking-wide text-gold uppercase">
         {bracket.name}: Round {bracket.currentRound} voting
       </h1>

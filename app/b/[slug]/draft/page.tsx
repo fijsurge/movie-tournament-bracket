@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getVoterId } from "@/lib/voter-cookie";
 import { VoterIdentify } from "@/components/voting/VoterIdentify";
@@ -7,6 +7,7 @@ import { DraftBoard } from "@/components/nominate/DraftBoard";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
 import { PhaseWatcher } from "@/components/shared/PhaseWatcher";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
+import { phaseHref } from "@/lib/phase-nav";
 
 export default async function DraftPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -17,6 +18,8 @@ export default async function DraftPage({ params }: { params: Promise<{ slug: st
   if (!bracket) notFound();
 
   if (bracket.nominationMode !== "DRAFT") {
+    const dest = phaseHref(bracket);
+    if (dest) redirect(dest);
     return (
       <main className="mx-auto max-w-xl p-6">
         <BracketNav slug={bracket.slug} bracketName={bracket.name} />

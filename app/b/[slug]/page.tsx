@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { PageNav } from "@/components/shared/PageNav";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { TvIcon } from "@/components/shared/Icons";
+import { phaseHref } from "@/lib/phase-nav";
 import iconMark from "@/images/icon-mark.png";
 
 export const dynamic = "force-dynamic";
@@ -24,14 +25,7 @@ export default async function PublicBracketLanding({
     notFound();
   }
 
-  const nextHref =
-    bracket.status === "NOMINATING"
-      ? `/b/${bracket.slug}/${bracket.nominationMode === "DRAFT" ? "draft" : "nominate"}`
-      : bracket.status === "SEEDING"
-        ? `/b/${bracket.slug}/seed`
-        : bracket.status === "ACTIVE"
-          ? `/b/${bracket.slug}/vote`
-          : null;
+  const nextHref = phaseHref(bracket);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col p-6">
@@ -66,11 +60,7 @@ export default async function PublicBracketLanding({
             Continue
           </Link>
         ) : (
-          <p className="text-sm text-cream-dim">
-            {bracket.status === "SETUP"
-              ? "This bracket hasn't opened yet — check back soon."
-              : "This bracket is complete!"}
-          </p>
+          <p className="text-sm text-cream-dim">This bracket hasn&apos;t opened yet — check back soon.</p>
         )}
       </div>
     </main>

@@ -34,6 +34,12 @@
   --font-display: var(--font-anton);
 }
 
+html {
+  /* Safety net: no single element (nav, a wide poster row, etc.) should be
+     able to force the whole page to scroll sideways on a phone. */
+  overflow-x: hidden;
+}
+
 body {
   background: var(--color-ink);
   color: var(--color-cream);
