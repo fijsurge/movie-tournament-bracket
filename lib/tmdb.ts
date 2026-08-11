@@ -73,6 +73,26 @@ async function tmdbGet<T>(path: string, params: Record<string, string>): Promise
   return (await res.json()) as T;
 }
 
+interface TmdbPage {
+  results: TmdbRawMovie[];
+  total_pages: number;
+}
+
+// Fetches up to `maxPages` of a paginated TMDb endpoint (20 results/page) so a
+// filtered browse list is close to complete rather than just the first page.
+async function tmdbGetPages(path: string, params: Record<string, string>, maxPages: number): Promise<TmdbRawMovie[]> {
+  const first = await tmdbGet<TmdbPage>(path, { ...params, page: "1" });
+  const pagesToFetch = Math.min(first.total_pages, maxPages);
+  if (pagesToFetch <= 1) return first.results;
+
+  const rest = await Promise.all(
+    Array.from({ length: pagesToFetch - 1 }, (_, i) =>
+      tmdbGet<TmdbPage>(path, { ...params, page: String(i + 2) }),
+    ),
+  );
+  return [first.results, ...rest.map((page) => page.results)].flat();
+}
+
 /**
  * Searches for movies, honoring a bracket's optional cast/genre/year filters.
  * - A person filter restricts candidates to that person's on-screen credits.
@@ -100,23 +120,26 @@ export async function searchFilteredMovies(query: string, filters: MovieFilters)
     });
     candidates = data.results;
   } else if ((filters.genreIds && filters.genreIds.length > 0) || filters.yearMin || filters.yearMax) {
-    const data = await tmdbGet<{ results: TmdbRawMovie[] }>("/discover/movie", {
-      sort_by: "popularity.desc",
-      include_adult: "false",
-      ...(filters.genreIds && filters.genreIds.length > 0
-        ? { with_genres: filters.genreIds.join(",") }
-        : {}),
-      ...(filters.yearMin ? { "primary_release_date.gte": `${filters.yearMin}-01-01` } : {}),
-      ...(filters.yearMax ? { "primary_release_date.lte": `${filters.yearMax}-12-31` } : {}),
-    });
-    candidates = data.results;
+    candidates = await tmdbGetPages(
+      "/discover/movie",
+      {
+        sort_by: "popularity.desc",
+        include_adult: "false",
+        ...(filters.genreIds && filters.genreIds.length > 0
+          ? { with_genres: filters.genreIds.join(",") }
+          : {}),
+        ...(filters.yearMin ? { "primary_release_date.gte": `${filters.yearMin}-01-01` } : {}),
+        ...(filters.yearMax ? { "primary_release_date.lte": `${filters.yearMax}-12-31` } : {}),
+      },
+      5,
+    );
   } else {
     return [];
   }
 
   return candidates
     .filter((m) => matchesFilters(m, filters))
-    .slice(0, 20)
+    .slice(0, 100)
     .map(toResult);
 }
 

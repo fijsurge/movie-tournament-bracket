@@ -6,6 +6,8 @@ import { TVView } from "@/components/bracket/TVView";
 import { ArrowLeftIcon, HomeIcon } from "@/components/shared/Icons";
 import iconMark from "@/images/icon-mark.png";
 
+export const dynamic = "force-dynamic";
+
 export default async function TvPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const bracket = await prisma.bracket.findUnique({ where: { slug } });

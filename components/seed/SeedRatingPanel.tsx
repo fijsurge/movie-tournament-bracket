@@ -60,9 +60,9 @@ export function SeedRatingPanel({
             ) : (
               <div className="h-24 w-16 shrink-0 rounded bg-surface-raised" />
             )}
-            <div className="flex flex-1 flex-col gap-1">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
               <span className="font-medium">{movie.title}</span>
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1">
                 {SCORES.map((score) => (
                   <button
                     key={score}

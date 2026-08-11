@@ -5,6 +5,7 @@ import { VoterIdentify } from "@/components/voting/VoterIdentify";
 import { BracketNav } from "@/components/voting/BracketNav";
 import { SeedRatingPanel } from "@/components/seed/SeedRatingPanel";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
+import { PhaseWatcher } from "@/components/shared/PhaseWatcher";
 
 export default async function SeedPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -18,6 +19,7 @@ export default async function SeedPage({ params }: { params: Promise<{ slug: str
     return (
       <main className="mx-auto max-w-xl p-6">
         <BracketNav slug={bracket.slug} bracketName={bracket.name} />
+        <PhaseWatcher slug={bracket.slug} status={bracket.status} />
         <p>Seeding isn&apos;t open for this bracket right now (status: {bracket.status}).</p>
       </main>
     );
@@ -35,6 +37,7 @@ export default async function SeedPage({ params }: { params: Promise<{ slug: str
   return (
     <main className="mx-auto max-w-xl p-6">
       <BracketNav slug={bracket.slug} bracketName={bracket.name} />
+      <PhaseWatcher slug={bracket.slug} status={bracket.status} />
       <h1 className="mb-4 font-display text-2xl tracking-wide text-gold uppercase">{bracket.name}: Seed the bracket</h1>
       {voter ? (
         <div className="flex flex-col gap-4">

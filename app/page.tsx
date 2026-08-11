@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import iconMark from "@/images/icon-mark.png";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const brackets = await prisma.bracket.findMany({
     orderBy: { createdAt: "desc" },

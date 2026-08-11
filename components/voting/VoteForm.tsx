@@ -19,20 +19,25 @@ interface MovieInfo {
 const SCORES = [1, 2, 3, 4, 5];
 
 function ScorePicker({
-  movie,
+  title,
   categories,
   scores,
   setScores,
+  divider,
 }: {
-  movie: "A" | "B";
+  title: string;
   categories: Category[];
   scores: Record<string, number>;
   setScores: (fn: (prev: Record<string, number>) => Record<string, number>) => void;
+  divider?: boolean;
 }) {
   return (
-    <div className="flex flex-1 flex-col gap-2">
+    <div
+      className={`flex min-w-0 flex-1 flex-col gap-2 ${divider ? "border-t border-gold/15 pt-4 sm:border-t-0 sm:pt-0" : ""}`}
+    >
+      <p className="truncate text-sm font-semibold text-gold">{title}</p>
       {categories.map((cat) => (
-        <div key={cat.key} className="flex items-center justify-between gap-2">
+        <div key={cat.key} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <span className="text-sm">{cat.label}</span>
           <div className="flex gap-1">
             {SCORES.map((score) => (
@@ -41,7 +46,7 @@ function ScorePicker({
                 type="button"
                 onClick={() => setScores((prev) => ({ ...prev, [cat.key]: score }))}
                 aria-pressed={scores[cat.key] === score}
-                className={`h-7 w-7 rounded border text-xs transition ${
+                className={`h-8 w-8 shrink-0 rounded border text-xs transition ${
                   scores[cat.key] === score
                     ? "border-gold bg-gold text-ink"
                     : "border-gold/25 text-cream hover:border-gold/50"
@@ -54,7 +59,7 @@ function ScorePicker({
         </div>
       ))}
       <p className="text-xs text-cream-dim">
-        Movie {movie} total: {categories.reduce((sum, c) => sum + (scores[c.key] ?? 0), 0)}
+        Total: {categories.reduce((sum, c) => sum + (scores[c.key] ?? 0), 0)}
       </p>
     </div>
   );
@@ -130,9 +135,15 @@ export function VoteForm({
         </div>
       </div>
 
-      <div className="flex gap-6">
-        <ScorePicker movie="A" categories={categories} scores={scoresA} setScores={setScoresA} />
-        <ScorePicker movie="B" categories={categories} scores={scoresB} setScores={setScoresB} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+        <ScorePicker title={movieA.title} categories={categories} scores={scoresA} setScores={setScoresA} />
+        <ScorePicker
+          title={movieB.title}
+          categories={categories}
+          scores={scoresB}
+          setScores={setScoresB}
+          divider
+        />
       </div>
 
       {error && <p className="mt-2 text-sm text-error">{error}</p>}

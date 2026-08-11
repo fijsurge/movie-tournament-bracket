@@ -5,6 +5,7 @@ import { VoterIdentify } from "@/components/voting/VoterIdentify";
 import { BracketNav } from "@/components/voting/BracketNav";
 import { OpenNominationPanel } from "@/components/nominate/OpenNominationPanel";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
+import { PhaseWatcher } from "@/components/shared/PhaseWatcher";
 
 export default async function NominatePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -15,6 +16,7 @@ export default async function NominatePage({ params }: { params: Promise<{ slug:
     return (
       <main className="mx-auto max-w-xl p-6">
         <BracketNav slug={bracket.slug} bracketName={bracket.name} />
+        <PhaseWatcher slug={bracket.slug} status={bracket.status} />
         <p>This bracket uses draft-style nominations. Head to the draft page instead.</p>
       </main>
     );
@@ -24,6 +26,7 @@ export default async function NominatePage({ params }: { params: Promise<{ slug:
     return (
       <main className="mx-auto max-w-xl p-6">
         <BracketNav slug={bracket.slug} bracketName={bracket.name} />
+        <PhaseWatcher slug={bracket.slug} status={bracket.status} />
         <p>Nominations aren&apos;t open for this bracket right now (status: {bracket.status}).</p>
       </main>
     );
@@ -35,6 +38,7 @@ export default async function NominatePage({ params }: { params: Promise<{ slug:
   return (
     <main className="mx-auto max-w-xl p-6">
       <BracketNav slug={bracket.slug} bracketName={bracket.name} />
+      <PhaseWatcher slug={bracket.slug} status={bracket.status} />
       <h1 className="mb-4 font-display text-2xl tracking-wide text-gold uppercase">{bracket.name}: Nominate movies</h1>
       {voter ? (
         <div className="flex flex-col gap-4">

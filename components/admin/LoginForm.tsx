@@ -6,11 +6,12 @@ import { Spinner } from "@/components/shared/Spinner";
 
 const initialState: LoginState = { error: null };
 
-export function LoginForm() {
+export function LoginForm({ next }: { next?: string }) {
   const [state, formAction, pending] = useActionState(loginAdmin, initialState);
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
+      {next && <input type="hidden" name="next" value={next} />}
       <input
         type="password"
         name="password"

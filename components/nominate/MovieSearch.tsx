@@ -61,7 +61,7 @@ export function MovieSearch({
         </p>
       )}
       {results.length > 0 && (
-        <ul className="flex flex-col gap-1">
+        <ul className="flex max-h-[60vh] flex-col gap-1 overflow-y-auto">
           {results.map((movie) => {
             const alreadyAdded = excludeTmdbIds.includes(movie.tmdbId);
             return (

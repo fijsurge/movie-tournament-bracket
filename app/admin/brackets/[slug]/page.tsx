@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/db";
+import { getBaseUrl } from "@/lib/base-url";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { SubmitButton } from "@/components/shared/SubmitButton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Avatar } from "@/components/shared/Avatar";
+import { ShareLink } from "@/components/admin/ShareLink";
 import { TMDB_GENRES } from "@/lib/genres";
 import {
   openNominations,
@@ -29,6 +31,7 @@ export default async function AdminBracketDashboard({
 }) {
   await requireAdmin();
   const { slug } = await params;
+  const baseUrl = await getBaseUrl();
 
   const bracket = await prisma.bracket.findUnique({
     where: { slug },
@@ -234,13 +237,10 @@ export default async function AdminBracketDashboard({
         )}
       </section>
 
-      <section className="mt-6">
+      <section className="mt-6 flex flex-col gap-2">
         <h2 className="text-lg font-medium text-rose">Share this link</h2>
-        <p className="mt-1 text-sm text-cream-dim">
-          Send everyone to <code className="rounded bg-surface px-1 text-gold">/b/{bracket.slug}</code>{" "}
-          to nominate and vote. Project <code className="rounded bg-surface px-1 text-gold">/b/{bracket.slug}/tv</code>{" "}
-          on the TV.
-        </p>
+        <ShareLink url={`${baseUrl}/b/${bracket.slug}`} label="Send to your group — nominate & vote" />
+        <ShareLink url={`${baseUrl}/b/${bracket.slug}/tv`} label="Project this on the TV" />
       </section>
     </main>
   );

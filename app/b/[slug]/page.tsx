@@ -7,6 +7,8 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { TvIcon } from "@/components/shared/Icons";
 import iconMark from "@/images/icon-mark.png";
 
+export const dynamic = "force-dynamic";
+
 export default async function PublicBracketLanding({
   params,
 }: {
