@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getVoterId } from "@/lib/voter-cookie";
 import { submitVoteSchema } from "@/lib/validation";
 import { sumScores } from "@/lib/resolve-matchup";
+import { maybeAutoAdvance } from "@/lib/phase-transitions";
 
 export interface SubmitVoteState {
   error: string | null;
@@ -66,5 +67,6 @@ export async function submitVote(formInput: unknown): Promise<SubmitVoteState> {
     },
   });
 
+  await maybeAutoAdvance(matchup.bracketId);
   return { error: null };
 }

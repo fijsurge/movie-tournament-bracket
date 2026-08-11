@@ -57,6 +57,7 @@ export interface BracketStateDraft {
   currentTurnIndex: number;
   currentVoterId: string | null;
   currentVoterName: string | null;
+  nextVoterName: string | null;
   participantNames: string[];
   isComplete: boolean;
 }

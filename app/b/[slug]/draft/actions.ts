@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { getVoterId } from "@/lib/voter-cookie";
 import { submitNominationSchema } from "@/lib/validation";
+import { maybeAutoAdvance } from "@/lib/phase-transitions";
 
 export interface DraftPickState {
   error: string | null;
@@ -45,7 +46,7 @@ export async function submitDraftPick(bracketId: string, formInput: unknown): Pr
     const poolCount = await tx.movie.count({ where: { bracketId } });
     const nextIndex = bracket.draftState!.currentTurnIndex + 1;
 
-    if (bracket.poolTargetSize && poolCount >= bracket.poolTargetSize) {
+    if (bracket.autoAdvance && bracket.poolTargetSize && poolCount >= bracket.poolTargetSize) {
       await tx.bracket.update({ where: { id: bracketId }, data: { status: "SEEDING" } });
     } else {
       await tx.draftState.update({
@@ -55,5 +56,6 @@ export async function submitDraftPick(bracketId: string, formInput: unknown): Pr
     }
   });
 
+  await maybeAutoAdvance(bracketId);
   return { error: null };
 }

@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { getVoterId } from "@/lib/voter-cookie";
 import { submitNominationSchema } from "@/lib/validation";
+import { maybeAutoAdvance } from "@/lib/phase-transitions";
 
 export interface NominateState {
   error: string | null;
@@ -43,5 +44,6 @@ export async function submitNomination(bracketId: string, formInput: unknown): P
     data: { bracketId, tmdbId, title, posterUrl, nominatedByVoterId: voterId },
   });
 
+  await maybeAutoAdvance(bracketId);
   return { error: null };
 }

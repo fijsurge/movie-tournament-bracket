@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { getVoterId } from "@/lib/voter-cookie";
 import { submitSeedVoteSchema } from "@/lib/validation";
+import { maybeAutoAdvance } from "@/lib/phase-transitions";
 
 export interface SeedVoteState {
   error: string | null;
@@ -31,5 +32,6 @@ export async function submitSeedVote(bracketId: string, formInput: unknown): Pro
     create: { bracketId, movieId, voterId, score },
   });
 
+  await maybeAutoAdvance(bracketId);
   return { error: null };
 }

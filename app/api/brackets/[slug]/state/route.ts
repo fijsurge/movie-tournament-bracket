@@ -47,6 +47,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
   if (bracket.draftState) {
     const turnOrder = JSON.parse(bracket.draftState.turnOrder) as string[];
     const votersById = new Map(bracket.voters.map((v) => [v.id, v.name]));
+    const isComplete = bracket.draftState.currentTurnIndex >= turnOrder.length;
     draft = {
       turnOrder,
       currentTurnIndex: bracket.draftState.currentTurnIndex,
@@ -54,8 +55,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       currentVoterName: turnOrder[bracket.draftState.currentTurnIndex]
         ? (votersById.get(turnOrder[bracket.draftState.currentTurnIndex]) ?? null)
         : null,
+      nextVoterName:
+        !isComplete && turnOrder.length > 0
+          ? (votersById.get(turnOrder[(bracket.draftState.currentTurnIndex + 1) % turnOrder.length]) ?? null)
+          : null,
       participantNames: turnOrder.map((id) => votersById.get(id) ?? "Unknown"),
-      isComplete: bracket.draftState.currentTurnIndex >= turnOrder.length,
+      isComplete,
     };
   }
 

@@ -70,6 +70,19 @@ export const identifyVoterSchema = z.object({
   avatar: z.string().max(200_000).optional(),
 });
 
+export const inviteVotersSchema = z.object({
+  bracketId: z.string().min(1),
+  voters: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(60),
+        email: z.string().trim().email(),
+      }),
+    )
+    .min(1)
+    .max(30),
+});
+
 export const submitNominationSchema = z.object({
   bracketId: z.string().min(1),
   tmdbId: z.number().int().positive(),

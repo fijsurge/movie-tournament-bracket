@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { motion } from "motion/react";
 import type { BracketStateRound } from "@/types/bracket";
 
 function SeedBadge({ seed }: { seed: number | null }) {
@@ -20,24 +21,33 @@ function MatchupCard({ matchup }: { matchup: BracketStateRound["matchups"][numbe
         { movie: matchup.movieA, won: aWon },
         { movie: matchup.movieB, won: bWon },
       ].map((slot, i) => (
-        <div
+        <motion.div
           key={i}
+          layout
+          animate={slot.won ? { scale: [1, 1.04, 1] } : {}}
+          transition={{ duration: 0.5, ease: "easeOut" }}
           className={`flex items-center gap-2.5 rounded border-l-2 px-2 py-1.5 ${
             slot.won ? "border-gold bg-gold/15 font-semibold text-gold" : "border-transparent text-cream-dim"
           }`}
         >
-          <div className="relative shrink-0">
+          <motion.div
+            key={slot.movie?.id ?? "tbd"}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: "spring", stiffness: 320, damping: 26 }}
+            className="relative shrink-0"
+          >
             {slot.movie?.posterUrl ? (
               <Image src={slot.movie.posterUrl} alt="" width={32} height={48} className="rounded-sm" />
             ) : (
               <div className="h-12 w-8 rounded-sm bg-surface-raised" />
             )}
             <SeedBadge seed={slot.movie?.seed ?? null} />
-          </div>
+          </motion.div>
           <span className="truncate text-sm">
             {slot.movie?.title ?? (matchup.isBye ? "— bye —" : "TBD")}
           </span>
-        </div>
+        </motion.div>
       ))}
       {matchup.status === "NEEDS_MANUAL_TIEBREAK" && (
         <p className="text-center text-xs text-rose">Tie — admin deciding…</p>

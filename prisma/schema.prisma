@@ -59,6 +59,7 @@ model Bracket {
   filterGenreIds        String? // JSON-encoded array of TMDb genre ids
   filterYearMin         Int?
   filterYearMax         Int?
+  autoAdvance           Boolean        @default(true)
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 
@@ -113,19 +114,23 @@ model DraftState {
 }
 
 model Voter {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   bracketId      String
-  bracket        Bracket  @relation(fields: [bracketId], references: [id], onDelete: Cascade)
+  bracket        Bracket   @relation(fields: [bracketId], references: [id], onDelete: Cascade)
   name           String
   normalizedName String
   avatar         String? // emoji preset, or a data: URI for an uploaded photo
-  createdAt      DateTime @default(now())
+  email          String? // set only for voters the admin invited by email
+  inviteToken    String?   @unique
+  invitedAt      DateTime?
+  createdAt      DateTime  @default(now())
 
   nominatedMovies Movie[]
   seedVotes       SeedVote[]
   votes           Vote[]
 
   @@unique([bracketId, normalizedName])
+  @@unique([bracketId, email])
 }
 
 model SeedVote {

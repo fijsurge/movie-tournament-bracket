@@ -7,6 +7,8 @@ import { SubmitButton } from "@/components/shared/SubmitButton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Avatar } from "@/components/shared/Avatar";
 import { ShareLink } from "@/components/admin/ShareLink";
+import { InviteVoters } from "@/components/admin/InviteVoters";
+import { UndoButton } from "@/components/admin/UndoButton";
 import { TMDB_GENRES } from "@/lib/genres";
 import {
   openNominations,
@@ -17,6 +19,8 @@ import {
   closeRound,
   resolveTiebreakCoinFlip,
   reopenForRevote,
+  toggleAutoAdvance,
+  undoLastPhase,
 } from "./actions";
 
 const PRIMARY_BUTTON =
@@ -57,6 +61,8 @@ export default async function AdminBracketDashboard({
   const closeNominationsForBracket = closeNominations.bind(null, bracket.id);
   const closeSeedingForBracket = closeSeeding.bind(null, bracket.id);
   const closeRoundForBracket = closeRound.bind(null, bracket.id);
+  const toggleAutoAdvanceForBracket = toggleAutoAdvance.bind(null, bracket.id);
+  const undoLastPhaseForBracket = undoLastPhase.bind(null, bracket.id);
 
   const currentRoundData = bracket.rounds.find((r) => r.roundNumber === bracket.currentRound);
 
@@ -81,11 +87,25 @@ export default async function AdminBracketDashboard({
     <main className="mx-auto max-w-2xl p-6">
       <AdminNav />
       <h1 className="font-display text-3xl tracking-wide text-gold uppercase">{bracket.name}</h1>
-      <div className="mt-2 flex items-center gap-3">
+      <div className="mt-2 flex flex-wrap items-center gap-3">
         <StatusBadge status={bracket.status} />
         <span className="text-sm text-cream-dim">
           Nomination mode: <span className="font-medium text-cream">{bracket.nominationMode}</span>
         </span>
+        {bracket.status !== "SETUP" && bracket.status !== "COMPLETE" && (
+          <form action={toggleAutoAdvanceForBracket}>
+            <SubmitButton
+              pendingLabel="…"
+              className={`rounded-full border px-3 py-1 text-xs transition ${
+                bracket.autoAdvance
+                  ? "border-gold/50 bg-gold/10 text-gold hover:border-gold"
+                  : "border-cream-dim/30 text-cream-dim hover:border-cream-dim/60"
+              }`}
+            >
+              Auto-advance: {bracket.autoAdvance ? "On" : "Paused"}
+            </SubmitButton>
+          </form>
+        )}
       </div>
 
       <section className="mt-6">
@@ -235,7 +255,20 @@ export default async function AdminBracketDashboard({
               : "."}
           </p>
         )}
+
+        {bracket.status !== "SETUP" && (
+          <UndoButton action={undoLastPhaseForBracket} className={`${SECONDARY_BUTTON} mt-3`} />
+        )}
       </section>
+
+      {bracket.status !== "COMPLETE" && (
+        <InviteVoters
+          bracketId={bracket.id}
+          invitedVoters={bracket.voters
+            .filter((v): v is typeof v & { email: string } => v.email !== null)
+            .map((v) => ({ id: v.id, name: v.name, email: v.email, avatar: v.avatar }))}
+        />
+      )}
 
       <section className="mt-6 flex flex-col gap-2">
         <h2 className="text-lg font-medium text-rose">Share this link</h2>

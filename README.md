@@ -18,6 +18,7 @@ Copy `.env.example` to `.env` and fill in:
   [Neon](https://neon.tech) or Vercel Postgres branch works well for local dev.
 - `ADMIN_PASSWORD` — shared password that gates `/admin/*` routes.
 - `TMDB_API_KEY` — free key from [themoviedb.org](https://www.themoviedb.org/settings/api), used to search movies and fetch posters.
+- `RESEND_API_KEY` — free key from [resend.com](https://resend.com/api-keys), used to email bracket invites. **Without a verified domain in Resend, you can only send to the email address your Resend account itself is signed up with** — to invite anyone else, verify a domain you own in the Resend dashboard (a few DNS records). Optional `RESEND_FROM_EMAIL` overrides the sender address.
 
 The app uses Postgres everywhere (via `@prisma/adapter-pg`) — the same connection
 string works for local dev and production, so there's no separate local database
@@ -41,6 +42,21 @@ setup beyond pointing `DATABASE_URL` at a real instance.
 5. **TV view** (`/b/[slug]/tv`) — phase-aware projector screen: nomination pool/draft
    board → seeding leaderboard → bracket tree → champion reveal.
 
+### Email invites & auto-advance
+
+From the admin dashboard, invite people by name + email — they get a link that
+identifies them automatically (no typing their name). Once every invited voter has
+finished the current phase (nominated their cap, rated every movie, voted every
+open matchup), the bracket advances on its own — no admin clicks required.
+Voters who join the old way (typing their name on the public link) still work
+exactly as before; they just don't count toward auto-advance, since the app has
+no way to know when an open-ended crowd is "done."
+
+The admin can pause auto-advance at any time (toggle on the dashboard) and fall
+back to the manual "close X" buttons, or use **Undo last phase** to reverse the
+most recently completed transition if something needs fixing — reopening it also
+pauses auto-advance so the same condition doesn't immediately re-trigger it.
+
 ## Testing
 
 ```bash
@@ -48,13 +64,13 @@ npm run test
 ```
 
 Unit tests cover the bracket-seeding algorithm (`lib/bracket-generator.ts`, including
-bye handling for non-power-of-2 pool sizes) and matchup resolution
-(`lib/resolve-matchup.ts`).
+bye handling for non-power-of-2 pool sizes), matchup resolution
+(`lib/resolve-matchup.ts`), and auto-advance completion checks (`lib/phase-completion.ts`).
 
 ## Deploying
 
 1. Push this repo to GitHub and import it in Vercel.
 2. In the Vercel project → **Storage**, add a Postgres database (auto-injects
    `DATABASE_URL`).
-3. Set `ADMIN_PASSWORD` and `TMDB_API_KEY` as Vercel environment variables.
+3. Set `ADMIN_PASSWORD`, `TMDB_API_KEY`, and `RESEND_API_KEY` as Vercel environment variables.
 4. Deploy — the build script runs `prisma migrate deploy` automatically.
