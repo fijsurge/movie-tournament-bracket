@@ -6,6 +6,7 @@ import Image from "next/image";
 import { MovieSearch, type MovieSearchResult } from "./MovieSearch";
 import { submitNomination } from "@/app/b/[slug]/nominate/actions";
 import { Avatar } from "@/components/shared/Avatar";
+import { PickAnnouncement } from "@/components/shared/PickAnnouncement";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -63,6 +64,8 @@ export function OpenNominationPanel({
         Hi {voterName} — you&apos;ve nominated {myCount}
         {cap !== null && ` of ${cap}`}.
       </p>
+
+      <PickAnnouncement movies={movies} />
 
       {data?.bracket.filterSummary && (
         <p className="text-sm text-cream-dim">
