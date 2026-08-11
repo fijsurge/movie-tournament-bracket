@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from "swr";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { MovieSearch, type MovieSearchResult } from "./MovieSearch";
 import { submitNomination } from "@/app/b/[slug]/nominate/actions";
@@ -39,22 +39,30 @@ export function OpenNominationPanel({
     refreshInterval: 5000,
   });
   const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [isPicking, setIsPicking] = useState(false);
 
   const movies = data?.movies ?? [];
   const cap = data?.bracket.nominationCapPerVoter ?? null;
   const myCount = movies.filter((m) => m.nominatedByName === voterName).length;
   const atCap = cap !== null && myCount >= cap;
 
-  function handlePick(movie: MovieSearchResult) {
+  async function handlePick(movie: MovieSearchResult) {
     setError(null);
-    startTransition(async () => {
+    setIsPicking(true);
+    try {
       const result = await submitNomination(bracketId, movie);
       if (result.error) {
         setError(result.error);
       }
-      mutate();
-    });
+      // Awaited (not fire-and-forget) so the newly nominated movie is
+      // guaranteed to be in `data` before this handler returns — a bare
+      // `mutate()` call left unawaited inside a transition previously meant
+      // the pool list's update could sit pending until some unrelated
+      // interaction forced React to flush it.
+      await mutate();
+    } finally {
+      setIsPicking(false);
+    }
   }
 
   return (
@@ -76,7 +84,7 @@ export function OpenNominationPanel({
         <MovieSearch
           bracketId={bracketId}
           onPick={handlePick}
-          disabled={pending}
+          disabled={isPicking}
           excludeTmdbIds={movies.map((m) => m.tmdbId)}
           hasFilters={data?.bracket.hasFilters ?? false}
         />

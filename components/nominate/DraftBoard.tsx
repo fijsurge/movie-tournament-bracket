@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from "swr";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
 import { MovieSearch, type MovieSearchResult } from "./MovieSearch";
@@ -40,7 +40,7 @@ export function DraftBoard({
     refreshInterval: 4000,
   });
   const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [isPicking, setIsPicking] = useState(false);
 
   if (!data) return <p className="text-cream-dim">Loading…</p>;
 
@@ -55,13 +55,20 @@ export function DraftBoard({
   const isUpNext = !isMyTurn && data.draft.nextVoterName === voterName;
   const movies = data.movies;
 
-  function handlePick(movie: MovieSearchResult) {
+  async function handlePick(movie: MovieSearchResult) {
     setError(null);
-    startTransition(async () => {
+    setIsPicking(true);
+    try {
       const result = await submitDraftPick(bracketId, movie);
       if (result.error) setError(result.error);
-      mutate();
-    });
+      // Awaited so the draft board and pool are guaranteed to reflect the
+      // new pick before this handler returns — see OpenNominationPanel for
+      // why a fire-and-forget mutate() here was the likely cause of the pool
+      // sometimes not updating until an unrelated interaction.
+      await mutate();
+    } finally {
+      setIsPicking(false);
+    }
   }
 
   return (
@@ -112,7 +119,7 @@ export function DraftBoard({
         <MovieSearch
           bracketId={bracketId}
           onPick={handlePick}
-          disabled={pending}
+          disabled={isPicking}
           excludeTmdbIds={movies.map((m) => m.tmdbId)}
           hasFilters={data.bracket.hasFilters}
         />
