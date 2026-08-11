@@ -60,6 +60,7 @@ model Bracket {
   filterYearMin         Int?
   filterYearMax         Int?
   autoAdvance           Boolean        @default(true)
+  archived              Boolean        @default(false)
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 
@@ -113,6 +114,17 @@ model DraftState {
   updatedAt        DateTime @updatedAt
 }
 
+model Person {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  avatar    String? // emoji preset, or a data: URI for an uploaded photo
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  voters Voter[]
+}
+
 model Voter {
   id             String    @id @default(cuid())
   bracketId      String
@@ -123,6 +135,8 @@ model Voter {
   email          String? // set only for voters the admin invited by email
   inviteToken    String?   @unique
   invitedAt      DateTime?
+  personId       String? // links to a persistent cross-bracket Person, when one was linked
+  person         Person?   @relation(fields: [personId], references: [id])
   createdAt      DateTime  @default(now())
 
   nominatedMovies Movie[]

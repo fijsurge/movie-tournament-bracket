@@ -10,7 +10,9 @@ import { logoutAdmin } from "./actions";
 export default async function AdminHomePage() {
   await requireAdmin();
 
-  const brackets = await prisma.bracket.findMany({ orderBy: { createdAt: "desc" } });
+  const brackets = await prisma.bracket.findMany({
+    orderBy: [{ archived: "asc" }, { createdAt: "desc" }],
+  });
 
   return (
     <main className="mx-auto max-w-2xl p-6">
@@ -46,9 +48,18 @@ export default async function AdminHomePage() {
             <li key={b.id}>
               <Link
                 href={`/admin/brackets/${b.slug}`}
-                className="flex items-center justify-between rounded-lg border border-gold/15 bg-surface px-5 py-4 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)] transition hover:border-gold/40 hover:shadow-[0_8px_24px_-8px_rgba(232,163,61,0.25)]"
+                className={`flex items-center justify-between rounded-lg border border-gold/15 bg-surface px-5 py-4 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)] transition hover:border-gold/40 hover:shadow-[0_8px_24px_-8px_rgba(232,163,61,0.25)] ${
+                  b.archived ? "opacity-60" : ""
+                }`}
               >
-                <span className="font-medium">{b.name}</span>
+                <span className="flex items-center gap-2 font-medium">
+                  {b.name}
+                  {b.archived && (
+                    <span className="rounded-full border border-cream-dim/30 px-2 py-0.5 text-xs text-cream-dim">
+                      Archived
+                    </span>
+                  )}
+                </span>
                 <StatusBadge status={b.status} />
               </Link>
             </li>

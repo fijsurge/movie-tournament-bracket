@@ -6,12 +6,13 @@ import { BracketNav } from "@/components/voting/BracketNav";
 import { SeedRatingPanel } from "@/components/seed/SeedRatingPanel";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
 import { PhaseWatcher } from "@/components/shared/PhaseWatcher";
+import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
 
 export default async function SeedPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const bracket = await prisma.bracket.findUnique({
     where: { slug },
-    include: { voters: true, movies: { orderBy: { createdAt: "asc" } } },
+    include: { voters: { include: { person: true } }, movies: { orderBy: { createdAt: "asc" } } },
   });
   if (!bracket) notFound();
 
@@ -55,7 +56,10 @@ export default async function SeedPage({ params }: { params: Promise<{ slug: str
         <VoterIdentify
           bracketId={bracket.id}
           redirectTo={`/b/${bracket.slug}/seed`}
-          existingVoters={bracket.voters.map((v) => ({ name: v.name, avatar: v.avatar }))}
+          existingVoters={bracket.voters.map((v) => ({
+            name: effectiveVoterName(v),
+            avatar: effectiveVoterAvatar(v),
+          }))}
         />
       )}
     </main>

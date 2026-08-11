@@ -7,7 +7,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
 
   const voter = await prisma.voter.findUnique({
     where: { inviteToken: token },
-    include: { bracket: true },
+    include: { bracket: true, person: true },
   });
 
   if (!voter) {
@@ -15,5 +15,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   }
 
   await setVoterCookie(voter.bracketId, voter.id);
+
+  if (voter.person && !voter.person.avatar) {
+    return NextResponse.redirect(new URL(`/b/${voter.bracket.slug}/account`, request.url));
+  }
   return NextResponse.redirect(new URL(`/b/${voter.bracket.slug}`, request.url));
 }

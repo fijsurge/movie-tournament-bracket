@@ -6,10 +6,14 @@ import { BracketNav } from "@/components/voting/BracketNav";
 import { DraftBoard } from "@/components/nominate/DraftBoard";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
 import { PhaseWatcher } from "@/components/shared/PhaseWatcher";
+import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
 
 export default async function DraftPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const bracket = await prisma.bracket.findUnique({ where: { slug }, include: { voters: true } });
+  const bracket = await prisma.bracket.findUnique({
+    where: { slug },
+    include: { voters: { include: { person: true } } },
+  });
   if (!bracket) notFound();
 
   if (bracket.nominationMode !== "DRAFT") {
@@ -46,13 +50,16 @@ export default async function DraftPage({ params }: { params: Promise<{ slug: st
             Movies get picked in turns, like a fantasy draft. When it&apos;s your turn you&apos;ll get a
             search box — everyone else sees the board update live.
           </FirstTimeTip>
-          <DraftBoard bracketId={bracket.id} slug={bracket.slug} voterName={voter.name} />
+          <DraftBoard bracketId={bracket.id} slug={bracket.slug} voterName={effectiveVoterName(voter)} />
         </div>
       ) : (
         <VoterIdentify
           bracketId={bracket.id}
           redirectTo={`/b/${bracket.slug}/draft`}
-          existingVoters={bracket.voters.map((v) => ({ name: v.name, avatar: v.avatar }))}
+          existingVoters={bracket.voters.map((v) => ({
+            name: effectiveVoterName(v),
+            avatar: effectiveVoterAvatar(v),
+          }))}
         />
       )}
     </main>

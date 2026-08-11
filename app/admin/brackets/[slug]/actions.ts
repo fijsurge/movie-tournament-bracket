@@ -2,6 +2,7 @@
 
 import { randomInt, randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-auth";
 import { normalizeVoterName } from "@/lib/voter-cookie";
@@ -29,6 +30,23 @@ export async function toggleAutoAdvance(bracketId: string): Promise<void> {
   const bracket = await prisma.bracket.findUniqueOrThrow({ where: { id: bracketId } });
   await prisma.bracket.update({ where: { id: bracketId }, data: { autoAdvance: !bracket.autoAdvance } });
   revalidatePath(`/admin/brackets/${bracket.slug}`);
+}
+
+export async function toggleArchived(bracketId: string): Promise<void> {
+  await requireAdmin();
+  const bracket = await prisma.bracket.findUniqueOrThrow({ where: { id: bracketId } });
+  await prisma.bracket.update({ where: { id: bracketId }, data: { archived: !bracket.archived } });
+  revalidatePath(`/admin/brackets/${bracket.slug}`);
+  revalidatePath("/admin");
+  revalidatePath("/");
+}
+
+export async function deleteBracket(bracketId: string): Promise<void> {
+  await requireAdmin();
+  await prisma.bracket.delete({ where: { id: bracketId } });
+  revalidatePath("/admin");
+  revalidatePath("/");
+  redirect("/admin");
 }
 
 export async function openNominations(bracketId: string): Promise<void> {
@@ -151,11 +169,20 @@ export async function inviteVoters(
 
   for (const { name, email } of parsed.data.voters) {
     try {
-      const normalizedName = normalizeVoterName(name);
+      // A saved Person's name/avatar are authoritative — re-inviting someone
+      // who already has an account never silently renames them; they change
+      // their own name via the account settings page instead.
+      const person = await prisma.person.upsert({
+        where: { email },
+        update: {},
+        create: { email, name: name.trim() },
+      });
+
+      const normalizedName = normalizeVoterName(person.name);
       let voter = await prisma.voter.upsert({
         where: { bracketId_normalizedName: { bracketId, normalizedName } },
-        update: {},
-        create: { bracketId, name: name.trim(), normalizedName },
+        update: { personId: person.id },
+        create: { bracketId, name: person.name, normalizedName, personId: person.id },
       });
 
       if (!voter.inviteToken || voter.email !== email) {
@@ -167,7 +194,7 @@ export async function inviteVoters(
 
       const result = await sendInviteEmail({
         to: email,
-        voterName: voter.name,
+        voterName: person.name,
         bracketName: bracket.name,
         inviteUrl: `${baseUrl}/invite/${voter.inviteToken}`,
       });

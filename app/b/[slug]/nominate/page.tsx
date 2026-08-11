@@ -6,10 +6,14 @@ import { BracketNav } from "@/components/voting/BracketNav";
 import { OpenNominationPanel } from "@/components/nominate/OpenNominationPanel";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
 import { PhaseWatcher } from "@/components/shared/PhaseWatcher";
+import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
 
 export default async function NominatePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const bracket = await prisma.bracket.findUnique({ where: { slug }, include: { voters: true } });
+  const bracket = await prisma.bracket.findUnique({
+    where: { slug },
+    include: { voters: { include: { person: true } } },
+  });
   if (!bracket) notFound();
 
   if (bracket.nominationMode !== "OPEN") {
@@ -46,13 +50,16 @@ export default async function NominatePage({ params }: { params: Promise<{ slug:
             Search for movies and add up to your limit. Everyone&apos;s picks merge into one shared pool —
             you&apos;ll vote on the final lineup&apos;s seeding next.
           </FirstTimeTip>
-          <OpenNominationPanel bracketId={bracket.id} slug={bracket.slug} voterName={voter.name} />
+          <OpenNominationPanel bracketId={bracket.id} slug={bracket.slug} voterName={effectiveVoterName(voter)} />
         </div>
       ) : (
         <VoterIdentify
           bracketId={bracket.id}
           redirectTo={`/b/${bracket.slug}/nominate`}
-          existingVoters={bracket.voters.map((v) => ({ name: v.name, avatar: v.avatar }))}
+          existingVoters={bracket.voters.map((v) => ({
+            name: effectiveVoterName(v),
+            avatar: effectiveVoterAvatar(v),
+          }))}
         />
       )}
     </main>

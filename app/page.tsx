@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const brackets = await prisma.bracket.findMany({
+    where: { archived: false },
     orderBy: { createdAt: "desc" },
     include: { movies: { orderBy: { createdAt: "asc" }, take: 5 }, _count: { select: { movies: true } } },
   });

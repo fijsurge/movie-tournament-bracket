@@ -6,12 +6,13 @@ import { BracketNav } from "@/components/voting/BracketNav";
 import { VoteForm } from "@/components/voting/VoteForm";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
 import { PhaseWatcher } from "@/components/shared/PhaseWatcher";
+import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
 
 export default async function VotePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const bracket = await prisma.bracket.findUnique({
     where: { slug },
-    include: { voters: true, categories: { orderBy: { order: "asc" } } },
+    include: { voters: { include: { person: true } }, categories: { orderBy: { order: "asc" } } },
   });
   if (!bracket) notFound();
 
@@ -92,7 +93,10 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
         <VoterIdentify
           bracketId={bracket.id}
           redirectTo={`/b/${bracket.slug}/vote`}
-          existingVoters={bracket.voters.map((v) => ({ name: v.name, avatar: v.avatar }))}
+          existingVoters={bracket.voters.map((v) => ({
+            name: effectiveVoterName(v),
+            avatar: effectiveVoterAvatar(v),
+          }))}
         />
       )}
     </main>

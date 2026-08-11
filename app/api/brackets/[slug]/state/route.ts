@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { TMDB_GENRES } from "@/lib/genres";
+import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +12,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     where: { slug },
     include: {
       categories: { orderBy: { order: "asc" } },
-      movies: { include: { nominatedByVoter: true, seedVotes: true }, orderBy: { createdAt: "asc" } },
+      movies: {
+        include: { nominatedByVoter: { include: { person: true } }, seedVotes: true },
+        orderBy: { createdAt: "asc" },
+      },
       draftState: true,
-      voters: true,
+      voters: { include: { person: true } },
       rounds: {
         orderBy: { roundNumber: "asc" },
         include: {
@@ -46,7 +50,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
   let draft = null;
   if (bracket.draftState) {
     const turnOrder = JSON.parse(bracket.draftState.turnOrder) as string[];
-    const votersById = new Map(bracket.voters.map((v) => [v.id, v.name]));
+    const votersById = new Map(bracket.voters.map((v) => [v.id, effectiveVoterName(v)]));
     const isComplete = bracket.draftState.currentTurnIndex >= turnOrder.length;
     draft = {
       turnOrder,
@@ -82,8 +86,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       tmdbId: m.tmdbId,
       title: m.title,
       posterUrl: m.posterUrl,
-      nominatedByName: m.nominatedByVoter?.name ?? null,
-      nominatedByAvatar: m.nominatedByVoter?.avatar ?? null,
+      nominatedByName: m.nominatedByVoter ? effectiveVoterName(m.nominatedByVoter) : null,
+      nominatedByAvatar: m.nominatedByVoter ? effectiveVoterAvatar(m.nominatedByVoter) : null,
       seed: m.seed,
       seedVoteCount: m.seedVotes.length,
       seedVoteAverage:
@@ -91,7 +95,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
           ? null
           : m.seedVotes.reduce((sum, v) => sum + v.score, 0) / m.seedVotes.length,
     })),
-    voterNames: bracket.voters.map((v) => v.name),
+    voterNames: bracket.voters.map((v) => effectiveVoterName(v)),
     draft,
     rounds: bracket.rounds.map((r) => ({
       roundNumber: r.roundNumber,

@@ -11,6 +11,18 @@ export const PRESET_AVATARS = [
   "🎭",
   "🐶",
   "👑",
+  "🥂",
+  "🍾",
+  "🍷",
+  "🎉",
+  "🎟️",
+  "🦊",
+  "🐱",
+  "🦄",
+  "🐸",
+  "😎",
+  "🔥",
+  "🌟",
 ] as const;
 
 const INITIAL_PALETTE = [

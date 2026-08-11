@@ -68,6 +68,7 @@ export const identifyVoterSchema = z.object({
   bracketId: z.string().min(1),
   name: z.string().trim().min(1).max(60),
   avatar: z.string().max(200_000).optional(),
+  email: z.string().trim().email().optional().or(z.literal("")),
 });
 
 export const inviteVotersSchema = z.object({

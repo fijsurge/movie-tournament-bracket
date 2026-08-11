@@ -65,6 +65,17 @@ export function VoterIdentify({
             {pending ? <Spinner className="h-4 w-4 text-ink" /> : "Go"}
           </button>
         </div>
+        <div className="flex flex-col gap-1">
+          <input
+            name="email"
+            type="email"
+            placeholder="Email (optional)"
+            className="rounded border border-gold/25 bg-surface px-3 py-2 text-sm text-cream placeholder:text-cream-dim/50 focus:border-gold focus:outline-none"
+          />
+          <p className="text-xs text-cream-dim">
+            Add your email to save your name and avatar — they&apos;ll carry over the next time you join a bracket.
+          </p>
+        </div>
       </form>
       {state.error && <p className="text-sm text-error">{state.error}</p>}
     </div>

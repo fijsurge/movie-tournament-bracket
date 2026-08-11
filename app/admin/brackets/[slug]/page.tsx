@@ -9,7 +9,9 @@ import { Avatar } from "@/components/shared/Avatar";
 import { ShareLink } from "@/components/admin/ShareLink";
 import { InviteVoters } from "@/components/admin/InviteVoters";
 import { UndoButton } from "@/components/admin/UndoButton";
+import { DeleteBracketButton } from "@/components/admin/DeleteBracketButton";
 import { TMDB_GENRES } from "@/lib/genres";
+import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
 import {
   openNominations,
   startDraft,
@@ -21,6 +23,8 @@ import {
   reopenForRevote,
   toggleAutoAdvance,
   undoLastPhase,
+  toggleArchived,
+  deleteBracket,
 } from "./actions";
 
 const PRIMARY_BUTTON =
@@ -41,8 +45,11 @@ export default async function AdminBracketDashboard({
     where: { slug },
     include: {
       categories: { orderBy: { order: "asc" } },
-      movies: { include: { nominatedByVoter: true, seedVotes: true }, orderBy: { createdAt: "asc" } },
-      voters: true,
+      movies: {
+        include: { nominatedByVoter: { include: { person: true } }, seedVotes: true },
+        orderBy: { createdAt: "asc" },
+      },
+      voters: { include: { person: true } },
       draftState: true,
       rounds: {
         orderBy: { roundNumber: "asc" },
@@ -63,6 +70,8 @@ export default async function AdminBracketDashboard({
   const closeRoundForBracket = closeRound.bind(null, bracket.id);
   const toggleAutoAdvanceForBracket = toggleAutoAdvance.bind(null, bracket.id);
   const undoLastPhaseForBracket = undoLastPhase.bind(null, bracket.id);
+  const toggleArchivedForBracket = toggleArchived.bind(null, bracket.id);
+  const deleteBracketForBracket = deleteBracket.bind(null, bracket.id);
 
   const currentRoundData = bracket.rounds.find((r) => r.roundNumber === bracket.currentRound);
 
@@ -78,7 +87,7 @@ export default async function AdminBracketDashboard({
   ].filter(Boolean);
 
   const turnOrder = bracket.draftState ? (JSON.parse(bracket.draftState.turnOrder) as string[]) : [];
-  const votersById = new Map(bracket.voters.map((v) => [v.id, v.name]));
+  const votersById = new Map(bracket.voters.map((v) => [v.id, effectiveVoterName(v)]));
   const currentTurnVoterName = bracket.draftState
     ? (votersById.get(turnOrder[bracket.draftState.currentTurnIndex % turnOrder.length]) ?? "Unknown")
     : null;
@@ -89,6 +98,11 @@ export default async function AdminBracketDashboard({
       <h1 className="font-display text-3xl tracking-wide text-gold uppercase">{bracket.name}</h1>
       <div className="mt-2 flex flex-wrap items-center gap-3">
         <StatusBadge status={bracket.status} />
+        {bracket.archived && (
+          <span className="rounded-full border border-cream-dim/30 px-2.5 py-1 text-xs text-cream-dim">
+            Archived
+          </span>
+        )}
         <span className="text-sm text-cream-dim">
           Nomination mode: <span className="font-medium text-cream">{bracket.nominationMode}</span>
         </span>
@@ -150,8 +164,8 @@ export default async function AdminBracketDashboard({
                     key={v.id}
                     className="flex items-center gap-1.5 rounded-full border border-gold/15 bg-surface py-1 pr-3 pl-1 text-sm"
                   >
-                    <Avatar name={v.name} avatar={v.avatar} size="sm" />
-                    {v.name}
+                    <Avatar name={effectiveVoterName(v)} avatar={effectiveVoterAvatar(v)} size="sm" />
+                    {effectiveVoterName(v)}
                   </span>
                 ))}
               </div>
@@ -266,7 +280,7 @@ export default async function AdminBracketDashboard({
           bracketId={bracket.id}
           invitedVoters={bracket.voters
             .filter((v): v is typeof v & { email: string } => v.email !== null)
-            .map((v) => ({ id: v.id, name: v.name, email: v.email, avatar: v.avatar }))}
+            .map((v) => ({ id: v.id, name: effectiveVoterName(v), email: v.email, avatar: effectiveVoterAvatar(v) }))}
         />
       )}
 
@@ -274,6 +288,27 @@ export default async function AdminBracketDashboard({
         <h2 className="text-lg font-medium text-rose">Share this link</h2>
         <ShareLink url={`${baseUrl}/b/${bracket.slug}`} label="Send to your group — nominate & vote" />
         <ShareLink url={`${baseUrl}/b/${bracket.slug}/tv`} label="Project this on the TV" />
+      </section>
+
+      <section className="mt-6 flex flex-col gap-3 rounded border border-error/30 p-4">
+        <h2 className="text-lg font-medium text-error">Danger zone</h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <form action={toggleArchivedForBracket}>
+            <SubmitButton pendingLabel="…" className={SECONDARY_BUTTON}>
+              {bracket.archived ? "Unarchive" : "Archive"}
+            </SubmitButton>
+          </form>
+          <p className="text-xs text-cream-dim">
+            {bracket.archived
+              ? "Hidden from the home page and your bracket list. Data is untouched."
+              : "Hides this bracket from lists without deleting anything — reversible any time."}
+          </p>
+        </div>
+        <DeleteBracketButton
+          action={deleteBracketForBracket}
+          bracketName={bracket.name}
+          className="self-start rounded-full border border-error/50 px-4 py-2 text-sm text-error transition hover:bg-error/10 disabled:opacity-50"
+        />
       </section>
     </main>
   );
