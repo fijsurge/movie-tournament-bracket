@@ -4,8 +4,9 @@
 
 Email invites, auto-advance, undo, and animation.
 
-- Admin can invite voters by name + email (Resend); the emailed link identifies
-  them automatically via a per-voter magic-link token, no typing their name.
+- Admin can invite voters by name + email (sent via Gmail SMTP); the emailed
+  link identifies them automatically via a per-voter magic-link token, no
+  typing their name.
 - The bracket now advances phases on its own once every invited voter has
   finished their part (nominated their cap, rated every movie, voted every open
   matchup) — admin only steps in to pause auto-advance or undo the most recently

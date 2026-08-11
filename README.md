@@ -18,7 +18,7 @@ Copy `.env.example` to `.env` and fill in:
   [Neon](https://neon.tech) or Vercel Postgres branch works well for local dev.
 - `ADMIN_PASSWORD` — shared password that gates `/admin/*` routes.
 - `TMDB_API_KEY` — free key from [themoviedb.org](https://www.themoviedb.org/settings/api), used to search movies and fetch posters.
-- `RESEND_API_KEY` — free key from [resend.com](https://resend.com/api-keys), used to email bracket invites. **Without a verified domain in Resend, you can only send to the email address your Resend account itself is signed up with** — to invite anyone else, verify a domain you own in the Resend dashboard (a few DNS records). Optional `RESEND_FROM_EMAIL` overrides the sender address.
+- `GMAIL_USER` / `GMAIL_APP_PASSWORD` — used to email bracket invites, sent from your own Gmail account over SMTP. Turn on 2-Step Verification on the Google account, then generate an App Password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) — use that (not your regular password) as `GMAIL_APP_PASSWORD`.
 
 The app uses Postgres everywhere (via `@prisma/adapter-pg`) — the same connection
 string works for local dev and production, so there's no separate local database
@@ -72,5 +72,5 @@ bye handling for non-power-of-2 pool sizes), matchup resolution
 1. Push this repo to GitHub and import it in Vercel.
 2. In the Vercel project → **Storage**, add a Postgres database (auto-injects
    `DATABASE_URL`).
-3. Set `ADMIN_PASSWORD`, `TMDB_API_KEY`, and `RESEND_API_KEY` as Vercel environment variables.
+3. Set `ADMIN_PASSWORD`, `TMDB_API_KEY`, `GMAIL_USER`, and `GMAIL_APP_PASSWORD` as Vercel environment variables.
 4. Deploy — the build script runs `prisma migrate deploy` automatically.

@@ -1,17 +1,21 @@
 import "server-only";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-let client: Resend | null = null;
+let transporter: nodemailer.Transporter | null = null;
 
-function getClient(): Resend {
-  if (!client) {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      throw new Error("RESEND_API_KEY environment variable is not set");
+function getTransporter(): nodemailer.Transporter {
+  if (!transporter) {
+    const user = process.env.GMAIL_USER;
+    const pass = process.env.GMAIL_APP_PASSWORD;
+    if (!user || !pass) {
+      throw new Error("GMAIL_USER and GMAIL_APP_PASSWORD environment variables must be set");
     }
-    client = new Resend(apiKey);
+    transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: { user, pass },
+    });
   }
-  return client;
+  return transporter;
 }
 
 export async function sendInviteEmail({
@@ -25,18 +29,19 @@ export async function sendInviteEmail({
   bracketName: string;
   inviteUrl: string;
 }): Promise<{ error: string | null }> {
-  const from = process.env.RESEND_FROM_EMAIL ?? "Movie Madness Bracket <onboarding@resend.dev>";
-
-  const { error } = await getClient().emails.send({
-    from,
-    to,
-    subject: `You're in: ${bracketName}`,
-    html: `
-      <p>Hi ${voterName},</p>
-      <p>You've been invited to nominate and vote in <strong>${bracketName}</strong>.</p>
-      <p><a href="${inviteUrl}">Tap here to join</a> — no need to sign in or type your name, this link knows who you are.</p>
-    `,
-  });
-
-  return { error: error?.message ?? null };
+  try {
+    await getTransporter().sendMail({
+      from: `Movie Madness Bracket <${process.env.GMAIL_USER}>`,
+      to,
+      subject: `You're in: ${bracketName}`,
+      html: `
+        <p>Hi ${voterName},</p>
+        <p>You've been invited to nominate and vote in <strong>${bracketName}</strong>.</p>
+        <p><a href="${inviteUrl}">Tap here to join</a> — no need to sign in or type your name, this link knows who you are.</p>
+      `,
+    });
+    return { error: null };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Failed to send email" };
+  }
 }
