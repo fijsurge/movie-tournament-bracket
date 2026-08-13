@@ -41,9 +41,13 @@ export function MovieInfoSheet({ movie, onClose }: { movie: MovieInfoSheetMovie 
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-y-auto rounded-t-2xl bg-surface p-5"
+            className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-y-auto rounded-t-2xl bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
           >
-            <button type="button" onClick={onClose} className="mb-3 ml-auto block text-cream-dim">
+            <button
+              type="button"
+              onClick={onClose}
+              className="mb-3 ml-auto block text-cream-dim transition active:scale-95"
+            >
               ✕ Close
             </button>
             <div className="flex gap-4">
