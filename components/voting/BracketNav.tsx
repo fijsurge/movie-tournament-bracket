@@ -1,7 +1,10 @@
 import { PageNav } from "@/components/shared/PageNav";
 import { TvIcon, HomeIcon, SettingsIcon, AccountIcon } from "@/components/shared/Icons";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 
-export function BracketNav({ slug, bracketName }: { slug: string; bracketName: string }) {
+export async function BracketNav({ slug, bracketName }: { slug: string; bracketName: string }) {
+  const isAdmin = await isAdminAuthenticated();
+
   return (
     <PageNav
       backHref={`/b/${slug}`}
@@ -9,7 +12,12 @@ export function BracketNav({ slug, bracketName }: { slug: string; bracketName: s
       links={[
         { href: `/b/${slug}/tv`, label: "TV view", icon: TvIcon },
         { href: `/b/${slug}/account`, label: "My account", icon: AccountIcon },
-        { href: `/admin/login?next=/admin/brackets/${slug}`, label: "Admin", icon: SettingsIcon },
+        {
+          href: isAdmin ? `/admin/brackets/${slug}` : `/admin/login?next=/admin/brackets/${slug}`,
+          label: "Admin",
+          icon: SettingsIcon,
+          accent: isAdmin,
+        },
         { href: "/", label: "Home", icon: HomeIcon },
       ]}
     />
