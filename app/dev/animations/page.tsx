@@ -304,7 +304,13 @@ export default function AnimationsPreviewPage() {
         <section className={SECTION}>
           <h2 className="mb-3 font-display text-lg tracking-wide text-rose uppercase">Champion reveal</h2>
           <div className="min-h-[520px] rounded-lg bg-ink">
-            <ChampionBanner key={championKey} bracketName="Movie Madness Bracket" championTitle="Top Gun: Maverick" posterUrl={POSTERS[0]} />
+            <ChampionBanner
+              key={championKey}
+              bracketName="Movie Madness Bracket"
+              championTitle="Top Gun: Maverick"
+              posterUrl={POSTERS[0]}
+              trailerKey={MOCK_TRAILER_KEY}
+            />
           </div>
           <TriggerForm onTrigger={() => setChampionKey((k) => k + 1)}>Replay reveal</TriggerForm>
         </section>

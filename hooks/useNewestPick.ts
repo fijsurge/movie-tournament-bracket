@@ -6,7 +6,10 @@ import { useEffect, useState } from "react";
 // window before clearing. State is adjusted during render rather than in an
 // effect (react.dev's documented pattern for deriving state from props) —
 // avoids an extra render pass and the "no setState in effect" lint rule.
-export function useNewestPick<T extends { id: string }>(items: T[], dismissAfterMs: number): T | null {
+export function useNewestPick<T extends { id: string }>(
+  items: T[],
+  dismissAfterMs: number | ((item: T) => number),
+): T | null {
   const [seenIds, setSeenIds] = useState<Set<string> | null>(null);
   const [announced, setAnnounced] = useState<T | null>(null);
 
@@ -23,7 +26,8 @@ export function useNewestPick<T extends { id: string }>(items: T[], dismissAfter
 
   useEffect(() => {
     if (!announced) return;
-    const timer = setTimeout(() => setAnnounced(null), dismissAfterMs);
+    const ms = typeof dismissAfterMs === "function" ? dismissAfterMs(announced) : dismissAfterMs;
+    const timer = setTimeout(() => setAnnounced(null), ms);
     return () => clearTimeout(timer);
   }, [announced, dismissAfterMs]);
 

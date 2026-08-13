@@ -4,21 +4,27 @@ import Image from "next/image";
 import { motion } from "motion/react";
 import { Avatar } from "@/components/shared/Avatar";
 import { TVTakeoverShell } from "@/components/bracket/TVTakeoverShell";
+import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 import { useNewestPick } from "@/hooks/useNewestPick";
 
 interface AnnouncedMovie {
   id: string;
   title: string;
   posterUrl: string | null;
+  trailerKey: string | null;
   nominatedByName: string | null;
   nominatedByAvatar: string | null;
 }
 
 // Full-screen TV takeover for a new pick landing during nomination/draft —
 // only ever receives new data while the bracket is NOMINATING, so it never
-// collides with RoundTransitionOverlay (ACTIVE-only).
+// collides with RoundTransitionOverlay (ACTIVE-only). Holds longer when a
+// trailer is available, playing it muted as ambient background motion — not
+// meant to be actively watched, just adds life. A later pick landing before
+// the window elapses cuts it short as normal (useNewestPick's existing
+// supersede-the-current-item behavior).
 export function PickRevealOverlay({ movies }: { movies: AnnouncedMovie[] }) {
-  const announced = useNewestPick(movies, 4000);
+  const announced = useNewestPick(movies, (m) => (m.trailerKey ? 9000 : 4000));
 
   return (
     <TVTakeoverShell active={announced !== null}>
@@ -64,6 +70,16 @@ export function PickRevealOverlay({ movies }: { movies: AnnouncedMovie[] }) {
             >
               <Avatar name={announced.nominatedByName} avatar={announced.nominatedByAvatar} size="sm" />
               picked by {announced.nominatedByName}
+            </motion.div>
+          )}
+          {announced.trailerKey && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.3, duration: 0.6 }}
+              className="w-full max-w-md"
+            >
+              <TrailerEmbed trailerKey={announced.trailerKey} startMuted />
             </motion.div>
           )}
         </>
