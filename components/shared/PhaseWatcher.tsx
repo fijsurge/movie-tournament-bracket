@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import useSWR from "swr";
 import type { BracketState } from "@/types/bracket";
@@ -31,26 +31,54 @@ export function PhaseWatcher({
   currentRound?: number | null;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { data } = useSWR<BracketState>(`/api/brackets/${slug}/state`, fetcher, {
     refreshInterval: 5000,
   });
   const [transition, setTransition] = useState<Transition | null>(null);
+  // What we've already reacted to — updated the moment we register a
+  // transition, not when the refreshed props eventually arrive, so clearing
+  // `transition` after a same-page router.refresh() doesn't immediately
+  // recompute the same change as "new" again and re-trigger in a loop.
+  const [seen, setSeen] = useState<{ status: BracketPhaseStatus; round: number | null }>({
+    status,
+    round: currentRound,
+  });
 
   const liveRound = data ? (data.rounds.find((r) => r.status === "VOTING_OPEN")?.roundNumber ?? null) : null;
-  const statusChanged = data !== undefined && data.bracket.status !== status;
-  const roundChanged = !statusChanged && status === "ACTIVE" && liveRound !== null && liveRound !== currentRound;
+  const liveStatus = data?.bracket.status ?? null;
+  const changed =
+    liveStatus !== null &&
+    (liveStatus !== seen.status || (liveStatus === "ACTIVE" && liveRound !== null && liveRound !== seen.round));
 
-  if (data && (statusChanged || roundChanged) && !transition) {
+  if (data && changed && !transition) {
     const dest = phaseHref({ slug, status: data.bracket.status, nominationMode: data.bracket.nominationMode });
-    const copy = phaseTransitionCopy(data.bracket.status, roundChanged ? liveRound : null);
+    const isRoundOnly = data.bracket.status === seen.status;
+    const copy = phaseTransitionCopy(data.bracket.status, isRoundOnly ? liveRound : null);
     setTransition({ href: dest ?? `/b/${slug}`, ...copy });
+    setSeen({ status: data.bracket.status, round: liveRound });
   }
 
   useEffect(() => {
     if (!transition) return;
-    const timer = setTimeout(() => router.push(transition.href), 1800);
+    const timer = setTimeout(() => {
+      // A round advancing lands on the same URL we're already on (still
+      // /vote, just a new round) — router.push() to an unchanged pathname
+      // isn't guaranteed to bypass the client router cache (nothing calls
+      // revalidatePath for voter-facing routes), so the old round's
+      // matchups could keep showing. router.refresh() forces a genuinely
+      // fresh server render for that case; push() is for an actual phase
+      // change, landing on a different page for the first time (which also
+      // unmounts this component, so no explicit cleanup is needed there).
+      if (transition.href === pathname) {
+        router.refresh();
+        setTransition(null);
+      } else {
+        router.push(transition.href);
+      }
+    }, 1800);
     return () => clearTimeout(timer);
-  }, [transition, router]);
+  }, [transition, router, pathname]);
 
   return (
     <AnimatePresence>
