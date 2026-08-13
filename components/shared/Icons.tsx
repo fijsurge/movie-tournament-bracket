@@ -144,6 +144,14 @@ export function InfoIcon(props: IconProps) {
   );
 }
 
+export function BoltIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M13 3 5 13h5l-1 8 8-10h-5l1-8Z" />
+    </svg>
+  );
+}
+
 export function ShareIcon(props: IconProps) {
   return (
     <svg {...base(props)}>
