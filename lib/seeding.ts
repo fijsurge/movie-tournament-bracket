@@ -21,3 +21,28 @@ export function computeSeedOrder(movies: SeedableMovie[]): SeedInput[] {
 
   return withAverages.map((m, i) => ({ movieId: m.movieId, seed: i + 1 }));
 }
+
+export interface TmdbRatableMovie {
+  movieId: string;
+  voteAverage: number | null;
+}
+
+/**
+ * Ranks movies by TMDb's own 0-10 audience rating, descending — an escape
+ * hatch for skipping manual seed voting entirely. Chosen over TMDb's
+ * `popularity` because rating is the correct semantic analog to what manual
+ * seeding measures (average audience opinion), not current trending buzz.
+ * Missing ratings count as 0, ties broken by input order — same conventions
+ * as computeSeedOrder.
+ */
+export function computeSeedOrderFromTmdbRatings(movies: TmdbRatableMovie[]): SeedInput[] {
+  const withRatings = movies.map((m, index) => ({
+    movieId: m.movieId,
+    index,
+    rating: m.voteAverage ?? 0,
+  }));
+
+  withRatings.sort((a, b) => (b.rating !== a.rating ? b.rating - a.rating : a.index - b.index));
+
+  return withRatings.map((m, i) => ({ movieId: m.movieId, seed: i + 1 }));
+}

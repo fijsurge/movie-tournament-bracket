@@ -9,7 +9,13 @@ import { normalizeVoterName } from "@/lib/voter-cookie";
 import { inviteVotersSchema } from "@/lib/validation";
 import { sendInviteEmail } from "@/lib/email";
 import { getBaseUrl } from "@/lib/base-url";
-import { closeNominationsCore, closeSeedingCore, closeRoundCore, undoLastPhase as undoLastPhaseCore } from "@/lib/phase-transitions";
+import {
+  closeNominationsCore,
+  closeSeedingCore,
+  quickSeedCore,
+  closeRoundCore,
+  undoLastPhase as undoLastPhaseCore,
+} from "@/lib/phase-transitions";
 
 function shuffle<T>(arr: T[]): T[] {
   const copy = [...arr];
@@ -96,6 +102,11 @@ export async function closeNominations(bracketId: string): Promise<void> {
 export async function closeSeeding(bracketId: string): Promise<void> {
   await requireAdmin();
   await closeSeedingCore(bracketId);
+}
+
+export async function quickSeed(bracketId: string): Promise<void> {
+  await requireAdmin();
+  await quickSeedCore(bracketId);
 }
 
 export async function closeRound(bracketId: string): Promise<void> {

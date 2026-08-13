@@ -9,6 +9,7 @@ import { Avatar } from "@/components/shared/Avatar";
 import { ShareLink } from "@/components/admin/ShareLink";
 import { InviteVoters } from "@/components/admin/InviteVoters";
 import { UndoButton } from "@/components/admin/UndoButton";
+import { QuickSeedButton } from "@/components/admin/QuickSeedButton";
 import { DeleteBracketButton } from "@/components/admin/DeleteBracketButton";
 import { TMDB_GENRES } from "@/lib/genres";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
@@ -18,6 +19,7 @@ import {
   skipDraftTurn,
   closeNominations,
   closeSeeding,
+  quickSeed,
   closeRound,
   resolveTiebreakCoinFlip,
   reopenForRevote,
@@ -67,6 +69,7 @@ export default async function AdminBracketDashboard({
   const skipDraftTurnForBracket = skipDraftTurn.bind(null, bracket.id);
   const closeNominationsForBracket = closeNominations.bind(null, bracket.id);
   const closeSeedingForBracket = closeSeeding.bind(null, bracket.id);
+  const quickSeedForBracket = quickSeed.bind(null, bracket.id);
   const closeRoundForBracket = closeRound.bind(null, bracket.id);
   const toggleAutoAdvanceForBracket = toggleAutoAdvance.bind(null, bracket.id);
   const undoLastPhaseForBracket = undoLastPhase.bind(null, bracket.id);
@@ -224,6 +227,7 @@ export default async function AdminBracketDashboard({
                 Close seeding & generate bracket
               </SubmitButton>
             </form>
+            <QuickSeedButton action={quickSeedForBracket} className={SECONDARY_BUTTON} />
           </div>
         )}
 
