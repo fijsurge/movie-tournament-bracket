@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { inviteVoters, type InviteVotersState } from "@/app/admin/brackets/[slug]/actions";
 import { SubmitButton } from "@/components/shared/SubmitButton";
 import { Avatar } from "@/components/shared/Avatar";
@@ -18,13 +18,24 @@ const initialState: InviteVotersState = { error: null, sentCount: 0, failures: [
 export function InviteVoters({
   bracketId,
   invitedVoters,
+  onSuccess,
 }: {
   bracketId: string;
   invitedVoters: { id: string; name: string; email: string; avatar: string | null }[];
+  onSuccess?: () => void;
 }) {
   const inviteVotersForBracket = inviteVoters.bind(null, bracketId);
   const [state, formAction, pending] = useActionState(inviteVotersForBracket, initialState);
   const [rows, setRows] = useState<Row[]>([{ name: "", email: "" }]);
+
+  // The invite action only revalidates the admin dashboard path, not
+  // wherever this component happens to be mounted (e.g. the voter-page quick
+  // actions sheet) — callers there need their own way to refresh the
+  // already-invited list once a send actually lands.
+  useEffect(() => {
+    if (!pending && state.sentCount > 0) onSuccess?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pending, state.sentCount]);
 
   function updateRow(index: number, field: keyof Row, value: string) {
     setRows((prev) => prev.map((r, i) => (i === index ? { ...r, [field]: value } : r)));
