@@ -3,7 +3,8 @@
 import useSWR from "swr";
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { MovieSearch, type MovieSearchResult } from "./MovieSearch";
+import type { MovieSearchResult } from "./MovieSearch";
+import { MovieSearchSheet } from "./MovieSearchSheet";
 import { submitDraftPick } from "@/app/b/[slug]/draft/actions";
 import { Avatar } from "@/components/shared/Avatar";
 import { PickAnnouncement } from "@/components/shared/PickAnnouncement";
@@ -124,7 +125,7 @@ export function DraftBoard({
       )}
 
       {isMyTurn && (
-        <MovieSearch
+        <MovieSearchSheet
           bracketId={bracketId}
           onPick={handlePick}
           disabled={isPicking}
