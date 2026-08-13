@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { submitVote } from "@/app/b/[slug]/vote/actions";
 import { Spinner } from "@/components/shared/Spinner";
 import { PosterButton } from "@/components/shared/PosterButton";
+import { SwipeMatchupCard } from "@/components/voting/SwipeMatchupCard";
+import { swipeToScores } from "@/lib/swipe-vote";
 
 interface Category {
   key: string;
@@ -97,6 +99,15 @@ export function VoteForm({
     categories.every((c) => scoresA[c.key] !== undefined) &&
     categories.every((c) => scoresB[c.key] !== undefined);
 
+  function handleSwipe(winner: "A" | "B") {
+    const { scoresA: a, scoresB: b } = swipeToScores(
+      categories.map((c) => c.key),
+      winner,
+    );
+    setScoresA(a);
+    setScoresB(b);
+  }
+
   function handleSubmit() {
     setError(null);
     startTransition(async () => {
@@ -137,6 +148,16 @@ export function VoteForm({
           <span className="font-medium">{movieB.title}</span>
         </div>
       </div>
+
+      {/* Only offered on a matchup the voter hasn't scored yet — prevents an
+          accidental re-swipe from silently overwriting a considered vote. */}
+      {!initialScoresA && (
+        <SwipeMatchupCard
+          movieA={{ title: movieA.title, posterUrl: movieA.posterUrl }}
+          movieB={{ title: movieB.title, posterUrl: movieB.posterUrl }}
+          onSwipe={handleSwipe}
+        />
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <ScorePicker title={movieA.title} categories={categories} scores={scoresA} setScores={setScoresA} />

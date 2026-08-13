@@ -9,6 +9,7 @@ import { NominationPool } from "@/components/nominate/NominationPool";
 import { PickAnnouncement } from "@/components/shared/PickAnnouncement";
 import { PickRevealOverlay } from "@/components/bracket/PickRevealOverlay";
 import { RoundTransitionOverlay } from "@/components/bracket/RoundTransitionOverlay";
+import { SwipeMatchupCard } from "@/components/voting/SwipeMatchupCard";
 import type { BracketState, BracketStateMovie, BracketStateRound } from "@/types/bracket";
 
 const POSTERS = [
@@ -182,6 +183,8 @@ export default function AnimationsPreviewPage() {
   const [rounds, setRounds] = useState<BracketStateRound[]>(() => makeBracket());
   const [championKey, setChampionKey] = useState(0);
   const [overlayRounds, setOverlayRounds] = useState<BracketStateRound[]>(() => makeBracket());
+  const [swipeKey, setSwipeKey] = useState(0);
+  const [swipeResult, setSwipeResult] = useState<string | null>(null);
 
   return (
     <main className="min-h-screen bg-ink p-6 text-cream">
@@ -313,6 +316,31 @@ export default function AnimationsPreviewPage() {
             />
           </div>
           <TriggerForm onTrigger={() => setChampionKey((k) => k + 1)}>Replay reveal</TriggerForm>
+        </section>
+
+        <section className={SECTION}>
+          <h2 className="mb-3 font-display text-lg tracking-wide text-rose uppercase">Swipe-to-vote card</h2>
+          <p className="text-sm text-cream-dim">
+            Try this on a real phone — drag the card left or right past the threshold to commit, or let go early
+            to spring back. This is the one piece of the mobile UI work that can&apos;t be verified any other way.
+          </p>
+          <div className="rounded-lg bg-ink">
+            <SwipeMatchupCard
+              key={swipeKey}
+              movieA={{ title: MOCK_TITLES[0], posterUrl: POSTERS[0] }}
+              movieB={{ title: MOCK_TITLES[1], posterUrl: POSTERS[1] }}
+              onSwipe={(winner) => setSwipeResult(winner === "A" ? MOCK_TITLES[0] : MOCK_TITLES[1])}
+            />
+          </div>
+          {swipeResult && <p className="mt-2 text-center text-sm text-gold">Swiped for: {swipeResult}</p>}
+          <TriggerForm
+            onTrigger={() => {
+              setSwipeKey((k) => k + 1);
+              setSwipeResult(null);
+            }}
+          >
+            Reset card
+          </TriggerForm>
         </section>
       </div>
     </main>
