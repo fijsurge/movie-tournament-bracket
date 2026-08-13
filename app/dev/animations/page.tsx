@@ -31,12 +31,24 @@ const MOCK_TITLES = [
 const AVATARS = ["🎬", "🍿", "🥂", "🏆"];
 const VOTER_NAMES = ["You", "Jordan", "Sam"];
 
+// Rick Astley's "Never Gonna Give You Up" — a permanently-stable, always-
+// embeddable YouTube id, used as a stand-in trailer so the trailer sections
+// below are actually previewable without depending on a real movie trailer
+// staying up.
+const MOCK_TRAILER_KEY = "dQw4w9WgXcQ";
+
 function makeMovie(index: number): BracketStateMovie {
   return {
     id: `movie-${index}`,
     tmdbId: 1000 + index,
     title: MOCK_TITLES[index % MOCK_TITLES.length],
     posterUrl: POSTERS[index % POSTERS.length],
+    overview:
+      "A group of friends and rivals face off in a high-stakes tournament where only one movie can be crowned champion.",
+    voteAverage: 7.2,
+    releaseYear: 2020 + (index % 5),
+    runtime: 110 + index,
+    trailerKey: index % 2 === 0 ? MOCK_TRAILER_KEY : null,
     nominatedByName: VOTER_NAMES[index % VOTER_NAMES.length],
     nominatedByAvatar: AVATARS[index % AVATARS.length],
     seed: null,
@@ -86,8 +98,8 @@ function makeBracket(): BracketStateRound[] {
           position: 0,
           isBye: false,
           status: "OPEN",
-          movieA: { id: m[0].id, title: m[0].title, posterUrl: m[0].posterUrl, seed: 1 },
-          movieB: { id: m[1].id, title: m[1].title, posterUrl: m[1].posterUrl, seed: 4 },
+          movieA: { id: m[0].id, title: m[0].title, posterUrl: m[0].posterUrl, seed: 1, trailerKey: m[0].trailerKey },
+          movieB: { id: m[1].id, title: m[1].title, posterUrl: m[1].posterUrl, seed: 4, trailerKey: m[1].trailerKey },
           winnerMovieId: null,
           winnerTitle: null,
         },
@@ -96,8 +108,8 @@ function makeBracket(): BracketStateRound[] {
           position: 1,
           isBye: false,
           status: "OPEN",
-          movieA: { id: m[2].id, title: m[2].title, posterUrl: m[2].posterUrl, seed: 2 },
-          movieB: { id: m[3].id, title: m[3].title, posterUrl: m[3].posterUrl, seed: 3 },
+          movieA: { id: m[2].id, title: m[2].title, posterUrl: m[2].posterUrl, seed: 2, trailerKey: m[2].trailerKey },
+          movieB: { id: m[3].id, title: m[3].title, posterUrl: m[3].posterUrl, seed: 3, trailerKey: m[3].trailerKey },
           winnerMovieId: null,
           winnerTitle: null,
         },
@@ -121,7 +133,13 @@ function resolveNextMatchup(rounds: BracketStateRound[]): BracketStateRound[] {
     openMatchup.winnerMovieId = openMatchup.movieA.id;
     openMatchup.winnerTitle = openMatchup.movieA.title;
     const final = next[1].matchups[0];
-    const slot = { id: openMatchup.movieA.id, title: openMatchup.movieA.title, posterUrl: openMatchup.movieA.posterUrl, seed: openMatchup.movieA.seed };
+    const slot = {
+      id: openMatchup.movieA.id,
+      title: openMatchup.movieA.title,
+      posterUrl: openMatchup.movieA.posterUrl,
+      seed: openMatchup.movieA.seed,
+      trailerKey: openMatchup.movieA.trailerKey,
+    };
     if (openMatchup.position === 0) final.movieA = slot;
     else final.movieB = slot;
   }
@@ -286,7 +304,13 @@ export default function AnimationsPreviewPage() {
         <section className={SECTION}>
           <h2 className="mb-3 font-display text-lg tracking-wide text-rose uppercase">Champion reveal</h2>
           <div className="min-h-[520px] rounded-lg bg-ink">
-            <ChampionBanner key={championKey} bracketName="Movie Madness Bracket" championTitle="Top Gun: Maverick" posterUrl={POSTERS[0]} />
+            <ChampionBanner
+              key={championKey}
+              bracketName="Movie Madness Bracket"
+              championTitle="Top Gun: Maverick"
+              posterUrl={POSTERS[0]}
+              trailerKey={MOCK_TRAILER_KEY}
+            />
           </div>
           <TriggerForm onTrigger={() => setChampionKey((k) => k + 1)}>Replay reveal</TriggerForm>
         </section>

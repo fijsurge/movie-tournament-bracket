@@ -1,13 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Image from "next/image";
 import { submitSeedVote } from "@/app/b/[slug]/seed/actions";
+import { PosterButton } from "@/components/shared/PosterButton";
 
 interface Movie {
   id: string;
   title: string;
   posterUrl: string | null;
+  overview: string | null;
+  voteAverage: number | null;
+  releaseYear: number | null;
+  runtime: number | null;
+  trailerKey: string | null;
 }
 
 const SCORES = [1, 2, 3, 4, 5];
@@ -49,17 +54,13 @@ export function SeedRatingPanel({
             key={movie.id}
             className="flex items-center gap-4 rounded-lg bg-surface p-3 shadow-[0_10px_24px_-14px_rgba(0,0,0,0.7)]"
           >
-            {movie.posterUrl ? (
-              <Image
-                src={movie.posterUrl}
-                alt=""
-                width={64}
-                height={96}
-                className="rounded shadow-[0_6px_14px_-6px_rgba(0,0,0,0.7)]"
-              />
-            ) : (
-              <div className="h-24 w-16 shrink-0 rounded bg-surface-raised" />
-            )}
+            <PosterButton
+              movie={movie}
+              width={64}
+              height={96}
+              imageClassName="rounded shadow-[0_6px_14px_-6px_rgba(0,0,0,0.7)]"
+              placeholderClassName="h-24 w-16 shrink-0 rounded bg-surface-raised"
+            />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <span className="font-medium">{movie.title}</span>
               <div className="flex flex-wrap gap-1">

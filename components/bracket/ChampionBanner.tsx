@@ -1,14 +1,17 @@
 import Image from "next/image";
 import { motion } from "motion/react";
+import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
 
 export function ChampionBanner({
   bracketName,
   championTitle,
   posterUrl,
+  trailerKey,
 }: {
   bracketName: string;
   championTitle: string;
   posterUrl: string | null;
+  trailerKey?: string | null;
 }) {
   return (
     <div className="relative flex flex-1 flex-col items-center justify-center gap-6 overflow-hidden p-8 text-center">
@@ -68,6 +71,16 @@ export function ChampionBanner({
       >
         Champion!
       </motion.p>
+      {trailerKey && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.9, duration: 0.6 }}
+          className="w-full max-w-xl"
+        >
+          <TrailerEmbed trailerKey={trailerKey} startMuted />
+        </motion.div>
+      )}
     </div>
   );
 }

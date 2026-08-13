@@ -28,6 +28,11 @@ export interface BracketStateMovie {
   tmdbId: number;
   title: string;
   posterUrl: string | null;
+  overview: string | null;
+  voteAverage: number | null;
+  releaseYear: number | null;
+  runtime: number | null;
+  trailerKey: string | null;
   nominatedByName: string | null;
   nominatedByAvatar: string | null;
   seed: number | null;
@@ -40,8 +45,8 @@ export interface BracketStateMatchup {
   position: number;
   isBye: boolean;
   status: "PENDING" | "OPEN" | "CLOSED" | "NEEDS_MANUAL_TIEBREAK" | "RESOLVED";
-  movieA: { id: string; title: string; posterUrl: string | null; seed: number | null } | null;
-  movieB: { id: string; title: string; posterUrl: string | null; seed: number | null } | null;
+  movieA: { id: string; title: string; posterUrl: string | null; seed: number | null; trailerKey: string | null } | null;
+  movieB: { id: string; title: string; posterUrl: string | null; seed: number | null; trailerKey: string | null } | null;
   winnerMovieId: string | null;
   winnerTitle: string | null;
 }

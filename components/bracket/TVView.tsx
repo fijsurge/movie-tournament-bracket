@@ -45,6 +45,11 @@ export function TVView({ slug }: { slug: string }) {
                   ? finalMatchup?.movieA?.posterUrl
                   : finalMatchup?.movieB?.posterUrl) ?? null
               }
+              trailerKey={
+                (finalMatchup?.movieA?.id === finalMatchup?.winnerMovieId
+                  ? finalMatchup?.movieA?.trailerKey
+                  : finalMatchup?.movieB?.trailerKey) ?? null
+              }
             />
           );
         })()}

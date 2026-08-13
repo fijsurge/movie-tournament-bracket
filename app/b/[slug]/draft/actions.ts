@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getVoterId } from "@/lib/voter-cookie";
 import { submitNominationSchema } from "@/lib/validation";
 import { maybeAutoAdvance } from "@/lib/phase-transitions";
+import { getMovieDetails } from "@/lib/tmdb";
 
 export interface DraftPickState {
   error: string | null;
@@ -40,8 +41,24 @@ export async function submitDraftPick(bracketId: string, formInput: unknown): Pr
     return { error: "That movie is already in the pool — pick another" };
   }
 
+  const details = await getMovieDetails(tmdbId);
+
   await prisma.$transaction(async (tx) => {
-    await tx.movie.create({ data: { bracketId, tmdbId, title, posterUrl, nominatedByVoterId: voterId } });
+    await tx.movie.create({
+      data: {
+        bracketId,
+        tmdbId,
+        title,
+        posterUrl,
+        nominatedByVoterId: voterId,
+        overview: details?.overview ?? null,
+        voteAverage: details?.voteAverage ?? null,
+        popularity: details?.popularity ?? null,
+        releaseYear: details?.releaseYear ?? null,
+        runtime: details?.runtime ?? null,
+        trailerKey: details?.trailerKey ?? null,
+      },
+    });
 
     const poolCount = await tx.movie.count({ where: { bracketId } });
     const nextIndex = bracket.draftState!.currentTurnIndex + 1;

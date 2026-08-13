@@ -1,10 +1,11 @@
 import "server-only";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
-import { computeSeedOrder } from "@/lib/seeding";
+import { computeSeedOrder, computeSeedOrderFromTmdbRatings } from "@/lib/seeding";
 import { generateBracket } from "@/lib/bracket-generator";
 import { resolveMatchup } from "@/lib/resolve-matchup";
 import { isNominationComplete, isSeedingComplete, isRoundComplete } from "@/lib/phase-completion";
+import type { SeedInput } from "@/types/bracket";
 
 // ---------------------------------------------------------------------------
 // Core phase transitions — the actual mutation logic, callable both from the
@@ -22,16 +23,9 @@ export async function closeNominationsCore(bracketId: string): Promise<void> {
   revalidatePath(`/admin/brackets/${bracket.slug}`);
 }
 
-export async function closeSeedingCore(bracketId: string): Promise<void> {
-  const bracket = await prisma.bracket.findUniqueOrThrow({
-    where: { id: bracketId },
-    include: { movies: { include: { seedVotes: true } } },
-  });
-  if (bracket.status !== "SEEDING" || bracket.movies.length < 2) return;
-
-  const seedOrder = computeSeedOrder(
-    bracket.movies.map((m) => ({ movieId: m.id, scores: m.seedVotes.map((v) => v.score) })),
-  );
+// Shared tail for both closeSeedingCore and quickSeedCore — generates the
+// bracket from a seed order (however it was derived) and persists it.
+async function generateAndPersistBracket(bracketId: string, bracketSlug: string, seedOrder: SeedInput[]): Promise<void> {
   const generated = generateBracket(seedOrder);
 
   await prisma.$transaction(async (tx) => {
@@ -80,7 +74,37 @@ export async function closeSeedingCore(bracketId: string): Promise<void> {
     await tx.bracket.update({ where: { id: bracketId }, data: { status: "ACTIVE", currentRound: 1 } });
   });
 
-  revalidatePath(`/admin/brackets/${bracket.slug}`);
+  revalidatePath(`/admin/brackets/${bracketSlug}`);
+}
+
+export async function closeSeedingCore(bracketId: string): Promise<void> {
+  const bracket = await prisma.bracket.findUniqueOrThrow({
+    where: { id: bracketId },
+    include: { movies: { include: { seedVotes: true } } },
+  });
+  if (bracket.status !== "SEEDING" || bracket.movies.length < 2) return;
+
+  const seedOrder = computeSeedOrder(
+    bracket.movies.map((m) => ({ movieId: m.id, scores: m.seedVotes.map((v) => v.score) })),
+  );
+  await generateAndPersistBracket(bracketId, bracket.slug, seedOrder);
+}
+
+// Admin escape hatch — ranks movies by TMDb's own audience rating instead of
+// waiting on voters to rate everything themselves. Discards/ignores any
+// partial SeedVote rows already collected; that's an accepted tradeoff for a
+// shortcut (undoLastPhase already unwinds either kind of seeding identically).
+export async function quickSeedCore(bracketId: string): Promise<void> {
+  const bracket = await prisma.bracket.findUniqueOrThrow({
+    where: { id: bracketId },
+    include: { movies: true },
+  });
+  if (bracket.status !== "SEEDING" || bracket.movies.length < 2) return;
+
+  const seedOrder = computeSeedOrderFromTmdbRatings(
+    bracket.movies.map((m) => ({ movieId: m.id, voteAverage: m.voteAverage })),
+  );
+  await generateAndPersistBracket(bracketId, bracket.slug, seedOrder);
 }
 
 export async function closeRoundCore(bracketId: string): Promise<void> {

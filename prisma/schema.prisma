@@ -92,6 +92,12 @@ model Movie {
   tmdbId             Int
   title              String
   posterUrl          String?
+  overview           String?
+  voteAverage        Float?
+  popularity         Float?
+  releaseYear        Int?
+  runtime            Int?
+  trailerKey         String?
   nominatedByVoterId String?
   nominatedByVoter   Voter?   @relation(fields: [nominatedByVoterId], references: [id])
   seed               Int?

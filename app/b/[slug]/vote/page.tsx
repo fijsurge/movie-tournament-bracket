@@ -83,8 +83,26 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
                   key={m.id}
                   matchupId={m.id}
                   categories={categories}
-                  movieA={{ id: m.movieA.id, title: m.movieA.title, posterUrl: m.movieA.posterUrl }}
-                  movieB={{ id: m.movieB.id, title: m.movieB.title, posterUrl: m.movieB.posterUrl }}
+                  movieA={{
+                    id: m.movieA.id,
+                    title: m.movieA.title,
+                    posterUrl: m.movieA.posterUrl,
+                    overview: m.movieA.overview,
+                    voteAverage: m.movieA.voteAverage,
+                    releaseYear: m.movieA.releaseYear,
+                    runtime: m.movieA.runtime,
+                    trailerKey: m.movieA.trailerKey,
+                  }}
+                  movieB={{
+                    id: m.movieB.id,
+                    title: m.movieB.title,
+                    posterUrl: m.movieB.posterUrl,
+                    overview: m.movieB.overview,
+                    voteAverage: m.movieB.voteAverage,
+                    releaseYear: m.movieB.releaseYear,
+                    runtime: m.movieB.runtime,
+                    trailerKey: m.movieB.trailerKey,
+                  }}
                   initialScoresA={myVote ? JSON.parse(myVote.scoresMovieA) : undefined}
                   initialScoresB={myVote ? JSON.parse(myVote.scoresMovieB) : undefined}
                 />
