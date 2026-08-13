@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Image from "next/image";
 import { submitVote } from "@/app/b/[slug]/vote/actions";
 import { Spinner } from "@/components/shared/Spinner";
+import { PosterButton } from "@/components/shared/PosterButton";
 
 interface Category {
   key: string;
@@ -115,12 +115,11 @@ export function VoteForm({
       <div className="mb-4 flex items-center justify-center gap-4 text-center">
         <div className="flex flex-col items-center gap-2">
           {movieA.posterUrl && (
-            <Image
-              src={movieA.posterUrl}
-              alt=""
+            <PosterButton
+              movie={movieA}
               width={84}
               height={126}
-              className="rounded-md shadow-[0_10px_22px_-8px_rgba(0,0,0,0.8)]"
+              imageClassName="rounded-md shadow-[0_10px_22px_-8px_rgba(0,0,0,0.8)]"
             />
           )}
           <span className="font-medium">{movieA.title}</span>
@@ -128,12 +127,11 @@ export function VoteForm({
         <span className="font-display text-rose">vs</span>
         <div className="flex flex-col items-center gap-2">
           {movieB.posterUrl && (
-            <Image
-              src={movieB.posterUrl}
-              alt=""
+            <PosterButton
+              movie={movieB}
               width={84}
               height={126}
-              className="rounded-md shadow-[0_10px_22px_-8px_rgba(0,0,0,0.8)]"
+              imageClassName="rounded-md shadow-[0_10px_22px_-8px_rgba(0,0,0,0.8)]"
             />
           )}
           <span className="font-medium">{movieB.title}</span>

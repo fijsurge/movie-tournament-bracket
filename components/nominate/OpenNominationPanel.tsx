@@ -2,11 +2,11 @@
 
 import useSWR from "swr";
 import { useState } from "react";
-import Image from "next/image";
 import { MovieSearch, type MovieSearchResult } from "./MovieSearch";
 import { submitNomination } from "@/app/b/[slug]/nominate/actions";
 import { Avatar } from "@/components/shared/Avatar";
 import { PickAnnouncement } from "@/components/shared/PickAnnouncement";
+import { PosterButton } from "@/components/shared/PosterButton";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -107,17 +107,13 @@ export function OpenNominationPanel({
               key={m.id}
               className="flex items-center gap-3 rounded-lg bg-surface p-2 shadow-[0_8px_20px_-14px_rgba(0,0,0,0.7)]"
             >
-              {m.posterUrl ? (
-                <Image
-                  src={m.posterUrl}
-                  alt=""
-                  width={48}
-                  height={72}
-                  className="rounded shadow-[0_4px_10px_-4px_rgba(0,0,0,0.7)]"
-                />
-              ) : (
-                <div className="h-[72px] w-12 shrink-0 rounded bg-surface-raised" />
-              )}
+              <PosterButton
+                movie={m}
+                width={48}
+                height={72}
+                imageClassName="rounded shadow-[0_4px_10px_-4px_rgba(0,0,0,0.7)]"
+                placeholderClassName="h-[72px] w-12 shrink-0 rounded bg-surface-raised"
+              />
               <span className="flex items-center gap-1.5">
                 {m.title}
                 {m.nominatedByName && (
