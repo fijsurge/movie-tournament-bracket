@@ -135,6 +135,15 @@ export function SettingsIcon(props: IconProps) {
   );
 }
 
+export function InfoIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v6M12 7.5v.01" />
+    </svg>
+  );
+}
+
 export function ShareIcon(props: IconProps) {
   return (
     <svg {...base(props)}>

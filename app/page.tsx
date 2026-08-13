@@ -3,15 +3,21 @@ import Image from "next/image";
 import { prisma } from "@/lib/db";
 import iconMark from "@/images/icon-mark.png";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { BottomTabBar } from "@/components/shared/BottomTabBar";
+import { InfoIcon, SettingsIcon } from "@/components/shared/Icons";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const brackets = await prisma.bracket.findMany({
-    where: { archived: false },
-    orderBy: { createdAt: "desc" },
-    include: { movies: { orderBy: { createdAt: "asc" }, take: 5 }, _count: { select: { movies: true } } },
-  });
+  const [brackets, isAdmin] = await Promise.all([
+    prisma.bracket.findMany({
+      where: { archived: false },
+      orderBy: { createdAt: "desc" },
+      include: { movies: { orderBy: { createdAt: "asc" }, take: 5 }, _count: { select: { movies: true } } },
+    }),
+    isAdminAuthenticated(),
+  ]);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-8 p-6">
@@ -64,9 +70,17 @@ export default async function Home() {
         </ul>
       )}
 
-      <Link href="/admin/login" className="self-center text-sm text-cream-dim underline underline-offset-2">
-        Admin
-      </Link>
+      <BottomTabBar
+        links={[
+          { href: "/about", label: "About", icon: <InfoIcon className="h-5 w-5" /> },
+          {
+            href: isAdmin ? "/admin" : "/admin/login",
+            label: "Admin",
+            icon: <SettingsIcon className="h-5 w-5" />,
+            accent: isAdmin,
+          },
+        ]}
+      />
     </main>
   );
 }

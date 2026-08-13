@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { PageNav } from "@/components/shared/PageNav";
 import { SubmitButton } from "@/components/shared/SubmitButton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { LogOutIcon } from "@/components/shared/Icons";
+import { HomeIcon, LogOutIcon } from "@/components/shared/Icons";
 import { logoutAdmin } from "./actions";
 
 export default async function AdminHomePage() {
@@ -19,6 +19,7 @@ export default async function AdminHomePage() {
       <PageNav
         backHref="/"
         backLabel="Home"
+        links={[{ href: "/", label: "Home", icon: HomeIcon }]}
         action={
           <form action={logoutAdmin}>
             <SubmitButton
