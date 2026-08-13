@@ -32,6 +32,31 @@ interface TmdbRawMovie {
   genre_ids?: number[];
 }
 
+export interface TmdbMovieDetails {
+  overview: string | null;
+  voteAverage: number | null;
+  popularity: number | null;
+  releaseYear: number | null;
+  runtime: number | null;
+  trailerKey: string | null;
+}
+
+interface TmdbVideo {
+  type: string;
+  site: string;
+  key: string;
+  official: boolean;
+}
+
+interface TmdbMovieDetailsRaw {
+  overview?: string | null;
+  vote_average?: number | null;
+  popularity?: number | null;
+  release_date?: string;
+  runtime?: number | null;
+  videos?: { results: TmdbVideo[] };
+}
+
 function getApiKey(): string {
   const apiKey = process.env.TMDB_API_KEY;
   if (!apiKey) {
@@ -91,6 +116,36 @@ async function tmdbGetPages(path: string, params: Record<string, string>, maxPag
     ),
   );
   return [first.results, ...rest.map((page) => page.results)].flat();
+}
+
+function pickTrailerKey(videos: TmdbVideo[] | undefined): string | null {
+  if (!videos || videos.length === 0) return null;
+  return (
+    videos.find((v) => v.type === "Trailer" && v.site === "YouTube" && v.official)?.key ??
+    videos.find((v) => v.type === "Trailer" && v.site === "YouTube")?.key ??
+    videos.find((v) => v.site === "YouTube")?.key ??
+    null
+  );
+}
+
+// Single-call detail + trailer fetch via append_to_response=videos, used at
+// nomination time so trailer playback never depends on a live TMDb call
+// during a reveal moment. Never throws — a failed request or a movie with no
+// trailer both resolve to null, so callers don't need their own try/catch.
+export async function getMovieDetails(tmdbId: number): Promise<TmdbMovieDetails | null> {
+  try {
+    const data = await tmdbGet<TmdbMovieDetailsRaw>(`/movie/${tmdbId}`, { append_to_response: "videos" });
+    return {
+      overview: data.overview ?? null,
+      voteAverage: data.vote_average ?? null,
+      popularity: data.popularity ?? null,
+      releaseYear: data.release_date ? Number(data.release_date.slice(0, 4)) : null,
+      runtime: data.runtime ?? null,
+      trailerKey: pickTrailerKey(data.videos?.results),
+    };
+  } catch {
+    return null;
+  }
 }
 
 /**

@@ -86,6 +86,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       tmdbId: m.tmdbId,
       title: m.title,
       posterUrl: m.posterUrl,
+      overview: m.overview,
+      voteAverage: m.voteAverage,
+      releaseYear: m.releaseYear,
+      runtime: m.runtime,
+      trailerKey: m.trailerKey,
       nominatedByName: m.nominatedByVoter ? effectiveVoterName(m.nominatedByVoter) : null,
       nominatedByAvatar: m.nominatedByVoter ? effectiveVoterAvatar(m.nominatedByVoter) : null,
       seed: m.seed,
@@ -106,10 +111,22 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
         isBye: m.isBye,
         status: m.status,
         movieA: m.movieA
-          ? { id: m.movieA.id, title: m.movieA.title, posterUrl: m.movieA.posterUrl, seed: m.movieA.seed }
+          ? {
+              id: m.movieA.id,
+              title: m.movieA.title,
+              posterUrl: m.movieA.posterUrl,
+              seed: m.movieA.seed,
+              trailerKey: m.movieA.trailerKey,
+            }
           : null,
         movieB: m.movieB
-          ? { id: m.movieB.id, title: m.movieB.title, posterUrl: m.movieB.posterUrl, seed: m.movieB.seed }
+          ? {
+              id: m.movieB.id,
+              title: m.movieB.title,
+              posterUrl: m.movieB.posterUrl,
+              seed: m.movieB.seed,
+              trailerKey: m.movieB.trailerKey,
+            }
           : null,
         winnerMovieId: m.winnerMovieId,
         winnerTitle: m.winnerMovie?.title ?? null,

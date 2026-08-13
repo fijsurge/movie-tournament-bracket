@@ -8,6 +8,11 @@ interface Movie {
   id: string;
   title: string;
   posterUrl: string | null;
+  overview: string | null;
+  voteAverage: number | null;
+  releaseYear: number | null;
+  runtime: number | null;
+  trailerKey: string | null;
 }
 
 const SCORES = [1, 2, 3, 4, 5];

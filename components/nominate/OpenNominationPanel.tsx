@@ -22,6 +22,11 @@ interface StateResponse {
     tmdbId: number;
     title: string;
     posterUrl: string | null;
+    overview: string | null;
+    voteAverage: number | null;
+    releaseYear: number | null;
+    runtime: number | null;
+    trailerKey: string | null;
     nominatedByName: string | null;
     nominatedByAvatar: string | null;
   }[];

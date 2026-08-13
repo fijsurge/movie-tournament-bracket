@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getVoterId } from "@/lib/voter-cookie";
 import { submitNominationSchema } from "@/lib/validation";
 import { maybeAutoAdvance } from "@/lib/phase-transitions";
+import { getMovieDetails } from "@/lib/tmdb";
 
 export interface NominateState {
   error: string | null;
@@ -40,8 +41,22 @@ export async function submitNomination(bracketId: string, formInput: unknown): P
     }
   }
 
+  const details = await getMovieDetails(tmdbId);
+
   await prisma.movie.create({
-    data: { bracketId, tmdbId, title, posterUrl, nominatedByVoterId: voterId },
+    data: {
+      bracketId,
+      tmdbId,
+      title,
+      posterUrl,
+      nominatedByVoterId: voterId,
+      overview: details?.overview ?? null,
+      voteAverage: details?.voteAverage ?? null,
+      popularity: details?.popularity ?? null,
+      releaseYear: details?.releaseYear ?? null,
+      runtime: details?.runtime ?? null,
+      trailerKey: details?.trailerKey ?? null,
+    },
   });
 
   await maybeAutoAdvance(bracketId);

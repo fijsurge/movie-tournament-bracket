@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "Movie" ADD COLUMN "overview" TEXT,
+ADD COLUMN "voteAverage" DOUBLE PRECISION,
+ADD COLUMN "popularity" DOUBLE PRECISION,
+ADD COLUMN "releaseYear" INTEGER,
+ADD COLUMN "runtime" INTEGER,
+ADD COLUMN "trailerKey" TEXT;

@@ -51,7 +51,16 @@ export default async function SeedPage({ params }: { params: Promise<{ slug: str
           </FirstTimeTip>
           <SeedRatingPanel
             bracketId={bracket.id}
-            movies={bracket.movies.map((m) => ({ id: m.id, title: m.title, posterUrl: m.posterUrl }))}
+            movies={bracket.movies.map((m) => ({
+              id: m.id,
+              title: m.title,
+              posterUrl: m.posterUrl,
+              overview: m.overview,
+              voteAverage: m.voteAverage,
+              releaseYear: m.releaseYear,
+              runtime: m.runtime,
+              trailerKey: m.trailerKey,
+            }))}
             initialRatings={initialRatings}
           />
         </div>
