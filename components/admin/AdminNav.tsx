@@ -13,7 +13,7 @@ export function AdminNav() {
         <form action={logoutAdmin}>
           <SubmitButton
             pendingLabel="…"
-            className="flex items-center gap-1.5 text-cream-dim transition hover:text-gold"
+            className="flex items-center gap-1.5 text-cream-dim transition hover:text-gold active:scale-95"
           >
             <LogOutIcon className="h-4 w-4" /> Log out
           </SubmitButton>

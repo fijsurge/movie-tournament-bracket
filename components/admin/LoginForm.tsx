@@ -24,7 +24,7 @@ export function LoginForm({ next }: { next?: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
+        className="rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim active:scale-95 disabled:opacity-50"
       >
         {pending ? (
           <span className="inline-flex items-center gap-2">

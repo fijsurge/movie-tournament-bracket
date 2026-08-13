@@ -34,7 +34,7 @@ export function VoterIdentify({
               <button
                 type="submit"
                 disabled={pending}
-                className="flex items-center gap-2 rounded-full border border-gold/40 py-1 pr-3 pl-1 text-sm transition hover:border-gold disabled:opacity-50"
+                className="flex items-center gap-2 rounded-full border border-gold/40 py-1 pr-3 pl-1 text-sm transition hover:border-gold active:scale-95 disabled:opacity-50"
               >
                 <Avatar name={voter.name} avatar={voter.avatar} size="sm" />
                 {voter.name}
@@ -60,7 +60,7 @@ export function VoterIdentify({
           <button
             type="submit"
             disabled={pending}
-            className="rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
+            className="rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim active:scale-95 disabled:opacity-50"
           >
             {pending ? <Spinner className="h-4 w-4 text-ink" /> : "Go"}
           </button>

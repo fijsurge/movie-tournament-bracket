@@ -155,8 +155,8 @@ function advanceRound(rounds: BracketStateRound[]): BracketStateRound[] {
   return next;
 }
 
-const BUTTON = "rounded-full bg-gold px-4 py-2 text-sm font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50";
-const OUTLINE_BUTTON = "rounded-full border border-gold/40 px-4 py-2 text-sm text-cream transition hover:border-gold";
+const BUTTON = "rounded-full bg-gold px-4 py-2 text-sm font-medium text-ink transition hover:bg-gold-dim active:scale-95 disabled:opacity-50";
+const OUTLINE_BUTTON = "rounded-full border border-gold/40 px-4 py-2 text-sm text-cream transition hover:border-gold active:scale-95";
 const SECTION = "rounded-xl border border-gold/15 bg-surface p-6";
 
 function TriggerForm({ onTrigger, children, disabled }: { onTrigger: () => void; children: React.ReactNode; disabled?: boolean }) {

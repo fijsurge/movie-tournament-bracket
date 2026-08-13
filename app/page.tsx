@@ -29,7 +29,7 @@ export default async function Home() {
             <li key={b.id}>
               <Link
                 href={`/b/${b.slug}`}
-                className="flex items-center gap-4 rounded-lg border border-gold/15 bg-surface p-4 shadow-[0_10px_28px_-16px_rgba(0,0,0,0.7)] transition hover:border-gold/40 hover:shadow-[0_10px_28px_-10px_rgba(232,163,61,0.2)]"
+                className="flex items-center gap-4 rounded-lg border border-gold/15 bg-surface p-4 shadow-[0_10px_28px_-16px_rgba(0,0,0,0.7)] transition hover:border-gold/40 hover:shadow-[0_10px_28px_-10px_rgba(232,163,61,0.2)] active:scale-[0.99]"
               >
                 <div className="flex -space-x-4">
                   {b.movies.length > 0 ? (

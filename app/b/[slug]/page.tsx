@@ -55,7 +55,7 @@ export default async function PublicBracketLanding({
         {nextHref ? (
           <Link
             href={nextHref}
-            className="mt-2 flex items-center gap-2 rounded-full bg-gold px-6 py-2.5 font-medium text-ink shadow-[0_4px_20px_-4px_rgba(232,163,61,0.5)] transition hover:bg-gold-dim"
+            className="mt-2 flex items-center gap-2 rounded-full bg-gold px-6 py-2.5 font-medium text-ink shadow-[0_4px_20px_-4px_rgba(232,163,61,0.5)] transition hover:bg-gold-dim active:scale-95"
           >
             Continue
           </Link>

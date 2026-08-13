@@ -72,7 +72,7 @@ export function PersonPicker({
                   setQuery("");
                   setResults([]);
                 }}
-                className="flex w-full items-center gap-2 rounded border border-gold/15 p-2 text-left text-sm transition hover:border-gold/40 hover:bg-surface"
+                className="flex w-full items-center gap-2 rounded border border-gold/15 p-2 text-left text-sm transition hover:border-gold/40 hover:bg-surface active:scale-[0.98]"
               >
                 {p.profileUrl ? (
                   <Image src={p.profileUrl} alt="" width={28} height={28} className="rounded-full" />

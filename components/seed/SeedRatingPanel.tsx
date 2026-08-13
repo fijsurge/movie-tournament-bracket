@@ -63,7 +63,7 @@ export function SeedRatingPanel({
             />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <span className="font-medium">{movie.title}</span>
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1.5">
                 {SCORES.map((score) => (
                   <button
                     key={score}
@@ -71,10 +71,10 @@ export function SeedRatingPanel({
                     disabled={pending}
                     onClick={() => rate(movie.id, score)}
                     aria-pressed={ratings[movie.id] === score}
-                    className={`h-8 w-8 rounded border text-sm transition disabled:opacity-50 ${
+                    className={`h-11 w-11 rounded border text-sm transition active:scale-95 disabled:opacity-50 ${
                       ratings[movie.id] === score
                         ? "border-gold bg-gold text-ink"
-                        : "border-gold/25 text-cream hover:border-gold/50"
+                        : "border-gold/25 text-cream hover:border-gold/50 active:border-gold/50"
                     }`}
                   >
                     {score}

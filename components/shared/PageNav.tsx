@@ -27,7 +27,7 @@ export function PageNav({
           <Link
             key={l.href}
             href={l.href}
-            className="flex shrink-0 items-center gap-1.5 text-cream-dim transition hover:text-gold"
+            className="flex shrink-0 items-center gap-1.5 text-cream-dim transition hover:text-gold active:scale-95"
           >
             {l.icon && <l.icon className="h-4 w-4" />}
             {/* Label hides below sm: an icon-only nav keeps 4+ links from

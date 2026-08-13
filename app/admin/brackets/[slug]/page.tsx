@@ -30,9 +30,9 @@ import {
 } from "./actions";
 
 const PRIMARY_BUTTON =
-  "rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50";
+  "rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim active:scale-95 disabled:opacity-50";
 const SECONDARY_BUTTON =
-  "rounded-full border border-gold/40 px-3 py-1 text-sm text-cream transition hover:border-gold disabled:opacity-50";
+  "rounded-full border border-gold/40 px-3 py-1 text-sm text-cream transition hover:border-gold active:scale-95 disabled:opacity-50";
 
 export default async function AdminBracketDashboard({
   params,
@@ -113,10 +113,10 @@ export default async function AdminBracketDashboard({
           <form action={toggleAutoAdvanceForBracket}>
             <SubmitButton
               pendingLabel="…"
-              className={`rounded-full border px-3 py-1 text-xs transition ${
+              className={`rounded-full border px-3 py-1 text-xs transition active:scale-95 ${
                 bracket.autoAdvance
-                  ? "border-gold/50 bg-gold/10 text-gold hover:border-gold"
-                  : "border-cream-dim/30 text-cream-dim hover:border-cream-dim/60"
+                  ? "border-gold/50 bg-gold/10 text-gold hover:border-gold active:border-gold"
+                  : "border-cream-dim/30 text-cream-dim hover:border-cream-dim/60 active:border-cream-dim/60"
               }`}
             >
               Auto-advance: {bracket.autoAdvance ? "On" : "Paused"}
@@ -311,7 +311,7 @@ export default async function AdminBracketDashboard({
         <DeleteBracketButton
           action={deleteBracketForBracket}
           bracketName={bracket.name}
-          className="self-start rounded-full border border-error/50 px-4 py-2 text-sm text-error transition hover:bg-error/10 disabled:opacity-50"
+          className="self-start rounded-full border border-error/50 px-4 py-2 text-sm text-error transition hover:bg-error/10 active:scale-95 disabled:opacity-50"
         />
       </section>
     </main>

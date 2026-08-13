@@ -63,7 +63,7 @@ export function MovieInfoSheet({ movie, onClose }: { movie: MovieInfoSheetMovie 
               <button
                 type="button"
                 onClick={() => setShowTrailer(true)}
-                className="mt-4 rounded-full bg-gold px-4 py-2 text-sm font-medium text-ink transition hover:bg-gold-dim"
+                className="mt-4 rounded-full bg-gold px-4 py-2 text-sm font-medium text-ink transition hover:bg-gold-dim active:scale-95"
               >
                 ▶ Watch trailer
               </button>

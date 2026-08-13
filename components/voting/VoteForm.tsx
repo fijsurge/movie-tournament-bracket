@@ -44,17 +44,17 @@ function ScorePicker({
       {categories.map((cat) => (
         <div key={cat.key} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <span className="text-sm">{cat.label}</span>
-          <div className="flex gap-1">
+          <div className="flex gap-1.5">
             {SCORES.map((score) => (
               <button
                 key={score}
                 type="button"
                 onClick={() => setScores((prev) => ({ ...prev, [cat.key]: score }))}
                 aria-pressed={scores[cat.key] === score}
-                className={`h-8 w-8 shrink-0 rounded border text-xs transition ${
+                className={`h-11 w-11 shrink-0 rounded border text-xs transition active:scale-95 ${
                   scores[cat.key] === score
                     ? "border-gold bg-gold text-ink"
-                    : "border-gold/25 text-cream hover:border-gold/50"
+                    : "border-gold/25 text-cream hover:border-gold/50 active:border-gold/50"
                 }`}
               >
                 {score}
@@ -155,7 +155,7 @@ export function VoteForm({
         type="button"
         onClick={handleSubmit}
         disabled={!complete || pending}
-        className="mt-4 w-full rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
+        className="mt-4 w-full rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim active:scale-[0.98] disabled:opacity-50"
       >
         {pending ? (
           <span className="inline-flex items-center gap-2">

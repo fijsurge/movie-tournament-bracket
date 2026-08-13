@@ -18,7 +18,7 @@ export default async function TvPage({ params }: { params: Promise<{ slug: strin
       <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-gold/20 px-4 py-3">
         <Link
           href={`/b/${slug}`}
-          className="flex items-center gap-1.5 justify-self-start text-sm text-cream-dim transition hover:text-gold"
+          className="flex items-center gap-1.5 justify-self-start text-sm text-cream-dim transition hover:text-gold active:scale-95"
         >
           <ArrowLeftIcon className="h-4 w-4" />
           Bracket
@@ -29,7 +29,7 @@ export default async function TvPage({ params }: { params: Promise<{ slug: strin
         </div>
         <Link
           href="/"
-          className="flex items-center gap-1.5 justify-self-end text-sm text-cream-dim transition hover:text-gold"
+          className="flex items-center gap-1.5 justify-self-end text-sm text-cream-dim transition hover:text-gold active:scale-95"
         >
           Home
           <HomeIcon className="h-4 w-4" />

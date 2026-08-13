@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Anton } from "next/font/google";
 import { VersionFooter } from "@/components/shared/VersionFooter";
 import "./globals.css";
@@ -22,6 +22,13 @@ const anton = Anton({
 export const metadata: Metadata = {
   title: "Movie Tournament Bracket",
   description: "Settle movie debates NCAA-bracket style.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1b1420",
+  // Lets env(safe-area-inset-*) resolve to real values instead of 0px, so
+  // the fixed bottom nav can pad above a notched phone's home indicator.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

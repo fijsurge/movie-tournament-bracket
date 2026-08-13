@@ -74,7 +74,7 @@ export function MovieSearch({
                     setQuery("");
                     setResults([]);
                   }}
-                  className="flex w-full items-center gap-3 rounded-lg bg-surface p-2 text-left shadow-[0_6px_16px_-8px_rgba(0,0,0,0.6)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_20px_-8px_rgba(232,163,61,0.25)] disabled:opacity-40 disabled:hover:translate-y-0"
+                  className="flex w-full items-center gap-3 rounded-lg bg-surface p-2 text-left shadow-[0_6px_16px_-8px_rgba(0,0,0,0.6)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_20px_-8px_rgba(232,163,61,0.25)] active:translate-y-0 active:scale-[0.98] disabled:opacity-40 disabled:hover:translate-y-0"
                 >
                   {movie.posterUrl ? (
                     <Image
