@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { submitVote } from "@/app/b/[slug]/vote/actions";
 import { Spinner } from "@/components/shared/Spinner";
 import { PosterButton } from "@/components/shared/PosterButton";
+import { SwipeMatchupCard } from "@/components/voting/SwipeMatchupCard";
+import { swipeToScores } from "@/lib/swipe-vote";
 
 interface Category {
   key: string;
@@ -44,17 +46,17 @@ function ScorePicker({
       {categories.map((cat) => (
         <div key={cat.key} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <span className="text-sm">{cat.label}</span>
-          <div className="flex gap-1">
+          <div className="flex gap-1.5">
             {SCORES.map((score) => (
               <button
                 key={score}
                 type="button"
                 onClick={() => setScores((prev) => ({ ...prev, [cat.key]: score }))}
                 aria-pressed={scores[cat.key] === score}
-                className={`h-8 w-8 shrink-0 rounded border text-xs transition ${
+                className={`h-11 w-11 shrink-0 rounded border text-xs transition active:scale-95 ${
                   scores[cat.key] === score
                     ? "border-gold bg-gold text-ink"
-                    : "border-gold/25 text-cream hover:border-gold/50"
+                    : "border-gold/25 text-cream hover:border-gold/50 active:border-gold/50"
                 }`}
               >
                 {score}
@@ -97,6 +99,15 @@ export function VoteForm({
     categories.every((c) => scoresA[c.key] !== undefined) &&
     categories.every((c) => scoresB[c.key] !== undefined);
 
+  function handleSwipe(winner: "A" | "B") {
+    const { scoresA: a, scoresB: b } = swipeToScores(
+      categories.map((c) => c.key),
+      winner,
+    );
+    setScoresA(a);
+    setScoresB(b);
+  }
+
   function handleSubmit() {
     setError(null);
     startTransition(async () => {
@@ -138,6 +149,16 @@ export function VoteForm({
         </div>
       </div>
 
+      {/* Only offered on a matchup the voter hasn't scored yet — prevents an
+          accidental re-swipe from silently overwriting a considered vote. */}
+      {!initialScoresA && (
+        <SwipeMatchupCard
+          movieA={{ title: movieA.title, posterUrl: movieA.posterUrl }}
+          movieB={{ title: movieB.title, posterUrl: movieB.posterUrl }}
+          onSwipe={handleSwipe}
+        />
+      )}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <ScorePicker title={movieA.title} categories={categories} scores={scoresA} setScores={setScoresA} />
         <ScorePicker
@@ -155,7 +176,7 @@ export function VoteForm({
         type="button"
         onClick={handleSubmit}
         disabled={!complete || pending}
-        className="mt-4 w-full rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
+        className="mt-4 w-full rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim active:scale-[0.98] disabled:opacity-50"
       >
         {pending ? (
           <span className="inline-flex items-center gap-2">

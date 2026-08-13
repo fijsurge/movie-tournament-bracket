@@ -101,7 +101,7 @@ export function NewBracketForm() {
               <button
                 type="button"
                 onClick={() => removeCategory(i)}
-                className="text-sm text-cream-dim hover:text-error"
+                className="text-sm text-cream-dim hover:text-error active:scale-95"
                 aria-label={`Remove ${cat.label || "category"}`}
               >
                 ✕
@@ -193,7 +193,7 @@ export function NewBracketForm() {
                 className={`cursor-pointer rounded-full border px-3 py-1 text-sm transition ${
                   filterGenreIds.includes(g.id)
                     ? "border-gold bg-gold text-ink"
-                    : "border-gold/25 text-cream-dim hover:border-gold/50"
+                    : "border-gold/25 text-cream-dim hover:border-gold/50 active:border-gold/50"
                 }`}
               >
                 <input
@@ -229,7 +229,7 @@ export function NewBracketForm() {
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-full bg-gold px-6 py-2.5 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
+        className="self-start rounded-full bg-gold px-6 py-2.5 font-medium text-ink transition hover:bg-gold-dim active:scale-95 disabled:opacity-50"
       >
         {pending ? (
           <span className="inline-flex items-center gap-2">

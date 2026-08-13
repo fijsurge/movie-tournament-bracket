@@ -45,6 +45,13 @@ body {
   color: var(--color-cream);
 }
 
+/* Reserves room above the fixed BottomTabBar so page content (especially
+   trailing form buttons) isn't hidden behind it — only fires on pages that
+   actually render one, via the bar's own data attribute. */
+body:has([data-bottom-tab-bar]) {
+  padding-bottom: calc(4.75rem + env(safe-area-inset-bottom));
+}
+
 ::selection {
   background: var(--color-gold);
   color: var(--color-ink);

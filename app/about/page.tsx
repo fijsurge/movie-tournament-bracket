@@ -1,6 +1,7 @@
-import Link from "next/link";
 import Image from "next/image";
 import splashLogo from "@/images/splash-logo.png";
+import { BottomTabBar } from "@/components/shared/BottomTabBar";
+import { HomeIcon } from "@/components/shared/Icons";
 
 export default function AboutPage() {
   return (
@@ -52,9 +53,7 @@ export default function AboutPage() {
         what phase the bracket is in.
       </p>
 
-      <Link href="/" className="text-sm text-gold underline underline-offset-2">
-        ← Back home
-      </Link>
+      <BottomTabBar links={[{ href: "/", label: "Home", icon: <HomeIcon className="h-5 w-5" /> }]} />
     </main>
   );
 }

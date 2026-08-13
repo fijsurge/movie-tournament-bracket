@@ -33,7 +33,7 @@ export function ShareLink({ url, label }: { url: string; label: string }) {
       <button
         type="button"
         onClick={handleShare}
-        className="flex shrink-0 items-center gap-1.5 rounded-full border border-gold/40 px-3 py-1.5 text-sm text-cream transition hover:border-gold"
+        className="flex shrink-0 items-center gap-1.5 rounded-full border border-gold/40 px-3 py-1.5 text-sm text-cream transition hover:border-gold active:scale-95"
       >
         <ShareIcon className="h-4 w-4" />
         Share
@@ -41,7 +41,7 @@ export function ShareLink({ url, label }: { url: string; label: string }) {
       <button
         type="button"
         onClick={handleCopy}
-        className="flex shrink-0 items-center gap-1.5 rounded-full bg-gold px-3 py-1.5 text-sm font-medium text-ink transition hover:bg-gold-dim"
+        className="flex shrink-0 items-center gap-1.5 rounded-full bg-gold px-3 py-1.5 text-sm font-medium text-ink transition hover:bg-gold-dim active:scale-95"
       >
         {copied ? <CheckCircleIcon className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
         {copied ? "Copied" : "Copy"}

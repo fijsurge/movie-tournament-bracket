@@ -24,7 +24,11 @@ export function PosterButton({
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="shrink-0 text-left">
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="shrink-0 text-left transition active:scale-95"
+      >
         {movie.posterUrl ? (
           <Image src={movie.posterUrl} alt="" width={width} height={height} className={imageClassName} />
         ) : (

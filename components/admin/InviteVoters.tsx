@@ -83,7 +83,7 @@ export function InviteVoters({
               <button
                 type="button"
                 onClick={() => removeRow(i)}
-                className="text-sm text-cream-dim hover:text-error"
+                className="text-sm text-cream-dim hover:text-error active:scale-95"
                 aria-label="Remove row"
               >
                 ✕
@@ -103,7 +103,7 @@ export function InviteVoters({
         <SubmitButton
           disabled={validRows.length === 0}
           pendingLabel="Sending…"
-          className="mt-1 self-start rounded-full bg-gold px-4 py-2 text-sm font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
+          className="mt-1 self-start rounded-full bg-gold px-4 py-2 text-sm font-medium text-ink transition hover:bg-gold-dim active:scale-95 disabled:opacity-50"
         >
           Send {validRows.length > 0 ? `${validRows.length} ` : ""}invite{validRows.length === 1 ? "" : "s"}
         </SubmitButton>

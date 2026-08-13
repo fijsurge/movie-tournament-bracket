@@ -60,7 +60,7 @@ export function AccountForm({
 
       <SubmitButton
         pendingLabel="Saving…"
-        className="self-start rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim disabled:opacity-50"
+        className="self-start rounded-full bg-gold px-4 py-2 font-medium text-ink transition hover:bg-gold-dim active:scale-95 disabled:opacity-50"
       >
         Save
       </SubmitButton>

@@ -32,7 +32,7 @@ export function TrailerEmbed({
         <button
           type="button"
           onClick={() => setMuted(false)}
-          className="absolute right-2 bottom-2 rounded-full bg-ink/80 px-3 py-1 text-xs text-cream backdrop-blur transition hover:bg-ink"
+          className="absolute right-2 bottom-2 rounded-full bg-ink/80 px-3 py-1 text-xs text-cream backdrop-blur transition hover:bg-ink active:scale-95"
         >
           🔊 Unmute
         </button>

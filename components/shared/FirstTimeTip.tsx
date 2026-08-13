@@ -28,7 +28,7 @@ export function FirstTimeTip({ id, children }: { id: string; children: React.Rea
           setDismissedOverride(true);
         }}
         aria-label="Dismiss tip"
-        className="shrink-0 text-rose hover:text-gold"
+        className="shrink-0 text-rose hover:text-gold active:scale-90"
       >
         ✕
       </button>

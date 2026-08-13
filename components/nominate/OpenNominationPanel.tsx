@@ -2,7 +2,8 @@
 
 import useSWR from "swr";
 import { useState } from "react";
-import { MovieSearch, type MovieSearchResult } from "./MovieSearch";
+import type { MovieSearchResult } from "./MovieSearch";
+import { MovieSearchSheet } from "./MovieSearchSheet";
 import { submitNomination } from "@/app/b/[slug]/nominate/actions";
 import { Avatar } from "@/components/shared/Avatar";
 import { PickAnnouncement } from "@/components/shared/PickAnnouncement";
@@ -89,7 +90,7 @@ export function OpenNominationPanel({
       {atCap ? (
         <p className="text-sm text-cream-dim">You&apos;ve used all your nominations. Waiting on everyone else…</p>
       ) : (
-        <MovieSearch
+        <MovieSearchSheet
           bracketId={bracketId}
           onPick={handlePick}
           disabled={isPicking}

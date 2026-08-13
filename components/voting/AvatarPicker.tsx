@@ -64,8 +64,8 @@ export function AvatarPicker({
               type="button"
               onClick={() => setValue(emoji)}
               aria-pressed={value === emoji}
-              className={`flex h-8 w-8 items-center justify-center rounded-full border text-base transition ${
-                value === emoji ? "border-gold bg-gold/15" : "border-gold/20 hover:border-gold/50"
+              className={`flex h-8 w-8 items-center justify-center rounded-full border text-base transition active:scale-90 ${
+                value === emoji ? "border-gold bg-gold/15" : "border-gold/20 hover:border-gold/50 active:border-gold/50"
               }`}
             >
               {emoji}
@@ -74,7 +74,7 @@ export function AvatarPicker({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-gold/20 text-cream-dim transition hover:border-gold/50"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-gold/20 text-cream-dim transition hover:border-gold/50 active:scale-90 active:border-gold/50"
             aria-label="Upload photo"
           >
             <UploadIcon className="h-4 w-4" />
