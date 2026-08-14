@@ -1,12 +1,23 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
+import { getPersonId } from "@/lib/person-session";
 
 const COOKIE_NAME = "admin_auth";
 
+// The shared password stays the source of truth (and the cheap fast path —
+// checked first, no DB read); a logged-in Person who's been linked as a
+// global admin (see app/admin/actions.ts's linkGlobalAdmin) is an additive
+// shortcut, not a replacement.
 export async function isAdminAuthenticated(): Promise<boolean> {
   const store = await cookies();
-  return store.get(COOKIE_NAME)?.value === getAdminPassword();
+  if (store.get(COOKIE_NAME)?.value === getAdminPassword()) return true;
+
+  const personId = await getPersonId();
+  if (!personId) return false;
+  const person = await prisma.person.findUnique({ where: { id: personId }, select: { isGlobalAdmin: true } });
+  return person?.isGlobalAdmin ?? false;
 }
 
 export function getAdminPassword(): string {

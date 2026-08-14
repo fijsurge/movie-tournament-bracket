@@ -5,6 +5,7 @@ import { logoutPerson } from "@/app/login/actions";
 import { SubmitButton } from "@/components/shared/SubmitButton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { BottomTabBar } from "@/components/shared/BottomTabBar";
+import { PersonProfileForm } from "@/components/PersonProfileForm";
 import { HomeIcon } from "@/components/shared/Icons";
 
 export const dynamic = "force-dynamic";
@@ -41,9 +42,10 @@ export default async function AccountPage() {
       <h1 className="font-display text-2xl tracking-wide text-gold uppercase">My account</h1>
 
       <div>
-        <p className="font-medium">{person.name}</p>
         <p className="text-sm text-cream-dim">{person.email}</p>
       </div>
+
+      <PersonProfileForm currentName={person.name} currentAvatar={person.avatar} />
 
       <section>
         <h2 className="text-lg font-medium text-rose">My brackets</h2>
