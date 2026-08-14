@@ -2,10 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { PageNav } from "@/components/shared/PageNav";
+import { BracketNav } from "@/components/voting/BracketNav";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { LoginNudge } from "@/components/LoginNudge";
-import { TvIcon } from "@/components/shared/Icons";
 import { phaseHref } from "@/lib/phase-nav";
 import iconMark from "@/images/icon-mark.png";
 
@@ -30,7 +29,7 @@ export default async function PublicBracketLanding({
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col p-6">
-      <PageNav backHref="/" backLabel="Home" links={[{ href: `/b/${bracket.slug}/tv`, label: "TV view", icon: TvIcon }]} />
+      <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
       <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
         <Image src={iconMark} alt="" width={64} className="opacity-90 drop-shadow-[0_0_24px_rgba(232,163,61,0.25)]" />
         <h1 className="font-display text-3xl tracking-wide text-gold uppercase">{bracket.name}</h1>
