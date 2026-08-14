@@ -54,8 +54,10 @@ model Bracket {
   nominationCapPerVoter Int?
   poolTargetSize        Int?
   currentRound          Int?
-  filterPersonId        Int?
-  filterPersonName      String?
+  filterPersonIds       String? // JSON-encoded array of {id, name}
+  filterCompanyIds      String? // JSON-encoded array of {id, name}
+  filterKeywordIds      String? // JSON-encoded array of {id, name}
+  filterCollectionIds   String? // JSON-encoded array of {id, name}
   filterGenreIds        String? // JSON-encoded array of TMDb genre ids
   filterYearMin         Int?
   filterYearMax         Int?

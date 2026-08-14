@@ -13,11 +13,24 @@ export async function GET(request: Request) {
   if (bracketId) {
     const bracket = await prisma.bracket.findUnique({
       where: { id: bracketId },
-      select: { filterPersonId: true, filterGenreIds: true, filterYearMin: true, filterYearMax: true },
+      select: {
+        filterPersonIds: true,
+        filterCompanyIds: true,
+        filterKeywordIds: true,
+        filterCollectionIds: true,
+        filterGenreIds: true,
+        filterYearMin: true,
+        filterYearMax: true,
+      },
     });
     if (bracket) {
+      const ids = (json: string | null) =>
+        json ? (JSON.parse(json) as { id: number; name: string }[]).map((p) => p.id) : null;
       filters = {
-        personId: bracket.filterPersonId,
+        personIds: ids(bracket.filterPersonIds),
+        companyIds: ids(bracket.filterCompanyIds),
+        keywordIds: ids(bracket.filterKeywordIds),
+        collectionIds: ids(bracket.filterCollectionIds),
         genreIds: bracket.filterGenreIds ? (JSON.parse(bracket.filterGenreIds) as number[]) : null,
         yearMin: bracket.filterYearMin,
         yearMax: bracket.filterYearMax,
