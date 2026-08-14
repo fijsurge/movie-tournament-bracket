@@ -94,10 +94,18 @@ export function VoteForm({
   const [submitted, setSubmitted] = useState(Boolean(initialScoresA));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [swiped, setSwiped] = useState(false);
+  const [swipedWinnerTitle, setSwipedWinnerTitle] = useState<string | null>(null);
 
   const complete =
     categories.every((c) => scoresA[c.key] !== undefined) &&
     categories.every((c) => scoresB[c.key] !== undefined);
+
+  // Only offered on a matchup the voter hasn't scored yet — prevents an
+  // accidental re-swipe from silently overwriting a considered vote. Once
+  // swiped this session, the card gives way to the static header + a
+  // confirmation line instead of leaving its own reserved space behind.
+  const showSwipeCard = !initialScoresA && !swiped;
 
   function handleSwipe(winner: "A" | "B") {
     const { scoresA: a, scoresB: b } = swipeToScores(
@@ -106,6 +114,8 @@ export function VoteForm({
     );
     setScoresA(a);
     setScoresB(b);
+    setSwiped(true);
+    setSwipedWinnerTitle(winner === "A" ? movieA.title : movieB.title);
   }
 
   function handleSubmit() {
@@ -123,35 +133,42 @@ export function VoteForm({
 
   return (
     <div className="rounded-xl bg-surface p-4 shadow-[0_16px_36px_-16px_rgba(0,0,0,0.75)]">
-      <div className="mb-4 flex items-center justify-center gap-4 text-center">
-        <div className="flex flex-col items-center gap-2">
-          {movieA.posterUrl && (
-            <PosterButton
-              movie={movieA}
-              width={84}
-              height={126}
-              imageClassName="rounded-md shadow-[0_10px_22px_-8px_rgba(0,0,0,0.8)]"
-            />
-          )}
-          <span className="font-medium">{movieA.title}</span>
+      {!showSwipeCard && (
+        <div className="mb-4 flex items-center justify-center gap-4 text-center">
+          <div className="flex flex-col items-center gap-2">
+            {movieA.posterUrl && (
+              <PosterButton
+                movie={movieA}
+                width={84}
+                height={126}
+                imageClassName="rounded-md shadow-[0_10px_22px_-8px_rgba(0,0,0,0.8)]"
+              />
+            )}
+            <span className="font-medium">{movieA.title}</span>
+          </div>
+          <span className="font-display text-rose">vs</span>
+          <div className="flex flex-col items-center gap-2">
+            {movieB.posterUrl && (
+              <PosterButton
+                movie={movieB}
+                width={84}
+                height={126}
+                imageClassName="rounded-md shadow-[0_10px_22px_-8px_rgba(0,0,0,0.8)]"
+              />
+            )}
+            <span className="font-medium">{movieB.title}</span>
+          </div>
         </div>
-        <span className="font-display text-rose">vs</span>
-        <div className="flex flex-col items-center gap-2">
-          {movieB.posterUrl && (
-            <PosterButton
-              movie={movieB}
-              width={84}
-              height={126}
-              imageClassName="rounded-md shadow-[0_10px_22px_-8px_rgba(0,0,0,0.8)]"
-            />
-          )}
-          <span className="font-medium">{movieB.title}</span>
-        </div>
-      </div>
+      )}
 
-      {/* Only offered on a matchup the voter hasn't scored yet — prevents an
-          accidental re-swipe from silently overwriting a considered vote. */}
-      {!initialScoresA && (
+      {swiped && swipedWinnerTitle && (
+        <p className="mb-4 text-center text-sm text-cream-dim">
+          You picked <span className="font-medium text-gold">{swipedWinnerTitle}</span> — adjust the scores
+          below if you&apos;d like.
+        </p>
+      )}
+
+      {showSwipeCard && (
         <SwipeMatchupCard
           movieA={{ title: movieA.title, posterUrl: movieA.posterUrl }}
           movieB={{ title: movieB.title, posterUrl: movieB.posterUrl }}
