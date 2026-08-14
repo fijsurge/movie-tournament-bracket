@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireBracketAdmin } from "@/lib/bracket-auth";
 import { prisma } from "@/lib/db";
 import { getBaseUrl } from "@/lib/base-url";
 import { AdminNav } from "@/components/admin/AdminNav";
@@ -27,6 +27,8 @@ import {
   undoLastPhase,
   toggleArchived,
   deleteBracket,
+  promoteVoter,
+  demoteVoter,
 } from "./actions";
 
 const PRIMARY_BUTTON =
@@ -39,7 +41,6 @@ export default async function AdminBracketDashboard({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  await requireAdmin();
   const { slug } = await params;
   const baseUrl = await getBaseUrl();
 
@@ -63,6 +64,8 @@ export default async function AdminBracketDashboard({
   if (!bracket) {
     notFound();
   }
+
+  await requireBracketAdmin(bracket.id);
 
   const openNominationsForBracket = openNominations.bind(null, bracket.id);
   const startDraftForBracket = startDraft.bind(null, bracket.id);
@@ -133,6 +136,49 @@ export default async function AdminBracketDashboard({
           <p className="mt-1 text-sm text-cream-dim">{filterSummary}</p>
         </section>
       )}
+
+      <section className="mt-6">
+        <h2 className="text-lg font-medium text-rose">Bracket admins</h2>
+        {bracket.voters.length === 0 ? (
+          <p className="mt-2 text-sm text-cream-dim">No voters yet.</p>
+        ) : (
+          <ul className="mt-2 flex flex-col gap-2">
+            {bracket.voters.map((v) => {
+              const isBracketAdminVoter = v.role === "ADMIN";
+              const canPromote = Boolean(v.person?.emailVerifiedAt);
+              return (
+                <li key={v.id} className="flex items-center justify-between gap-3 rounded border border-gold/15 p-2">
+                  <span className="flex items-center gap-2 text-sm">
+                    <Avatar name={effectiveVoterName(v)} avatar={effectiveVoterAvatar(v)} size="sm" />
+                    {effectiveVoterName(v)}
+                    {isBracketAdminVoter && (
+                      <span className="rounded-full border border-gold/40 px-2 py-0.5 text-xs text-gold">Admin</span>
+                    )}
+                  </span>
+                  {isBracketAdminVoter ? (
+                    <form action={demoteVoter.bind(null, bracket.id, v.id)}>
+                      <SubmitButton pendingLabel="…" className={`${SECONDARY_BUTTON} px-2 py-1 text-xs`}>
+                        Remove admin
+                      </SubmitButton>
+                    </form>
+                  ) : (
+                    <form action={promoteVoter.bind(null, bracket.id, v.id)}>
+                      <SubmitButton
+                        pendingLabel="…"
+                        disabled={!canPromote}
+                        title={canPromote ? undefined : "Needs a verified email to become admin"}
+                        className={`${SECONDARY_BUTTON} px-2 py-1 text-xs`}
+                      >
+                        Make admin
+                      </SubmitButton>
+                    </form>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
 
       <section className="mt-6 rounded border border-gold/20 bg-surface p-4">
         <h2 className="text-lg font-medium text-rose">Bracket controls</h2>

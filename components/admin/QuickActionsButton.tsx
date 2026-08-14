@@ -1,17 +1,15 @@
 import { prisma } from "@/lib/db";
-import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { isBracketAdmin } from "@/lib/bracket-auth";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
 import { QuickActionsSheet } from "@/components/admin/QuickActionsSheet";
 
-// Self-gating: checks admin auth itself rather than trusting the caller, and
-// runs its own independent query rather than threading data down from
-// whichever of BracketNav's many render sites happens to mount it — those
-// sites already fetch different shapes of the bracket, and this returns
-// voter emails (via invitedVoters), which shouldn't ride along on a query
-// that isn't already admin-gated.
+// Self-gating: runs its own independent query rather than threading data
+// down from whichever of BracketNav's many render sites happens to mount
+// it — those sites already fetch different shapes of the bracket, and this
+// returns voter emails (via invitedVoters), which shouldn't ride along on a
+// query that isn't already admin-gated. The bracket is fetched before
+// gating (rather than after) since isBracketAdmin needs its id.
 export async function QuickActionsButton({ slug }: { slug: string }) {
-  if (!(await isAdminAuthenticated())) return null;
-
   const bracket = await prisma.bracket.findUnique({
     where: { slug },
     select: {
@@ -24,6 +22,7 @@ export async function QuickActionsButton({ slug }: { slug: string }) {
   });
 
   if (!bracket || bracket.status === "SETUP" || bracket.status === "COMPLETE") return null;
+  if (!(await isBracketAdmin(bracket.id))) return null;
 
   const invitedVoters = bracket.voters
     .filter((v): v is typeof v & { email: string } => v.email !== null)
