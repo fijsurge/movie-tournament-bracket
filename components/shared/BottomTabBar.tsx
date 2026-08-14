@@ -36,12 +36,7 @@ export function BottomTabBar({
               active ? "text-gold" : "text-cream-dim hover:text-gold"
             }`}
           >
-            <span className="relative">
-              {l.icon}
-              {l.accent && (
-                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-gold" aria-hidden="true" />
-              )}
-            </span>
+            <span className={l.accent ? "text-gold" : undefined}>{l.icon}</span>
             {l.label}
           </Link>
         );
