@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { TMDB_GENRES } from "@/lib/genres";
+import { buildFilterSummary } from "@/lib/bracket-filters";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
 
 export const dynamic = "force-dynamic";
@@ -34,18 +34,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const genreIds = bracket.filterGenreIds ? (JSON.parse(bracket.filterGenreIds) as number[]) : [];
-  const filterParts = [
-    bracket.filterPersonName,
-    genreIds.length > 0
-      ? genreIds.map((id) => TMDB_GENRES.find((g) => g.id === id)?.name).filter(Boolean).join("/")
-      : null,
-    bracket.filterYearMin || bracket.filterYearMax
-      ? `${bracket.filterYearMin ?? "…"}-${bracket.filterYearMax ?? "…"}`
-      : null,
-  ].filter(Boolean);
-  const hasFilters = filterParts.length > 0;
-  const filterSummary = hasFilters ? filterParts.join(" · ") : null;
+  const { hasFilters, filterSummary } = buildFilterSummary(bracket);
 
   let draft = null;
   if (bracket.draftState) {

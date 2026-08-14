@@ -11,7 +11,7 @@ import { InviteVoters } from "@/components/admin/InviteVoters";
 import { UndoButton } from "@/components/admin/UndoButton";
 import { QuickSeedButton } from "@/components/admin/QuickSeedButton";
 import { DeleteBracketButton } from "@/components/admin/DeleteBracketButton";
-import { TMDB_GENRES } from "@/lib/genres";
+import { buildFilterSummary } from "@/lib/bracket-filters";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
 import {
   openNominations,
@@ -78,16 +78,7 @@ export default async function AdminBracketDashboard({
 
   const currentRoundData = bracket.rounds.find((r) => r.roundNumber === bracket.currentRound);
 
-  const genreIds = bracket.filterGenreIds ? (JSON.parse(bracket.filterGenreIds) as number[]) : [];
-  const filterParts = [
-    bracket.filterPersonName,
-    genreIds.length > 0
-      ? genreIds.map((id) => TMDB_GENRES.find((g) => g.id === id)?.name).filter(Boolean).join("/")
-      : null,
-    bracket.filterYearMin || bracket.filterYearMax
-      ? `${bracket.filterYearMin ?? "…"}-${bracket.filterYearMax ?? "…"}`
-      : null,
-  ].filter(Boolean);
+  const { filterSummary } = buildFilterSummary(bracket);
 
   const turnOrder = bracket.draftState ? (JSON.parse(bracket.draftState.turnOrder) as string[]) : [];
   const votersById = new Map(bracket.voters.map((v) => [v.id, effectiveVoterName(v)]));
@@ -136,10 +127,10 @@ export default async function AdminBracketDashboard({
         </ul>
       </section>
 
-      {filterParts.length > 0 && (
+      {filterSummary && (
         <section className="mt-6">
           <h2 className="text-lg font-medium text-rose">Search filter</h2>
-          <p className="mt-1 text-sm text-cream-dim">{filterParts.join(" · ")}</p>
+          <p className="mt-1 text-sm text-cream-dim">{filterSummary}</p>
         </section>
       )}
 

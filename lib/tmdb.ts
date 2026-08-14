@@ -1,4 +1,7 @@
 import "server-only";
+import { matchesFilters, dedupeById, type TmdbRawMovie, type MovieFilters } from "./tmdb-filters";
+
+export type { MovieFilters };
 
 const TMDB_API_BASE = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w342";
@@ -17,19 +20,21 @@ export interface TmdbPersonResult {
   profileUrl: string | null;
 }
 
-export interface MovieFilters {
-  personId?: number | null;
-  genreIds?: number[] | null;
-  yearMin?: number | null;
-  yearMax?: number | null;
+export interface TmdbCompanyResult {
+  companyId: number;
+  name: string;
+  logoUrl: string | null;
 }
 
-interface TmdbRawMovie {
-  id: number;
-  title: string;
-  release_date?: string;
-  poster_path?: string | null;
-  genre_ids?: number[];
+export interface TmdbKeywordResult {
+  keywordId: number;
+  name: string;
+}
+
+export interface TmdbCollectionResult {
+  collectionId: number;
+  name: string;
+  posterUrl: string | null;
 }
 
 export interface TmdbMovieDetails {
@@ -74,17 +79,6 @@ function toResult(m: TmdbRawMovie): TmdbMovieResult {
   };
 }
 
-function matchesFilters(m: TmdbRawMovie, filters: MovieFilters): boolean {
-  if (filters.genreIds && filters.genreIds.length > 0) {
-    const genres = m.genre_ids ?? [];
-    if (!filters.genreIds.some((g) => genres.includes(g))) return false;
-  }
-  const year = m.release_date ? Number(m.release_date.slice(0, 4)) : null;
-  if (filters.yearMin && (year === null || year < filters.yearMin)) return false;
-  if (filters.yearMax && (year === null || year > filters.yearMax)) return false;
-  return true;
-}
-
 async function tmdbGet<T>(path: string, params: Record<string, string>): Promise<T> {
   const url = new URL(`${TMDB_API_BASE}${path}`);
   url.searchParams.set("api_key", getApiKey());
@@ -118,6 +112,15 @@ async function tmdbGetPages(path: string, params: Record<string, string>, maxPag
   return [first.results, ...rest.map((page) => page.results)].flat();
 }
 
+// A collection's parts list is the exact, complete franchise roster (no
+// Discover filtering needed or even possible — /discover/movie has no
+// with_collections param) — used as-is, then optionally narrowed further by
+// a typed title/genre/year filter same as any other candidate list.
+async function getCollectionParts(collectionId: number): Promise<TmdbRawMovie[]> {
+  const data = await tmdbGet<{ parts: TmdbRawMovie[] }>(`/collection/${collectionId}`, {});
+  return data.parts;
+}
+
 function pickTrailerKey(videos: TmdbVideo[] | undefined): string | null {
   if (!videos || videos.length === 0) return null;
   return (
@@ -149,21 +152,45 @@ export async function getMovieDetails(tmdbId: number): Promise<TmdbMovieDetails 
 }
 
 /**
- * Searches for movies, honoring a bracket's optional cast/genre/year filters.
- * - A person filter restricts candidates to that person's on-screen credits.
- * - Otherwise, a text query hits TMDb's title search; an empty query with no
- *   text falls back to Discover (sorted by popularity) so admins can still
- *   browse a genre/year-scoped list without knowing exact titles.
- * - Genre and year filters are applied as a local pass afterward, since
- *   neither the search nor person-credits endpoints support them directly.
+ * Searches for movies, honoring a bracket's optional scope filters. Branches
+ * are tried in order of precision — most-specific wins, since combining an
+ * exact-list filter (collection) with a fuzzy one (person/company) has no
+ * obviously-correct semantic:
+ *   1. Collections — exact by construction (see getCollectionParts).
+ *   2. People — unions each person's on-screen credits (OR: "either of
+ *      these actors/directors"), then narrowed by a typed query if present.
+ *   3. A typed text query with no collection/person filter — hits TMDb's
+ *      title search. Company/keyword filters aren't enforced past this
+ *      point: TMDb's search results don't carry that data, only Discover's
+ *      server-side params do, so a typed title is trusted to already be
+ *      on-scope (same trust model genre used to implicitly rely on here).
+ *   4. An empty query with company/keyword/genre/year filters — Discover
+ *      (sorted by popularity), so admins can browse a scoped list without
+ *      knowing exact titles. Genre IDs are comma-joined (AND — "romantic
+ *      comedy" needs Comedy *and* Romance); company/keyword IDs are
+ *      pipe-joined (OR — matching either of the selected studios/tags is
+ *      the more useful default). This is a different axis than genre's
+ *      AND — don't conflate the two when editing.
+ * Genre and year are always re-verified locally afterward (matchesFilters)
+ * since every branch's candidates carry that data; company/keyword are not
+ * (see matchesFilters).
  */
 export async function searchFilteredMovies(query: string, filters: MovieFilters): Promise<TmdbMovieResult[]> {
   const trimmed = query.trim();
   let candidates: TmdbRawMovie[];
 
-  if (filters.personId) {
-    const data = await tmdbGet<{ cast: TmdbRawMovie[] }>(`/person/${filters.personId}/movie_credits`, {});
-    candidates = data.cast;
+  if (filters.collectionIds && filters.collectionIds.length > 0) {
+    const parts = await Promise.all(filters.collectionIds.map((id) => getCollectionParts(id)));
+    candidates = dedupeById(parts.flat());
+    if (trimmed) {
+      const q = trimmed.toLowerCase();
+      candidates = candidates.filter((m) => m.title.toLowerCase().includes(q));
+    }
+  } else if (filters.personIds && filters.personIds.length > 0) {
+    const credits = await Promise.all(
+      filters.personIds.map((id) => tmdbGet<{ cast: TmdbRawMovie[] }>(`/person/${id}/movie_credits`, {})),
+    );
+    candidates = dedupeById(credits.flatMap((c) => c.cast));
     if (trimmed) {
       const q = trimmed.toLowerCase();
       candidates = candidates.filter((m) => m.title.toLowerCase().includes(q));
@@ -174,14 +201,24 @@ export async function searchFilteredMovies(query: string, filters: MovieFilters)
       include_adult: "false",
     });
     candidates = data.results;
-  } else if ((filters.genreIds && filters.genreIds.length > 0) || filters.yearMin || filters.yearMax) {
+  } else if (
+    (filters.companyIds && filters.companyIds.length > 0) ||
+    (filters.keywordIds && filters.keywordIds.length > 0) ||
+    (filters.genreIds && filters.genreIds.length > 0) ||
+    filters.yearMin ||
+    filters.yearMax
+  ) {
     candidates = await tmdbGetPages(
       "/discover/movie",
       {
         sort_by: "popularity.desc",
         include_adult: "false",
-        ...(filters.genreIds && filters.genreIds.length > 0
-          ? { with_genres: filters.genreIds.join(",") }
+        ...(filters.genreIds && filters.genreIds.length > 0 ? { with_genres: filters.genreIds.join(",") } : {}),
+        ...(filters.companyIds && filters.companyIds.length > 0
+          ? { with_companies: filters.companyIds.join("|") }
+          : {}),
+        ...(filters.keywordIds && filters.keywordIds.length > 0
+          ? { with_keywords: filters.keywordIds.join("|") }
           : {}),
         ...(filters.yearMin ? { "primary_release_date.gte": `${filters.yearMin}-01-01` } : {}),
         ...(filters.yearMax ? { "primary_release_date.lte": `${filters.yearMax}-12-31` } : {}),
@@ -210,5 +247,48 @@ export async function searchPeople(query: string): Promise<TmdbPersonResult[]> {
     personId: p.id,
     name: p.name,
     profileUrl: p.profile_path ? `${TMDB_PROFILE_BASE}${p.profile_path}` : null,
+  }));
+}
+
+export async function searchCompanies(query: string): Promise<TmdbCompanyResult[]> {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  const data = await tmdbGet<{ results: { id: number; name: string; logo_path?: string | null }[] }>(
+    "/search/company",
+    { query: trimmed },
+  );
+
+  return data.results.slice(0, 8).map((c) => ({
+    companyId: c.id,
+    name: c.name,
+    logoUrl: c.logo_path ? `${TMDB_PROFILE_BASE}${c.logo_path}` : null,
+  }));
+}
+
+// TMDb keyword tagging is community-sourced and incomplete — a search here
+// can miss legitimate adaptations/themes, or need the exact tag phrasing.
+export async function searchKeywords(query: string): Promise<TmdbKeywordResult[]> {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  const data = await tmdbGet<{ results: { id: number; name: string }[] }>("/search/keyword", { query: trimmed });
+
+  return data.results.slice(0, 8).map((k) => ({ keywordId: k.id, name: k.name }));
+}
+
+export async function searchCollections(query: string): Promise<TmdbCollectionResult[]> {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  const data = await tmdbGet<{ results: { id: number; name: string; poster_path?: string | null }[] }>(
+    "/search/collection",
+    { query: trimmed },
+  );
+
+  return data.results.slice(0, 8).map((c) => ({
+    collectionId: c.id,
+    name: c.name,
+    posterUrl: c.poster_path ? `${TMDB_IMAGE_BASE}${c.poster_path}` : null,
   }));
 }

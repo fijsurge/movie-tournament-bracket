@@ -2,15 +2,9 @@
 
 import { useActionState, useState } from "react";
 import { createBracket, type CreateBracketState } from "@/app/admin/brackets/new/actions";
-import { PersonPicker } from "@/components/admin/PersonPicker";
+import { ScopePicker, type ScopeItem } from "@/components/admin/ScopePicker";
 import { Spinner } from "@/components/shared/Spinner";
 import { TMDB_GENRES } from "@/lib/genres";
-
-interface PersonValue {
-  personId: number;
-  name: string;
-  profileUrl: string | null;
-}
 
 interface CategoryRow {
   key: string;
@@ -42,8 +36,11 @@ export function NewBracketForm() {
   const [state, formAction, pending] = useActionState(createBracket, initialState);
   const [categories, setCategories] = useState<CategoryRow[]>(DEFAULT_CATEGORIES);
   const [nominationMode, setNominationMode] = useState<"OPEN" | "DRAFT">("OPEN");
-  const [filterPerson, setFilterPerson] = useState<PersonValue | null>(null);
+  const [scopeItems, setScopeItems] = useState<ScopeItem[]>([]);
   const [filterGenreIds, setFilterGenreIds] = useState<number[]>([]);
+
+  const byType = (type: ScopeItem["type"]) =>
+    scopeItems.filter((s) => s.type === type).map((s) => ({ id: s.id, name: s.name }));
 
   function toggleGenre(id: number) {
     setFilterGenreIds((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
@@ -175,13 +172,14 @@ export function NewBracketForm() {
 
       <fieldset className="flex flex-col gap-3">
         <legend className={LEGEND}>
-          Restrict the movie search (optional) — keeps nominations in scope, e.g. &ldquo;action movies
-          from the 1980s&rdquo;
+          Restrict the movie search (optional) — keeps nominations in scope, e.g. &ldquo;Marvel
+          movies&rdquo;, &ldquo;Agatha Christie movies&rdquo;, or &ldquo;action movies from the
+          1980s&rdquo;
         </legend>
 
         <div className="flex flex-col gap-1">
-          <span className="text-sm text-cream-dim">Actor or director</span>
-          <PersonPicker value={filterPerson} onChange={setFilterPerson} />
+          <span className="text-sm text-cream-dim">People, studios, or franchises</span>
+          <ScopePicker value={scopeItems} onChange={setScopeItems} />
         </div>
 
         <div className="flex flex-col gap-1">
@@ -219,8 +217,10 @@ export function NewBracketForm() {
           </label>
         </div>
 
-        <input type="hidden" name="filterPersonId" value={filterPerson?.personId ?? ""} />
-        <input type="hidden" name="filterPersonName" value={filterPerson?.name ?? ""} />
+        <input type="hidden" name="filterPersonIdsJson" value={JSON.stringify(byType("person"))} />
+        <input type="hidden" name="filterCompanyIdsJson" value={JSON.stringify(byType("company"))} />
+        <input type="hidden" name="filterKeywordIdsJson" value={JSON.stringify(byType("keyword"))} />
+        <input type="hidden" name="filterCollectionIdsJson" value={JSON.stringify(byType("collection"))} />
         <input type="hidden" name="filterGenreIdsJson" value={JSON.stringify(filterGenreIds)} />
       </fieldset>
 
