@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { submitVote } from "@/app/b/[slug]/vote/actions";
 import { Spinner } from "@/components/shared/Spinner";
 import { PosterButton } from "@/components/shared/PosterButton";
@@ -96,10 +97,16 @@ export function VoteForm({
   const [pending, startTransition] = useTransition();
   const [swiped, setSwiped] = useState(false);
   const [swipedWinnerTitle, setSwipedWinnerTitle] = useState<string | null>(null);
+  // Only ever set true as a direct result of a swipe — manual-only voting
+  // and re-opening an already-voted matchup never touch this, so the grid
+  // stays exactly as expanded as it's always been for both of those cases.
+  const [scoresCollapsed, setScoresCollapsed] = useState(false);
 
   const complete =
     categories.every((c) => scoresA[c.key] !== undefined) &&
     categories.every((c) => scoresB[c.key] !== undefined);
+  const totalA = categories.reduce((sum, c) => sum + (scoresA[c.key] ?? 0), 0);
+  const totalB = categories.reduce((sum, c) => sum + (scoresB[c.key] ?? 0), 0);
 
   // Only offered on a matchup the voter hasn't scored yet — prevents an
   // accidental re-swipe from silently overwriting a considered vote. Once
@@ -116,6 +123,7 @@ export function VoteForm({
     setScoresB(b);
     setSwiped(true);
     setSwipedWinnerTitle(winner === "A" ? movieA.title : movieB.title);
+    setScoresCollapsed(true);
   }
 
   function handleSubmit() {
@@ -176,16 +184,51 @@ export function VoteForm({
         />
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-        <ScorePicker title={movieA.title} categories={categories} scores={scoresA} setScores={setScoresA} />
-        <ScorePicker
-          title={movieB.title}
-          categories={categories}
-          scores={scoresB}
-          setScores={setScoresB}
-          divider
-        />
-      </div>
+      <AnimatePresence mode="wait" initial={false}>
+        {scoresCollapsed ? (
+          <motion.div
+            key="collapsed"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center justify-between gap-3 rounded-lg border border-gold/15 bg-ink/40 p-3"
+          >
+            <div className="flex gap-4 text-sm">
+              <span className="truncate">
+                {movieA.title}: <span className="font-medium text-gold">{totalA}</span>
+              </span>
+              <span className="truncate">
+                {movieB.title}: <span className="font-medium text-gold">{totalB}</span>
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setScoresCollapsed(false)}
+              aria-expanded={false}
+              className="shrink-0 text-sm text-gold underline underline-offset-2"
+            >
+              Adjust scores
+            </button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="expanded"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6"
+          >
+            <ScorePicker title={movieA.title} categories={categories} scores={scoresA} setScores={setScoresA} />
+            <ScorePicker
+              title={movieB.title}
+              categories={categories}
+              scores={scoresB}
+              setScores={setScoresB}
+              divider
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {error && <p className="mt-2 text-sm text-error">{error}</p>}
 
