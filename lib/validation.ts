@@ -111,3 +111,8 @@ export const submitVoteSchema = z.object({
   scoresMovieA: z.record(z.string(), scoreValue),
   scoresMovieB: z.record(z.string(), scoreValue),
 });
+
+export const requestLoginLinkSchema = z.object({
+  email: z.string().trim().email(),
+  next: z.string().trim().optional(),
+});

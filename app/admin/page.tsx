@@ -1,14 +1,20 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
+import { getPersonId } from "@/lib/person-session";
 import { prisma } from "@/lib/db";
 import { PageNav } from "@/components/shared/PageNav";
 import { SubmitButton } from "@/components/shared/SubmitButton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { HomeIcon, LogOutIcon } from "@/components/shared/Icons";
-import { logoutAdmin } from "./actions";
+import { logoutAdmin, linkGlobalAdmin, unlinkGlobalAdmin } from "./actions";
 
 export default async function AdminHomePage() {
   await requireAdmin();
+
+  const personId = await getPersonId();
+  const person = personId
+    ? await prisma.person.findUnique({ where: { id: personId }, select: { email: true, isGlobalAdmin: true } })
+    : null;
 
   const brackets = await prisma.bracket.findMany({
     orderBy: [{ archived: "asc" }, { createdAt: "desc" }],
@@ -31,6 +37,48 @@ export default async function AdminHomePage() {
           </form>
         }
       />
+
+      <section className="mb-6 rounded-lg border border-gold/20 bg-surface p-4 text-sm">
+        {!person ? (
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-cream-dim">
+              Log in with your account, then come back here to link it as an admin — skips typing the
+              password next time.
+            </p>
+            <Link
+              href="/login?next=/admin"
+              className="shrink-0 rounded-full border border-gold/40 px-3 py-1.5 text-xs text-cream transition hover:border-gold active:scale-95"
+            >
+              Log in
+            </Link>
+          </div>
+        ) : person.isGlobalAdmin ? (
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-cream-dim">Your account ({person.email}) is linked as an admin.</p>
+            <form action={unlinkGlobalAdmin}>
+              <SubmitButton
+                pendingLabel="…"
+                className="shrink-0 rounded-full border border-gold/40 px-3 py-1.5 text-xs text-cream transition hover:border-gold active:scale-95"
+              >
+                Unlink
+              </SubmitButton>
+            </form>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-cream-dim">Skip the password next time — link {person.email} as an admin.</p>
+            <form action={linkGlobalAdmin}>
+              <SubmitButton
+                pendingLabel="…"
+                className="shrink-0 rounded-full bg-gold px-3 py-1.5 text-xs font-medium text-ink transition hover:bg-gold-dim active:scale-95"
+              >
+                Link my account
+              </SubmitButton>
+            </form>
+          </div>
+        )}
+      </section>
+
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-3xl tracking-wide text-gold uppercase">Brackets</h1>
         <Link

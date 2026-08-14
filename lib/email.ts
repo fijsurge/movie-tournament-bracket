@@ -18,6 +18,29 @@ function getTransporter(): nodemailer.Transporter {
   return transporter;
 }
 
+export async function sendMagicLinkEmail({
+  to,
+  loginUrl,
+}: {
+  to: string;
+  loginUrl: string;
+}): Promise<{ error: string | null }> {
+  try {
+    await getTransporter().sendMail({
+      from: `Movie Madness Bracket <${process.env.GMAIL_USER}>`,
+      to,
+      subject: "Your login link",
+      html: `
+        <p><a href="${loginUrl}">Tap here to log in</a> — this link works once and expires in 30 minutes.</p>
+        <p>If you didn't request this, you can ignore this email.</p>
+      `,
+    });
+    return { error: null };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Failed to send email" };
+  }
+}
+
 export async function sendInviteEmail({
   to,
   voterName,

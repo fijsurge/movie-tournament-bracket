@@ -123,12 +123,17 @@ model DraftState {
 }
 
 model Person {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  avatar    String? // emoji preset, or a data: URI for an uploaded photo
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  name                String
+  avatar              String? // emoji preset, or a data: URI for an uploaded photo
+  emailVerifiedAt     DateTime? // set once a magic-link login is completed
+  loginTokenHash      String?   @unique // sha256 of the emailed token, never stored plain
+  loginTokenExpiresAt DateTime?
+  sessionVersion      Int       @default(0) // bumped on logout to invalidate outstanding session cookies
+  isGlobalAdmin       Boolean   @default(false) // linked as an admin shortcut, bypassing ADMIN_PASSWORD
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   voters Voter[]
 }
