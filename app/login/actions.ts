@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requestLoginLinkSchema } from "@/lib/validation";
 import {
@@ -11,10 +12,10 @@ import {
 import { sendMagicLinkEmail } from "@/lib/email";
 import { getBaseUrl } from "@/lib/base-url";
 import { clearPersonSession, getPersonId } from "@/lib/person-session";
+import { safeNextPath } from "@/lib/safe-redirect";
 
 export interface RequestLoginLinkState {
   error: string | null;
-  sent: boolean;
 }
 
 export async function requestLoginLink(
@@ -26,7 +27,7 @@ export async function requestLoginLink(
     next: formData.get("next") ? String(formData.get("next")) : undefined,
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid email", sent: false };
+    return { error: parsed.error.issues[0]?.message ?? "Invalid email" };
   }
   const { email, next } = parsed.data;
 
@@ -39,7 +40,7 @@ export async function requestLoginLink(
   const now = Date.now();
   const tokenIssuedAt = person.loginTokenExpiresAt ? person.loginTokenExpiresAt.getTime() - LOGIN_TOKEN_TTL_MS : 0;
   // Don't leak whether the email exists or whether a link was just sent —
-  // this branch silently no-ops (still returns the same generic response).
+  // this branch silently no-ops (still redirects to the same confirmation).
   if (now - tokenIssuedAt >= LOGIN_TOKEN_RESEND_COOLDOWN_MS) {
     const token = generateLoginToken();
     await prisma.person.update({
@@ -55,7 +56,9 @@ export async function requestLoginLink(
     await sendMagicLinkEmail({ to: email, loginUrl });
   }
 
-  return { error: null, sent: true };
+  // A real navigation, not client state, so the "check your email"
+  // confirmation survives a refresh (unlike returning it in useActionState).
+  redirect(`/login?sent=1&next=${encodeURIComponent(safeNextPath(next, "/"))}`);
 }
 
 export async function logoutPerson(): Promise<void> {

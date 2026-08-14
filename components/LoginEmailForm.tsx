@@ -4,14 +4,10 @@ import { useActionState } from "react";
 import { requestLoginLink, type RequestLoginLinkState } from "@/app/login/actions";
 import { Spinner } from "@/components/shared/Spinner";
 
-const initialState: RequestLoginLinkState = { error: null, sent: false };
+const initialState: RequestLoginLinkState = { error: null };
 
 export function LoginEmailForm({ next }: { next?: string }) {
   const [state, formAction, pending] = useActionState(requestLoginLink, initialState);
-
-  if (state.sent) {
-    return <p className="text-sm text-cream-dim">Check your email for a login link.</p>;
-  }
 
   return (
     <form action={formAction} className="flex flex-col gap-2">

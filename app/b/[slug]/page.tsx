@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { PageNav } from "@/components/shared/PageNav";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { LoginNudge } from "@/components/LoginNudge";
 import { TvIcon } from "@/components/shared/Icons";
 import { phaseHref } from "@/lib/phase-nav";
 import iconMark from "@/images/icon-mark.png";
@@ -63,6 +64,8 @@ export default async function PublicBracketLanding({
           <p className="text-sm text-cream-dim">This bracket hasn&apos;t opened yet — check back soon.</p>
         )}
       </div>
+
+      <LoginNudge bracketId={bracket.id} next={`/b/${bracket.slug}`} />
     </main>
   );
 }

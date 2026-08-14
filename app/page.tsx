@@ -4,7 +4,6 @@ import { prisma } from "@/lib/db";
 import iconMark from "@/images/icon-mark.png";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { BottomTabBar } from "@/components/shared/BottomTabBar";
-import { LoginEmailForm } from "@/components/LoginEmailForm";
 import { InfoIcon, SettingsIcon, AccountIcon } from "@/components/shared/Icons";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { getPersonId } from "@/lib/person-session";
@@ -60,11 +59,14 @@ export default async function Home() {
           )}
         </section>
       ) : (
-        <section className="rounded-lg border border-gold/15 bg-surface p-4">
-          <p className="mb-2 text-sm text-cream-dim">
-            Log in to see your brackets here next time, on any device.
-          </p>
-          <LoginEmailForm />
+        <section className="flex items-center justify-between gap-3 rounded-lg border border-gold/15 bg-surface p-4">
+          <p className="text-sm text-cream-dim">Log in to see your brackets here next time, on any device.</p>
+          <Link
+            href="/login?next=/"
+            className="shrink-0 rounded-full bg-gold px-4 py-2 text-sm font-medium text-ink transition hover:bg-gold-dim active:scale-95"
+          >
+            Log in
+          </Link>
         </section>
       )}
 

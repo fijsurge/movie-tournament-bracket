@@ -2,7 +2,6 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getPersonId } from "@/lib/person-session";
 import { logoutPerson } from "@/app/login/actions";
-import { LoginEmailForm } from "@/components/LoginEmailForm";
 import { SubmitButton } from "@/components/shared/SubmitButton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { BottomTabBar } from "@/components/shared/BottomTabBar";
@@ -26,7 +25,12 @@ export default async function AccountPage() {
       <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
         <h1 className="font-display text-2xl tracking-wide text-gold uppercase">My account</h1>
         <p className="text-sm text-cream-dim">Log in to see your account and the brackets you&apos;ve joined.</p>
-        <LoginEmailForm next="/account" />
+        <Link
+          href="/login?next=/account"
+          className="self-start rounded-full bg-gold px-4 py-2 text-sm font-medium text-ink transition hover:bg-gold-dim active:scale-95"
+        >
+          Log in
+        </Link>
         <BottomTabBar links={HOME_LINK} />
       </main>
     );
