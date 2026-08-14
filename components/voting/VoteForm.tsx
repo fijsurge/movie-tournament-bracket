@@ -44,7 +44,7 @@ function ScorePicker({
     >
       <p className="truncate text-sm font-semibold text-gold">{title}</p>
       {categories.map((cat) => (
-        <div key={cat.key} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <div key={cat.key} className="flex flex-col gap-1">
           <span className="text-sm">{cat.label}</span>
           <div className="flex gap-1.5">
             {SCORES.map((score) => (

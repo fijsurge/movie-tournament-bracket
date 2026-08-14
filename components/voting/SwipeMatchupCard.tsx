@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { motion } from "motion/react";
+import { ArrowLeftIcon } from "@/components/shared/Icons";
 
 const COMMIT_THRESHOLD_PX = 100;
 const HINT_DELAY_MS = 4000;
@@ -111,10 +113,29 @@ export function SwipeMatchupCard({
             <span className="max-w-[80px] truncate text-xs text-cream-dim">{movieB.title}</span>
           </div>
         </div>
+
+        {showHint && !exiting && (
+          <>
+            <motion.div
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-1 -translate-y-1/2 text-gold"
+              animate={{ x: [0, -8, 0], opacity: [0.4, 1, 0.4] }}
+              transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
+            >
+              <ArrowLeftIcon className="h-7 w-7" />
+            </motion.div>
+            <motion.div
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2 text-gold"
+              animate={{ x: [0, 8, 0], opacity: [0.4, 1, 0.4] }}
+              transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
+            >
+              <ArrowLeftIcon className="h-7 w-7 rotate-180" />
+            </motion.div>
+          </>
+        )}
       </div>
-      {showHint && !exiting && (
-        <p className="text-xs text-cream-dim">Swipe left or right to pick — or scroll down to score it yourself</p>
-      )}
+      {showHint && !exiting && <p className="text-xs text-cream-dim">or scroll down to score it yourself</p>}
     </div>
   );
 }
