@@ -88,13 +88,13 @@ export function SwipeMatchupCard({
           }}
         >
           <span
-            className="pointer-events-none absolute top-3 left-3 rounded border-2 border-rose px-2 py-0.5 font-display text-sm tracking-wide text-rose uppercase"
+            className="pointer-events-none absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-rose bg-ink/90 px-4 py-2 text-center font-display text-lg tracking-wide text-rose uppercase"
             style={{ opacity: leanA }}
           >
             {movieA.title}
           </span>
           <span
-            className="pointer-events-none absolute top-3 right-3 rounded border-2 border-gold px-2 py-0.5 font-display text-sm tracking-wide text-gold uppercase"
+            className="pointer-events-none absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-gold bg-ink/90 px-4 py-2 text-center font-display text-lg tracking-wide text-gold uppercase"
             style={{ opacity: leanB }}
           >
             {movieB.title}
@@ -118,24 +118,38 @@ export function SwipeMatchupCard({
           <>
             <motion.div
               aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-1 -translate-y-1/2 text-gold"
-              animate={{ x: [0, -8, 0], opacity: [0.4, 1, 0.4] }}
+              className="pointer-events-none absolute top-1/2 left-1 flex -translate-y-1/2 items-center gap-1 rounded-full border border-gold bg-ink/90 py-1.5 pr-3 pl-2 text-gold"
+              animate={{ x: [0, -10, 0], opacity: [0.5, 1, 0.5] }}
               transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
             >
-              <ArrowLeftIcon className="h-7 w-7" />
+              <ArrowLeftIcon className="h-5 w-5 shrink-0" />
+              <span className="font-display text-xs tracking-wide uppercase">Swipe</span>
             </motion.div>
             <motion.div
               aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2 text-gold"
-              animate={{ x: [0, 8, 0], opacity: [0.4, 1, 0.4] }}
+              className="pointer-events-none absolute top-1/2 right-1 flex -translate-y-1/2 items-center gap-1 rounded-full border border-gold bg-ink/90 py-1.5 pr-2 pl-3 text-gold"
+              animate={{ x: [0, 10, 0], opacity: [0.5, 1, 0.5] }}
               transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
             >
-              <ArrowLeftIcon className="h-7 w-7 rotate-180" />
+              <span className="font-display text-xs tracking-wide uppercase">Swipe</span>
+              <ArrowLeftIcon className="h-5 w-5 shrink-0 rotate-180" />
             </motion.div>
           </>
         )}
       </div>
-      {showHint && !exiting && <p className="text-xs text-cream-dim">or scroll down to score it yourself</p>}
+      {showHint && !exiting && (
+        <div className="flex flex-col items-center gap-0.5">
+          <motion.div
+            aria-hidden="true"
+            className="text-gold"
+            animate={{ y: [0, 5, 0] }}
+            transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
+          >
+            <ArrowLeftIcon className="h-5 w-5 -rotate-90" />
+          </motion.div>
+          <span className="font-display text-xs tracking-wide text-gold uppercase">or rank manually</span>
+        </div>
+      )}
     </div>
   );
 }
