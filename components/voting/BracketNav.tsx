@@ -1,10 +1,18 @@
 import { PageNav } from "@/components/shared/PageNav";
 import { TvIcon, HomeIcon, SettingsIcon, AccountIcon } from "@/components/shared/Icons";
-import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { isBracketAdmin } from "@/lib/bracket-auth";
 import { QuickActionsButton } from "@/components/admin/QuickActionsButton";
 
-export async function BracketNav({ slug, bracketName }: { slug: string; bracketName: string }) {
-  const isAdmin = await isAdminAuthenticated();
+export async function BracketNav({
+  slug,
+  bracketName,
+  bracketId,
+}: {
+  slug: string;
+  bracketName: string;
+  bracketId: string;
+}) {
+  const isAdmin = await isBracketAdmin(bracketId);
 
   return (
     <>

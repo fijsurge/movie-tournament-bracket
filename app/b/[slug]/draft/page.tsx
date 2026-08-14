@@ -22,7 +22,7 @@ export default async function DraftPage({ params }: { params: Promise<{ slug: st
     if (dest) redirect(dest);
     return (
       <main className="mx-auto max-w-xl p-6">
-        <BracketNav slug={bracket.slug} bracketName={bracket.name} />
+        <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
         <PhaseWatcher slug={bracket.slug} status={bracket.status} />
         <p>This bracket uses open nominations. Head to the nominate page instead.</p>
       </main>
@@ -32,7 +32,7 @@ export default async function DraftPage({ params }: { params: Promise<{ slug: st
   if (bracket.status === "SETUP") {
     return (
       <main className="mx-auto max-w-xl p-6">
-        <BracketNav slug={bracket.slug} bracketName={bracket.name} />
+        <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
         <PhaseWatcher slug={bracket.slug} status={bracket.status} />
         <p>The draft hasn&apos;t opened yet — check back soon.</p>
       </main>
@@ -44,7 +44,7 @@ export default async function DraftPage({ params }: { params: Promise<{ slug: st
 
   return (
     <main className="mx-auto max-w-xl p-6">
-      <BracketNav slug={bracket.slug} bracketName={bracket.name} />
+      <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
       <PhaseWatcher slug={bracket.slug} status={bracket.status} />
       <h1 className="mb-4 font-display text-2xl tracking-wide text-gold uppercase">{bracket.name}: Draft</h1>
       {voter ? (

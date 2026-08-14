@@ -24,7 +24,7 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
     });
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col p-6">
-        <BracketNav slug={bracket.slug} bracketName={bracket.name} />
+        <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
         <PhaseWatcher slug={bracket.slug} status={bracket.status} />
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
           <h1 className="font-display text-2xl tracking-wide text-gold uppercase">{bracket.name}</h1>
@@ -41,7 +41,7 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
     if (dest) redirect(dest);
     return (
       <main className="mx-auto max-w-xl p-6">
-        <BracketNav slug={bracket.slug} bracketName={bracket.name} />
+        <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
         <PhaseWatcher slug={bracket.slug} status={bracket.status} />
         <p>Voting isn&apos;t open for this bracket right now (status: {bracket.status}).</p>
       </main>
@@ -61,7 +61,7 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
 
   return (
     <main className="mx-auto max-w-xl p-6">
-      <BracketNav slug={bracket.slug} bracketName={bracket.name} />
+      <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
       <PhaseWatcher slug={bracket.slug} status={bracket.status} currentRound={bracket.currentRound} />
       <h1 className="mb-4 font-display text-2xl tracking-wide text-gold uppercase">
         {bracket.name}: Round {bracket.currentRound} voting

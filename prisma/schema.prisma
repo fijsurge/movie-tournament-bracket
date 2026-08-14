@@ -45,6 +45,11 @@ enum ResolutionMethod {
   REVOTE
 }
 
+enum VoterRole {
+  VOTER
+  ADMIN
+}
+
 model Bracket {
   id                    String         @id @default(cuid())
   slug                  String         @unique
@@ -150,6 +155,7 @@ model Voter {
   invitedAt      DateTime?
   personId       String? // links to a persistent cross-bracket Person, when one was linked
   person         Person?   @relation(fields: [personId], references: [id])
+  role           VoterRole @default(VOTER) // ADMIN requires a linked, verified Person — see promoteVoter
   createdAt      DateTime  @default(now())
 
   nominatedMovies Movie[]
