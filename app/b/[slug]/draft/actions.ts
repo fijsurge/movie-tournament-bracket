@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getVoterId } from "@/lib/voter-cookie";
 import { submitNominationSchema } from "@/lib/validation";
 import { maybeAutoAdvance } from "@/lib/phase-transitions";
+import { notifyCurrentTurn } from "@/lib/turn-notify";
 import { getMovieDetails } from "@/lib/tmdb";
 
 export interface DraftPickState {
@@ -43,6 +44,8 @@ export async function submitDraftPick(bracketId: string, formInput: unknown): Pr
 
   const details = await getMovieDetails(tmdbId);
 
+  let turnAdvanced = false;
+
   await prisma.$transaction(async (tx) => {
     await tx.movie.create({
       data: {
@@ -70,8 +73,15 @@ export async function submitDraftPick(bracketId: string, formInput: unknown): Pr
         where: { bracketId },
         data: { currentTurnIndex: nextIndex % turnOrder.length },
       });
+      turnAdvanced = true;
     }
   });
+
+  // Only notify when there's a next turn to notify about — not when this
+  // pick just filled the pool and moved the bracket straight to SEEDING.
+  if (turnAdvanced) {
+    await notifyCurrentTurn(bracketId);
+  }
 
   await maybeAutoAdvance(bracketId);
   return { error: null };

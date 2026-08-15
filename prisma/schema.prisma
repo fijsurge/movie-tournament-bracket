@@ -119,12 +119,13 @@ model Movie {
 }
 
 model DraftState {
-  id               String   @id @default(cuid())
-  bracketId        String   @unique
-  bracket          Bracket  @relation(fields: [bracketId], references: [id], onDelete: Cascade)
+  id               String    @id @default(cuid())
+  bracketId        String    @unique
+  bracket          Bracket   @relation(fields: [bracketId], references: [id], onDelete: Cascade)
   turnOrder        String // JSON-encoded array of voter IDs
-  currentTurnIndex Int      @default(0)
-  updatedAt        DateTime @updatedAt
+  currentTurnIndex Int       @default(0)
+  turnNotifiedAt   DateTime? // last time the current turn-holder was emailed about this turn
+  updatedAt        DateTime  @updatedAt
 }
 
 model Person {

@@ -41,6 +41,34 @@ export async function sendMagicLinkEmail({
   }
 }
 
+export async function sendYourTurnEmail({
+  to,
+  voterName,
+  bracketName,
+  draftUrl,
+}: {
+  to: string;
+  voterName: string;
+  bracketName: string;
+  draftUrl: string;
+}): Promise<{ error: string | null }> {
+  try {
+    await getTransporter().sendMail({
+      from: `Movie Madness Bracket <${process.env.GMAIL_USER}>`,
+      to,
+      subject: `Your turn in ${bracketName}`,
+      html: `
+        <p>Hi ${voterName},</p>
+        <p>It's your turn to pick a movie in <strong>${bracketName}</strong>.</p>
+        <p><a href="${draftUrl}">Tap here to make your pick</a>.</p>
+      `,
+    });
+    return { error: null };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Failed to send email" };
+  }
+}
+
 export async function sendInviteEmail({
   to,
   voterName,
