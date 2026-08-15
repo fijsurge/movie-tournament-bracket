@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
 import { motion } from "motion/react";
 import { Avatar } from "@/components/shared/Avatar";
 import { TVTakeoverShell } from "@/components/bracket/TVTakeoverShell";
-import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
+import { TrailerEmbed, TRAILER_TV_SKIP_SECONDS } from "@/components/shared/TrailerEmbed";
 import { useNewestPick } from "@/hooks/useNewestPick";
+import { playPickChime } from "@/lib/sfx";
 
 interface AnnouncedMovie {
   id: string;
@@ -19,12 +21,26 @@ interface AnnouncedMovie {
 // Full-screen TV takeover for a new pick landing during nomination/draft —
 // only ever receives new data while the bracket is NOMINATING, so it never
 // collides with RoundTransitionOverlay (ACTIVE-only). Holds longer when a
-// trailer is available, playing it muted as ambient background motion — not
-// meant to be actively watched, just adds life. A later pick landing before
-// the window elapses cuts it short as normal (useNewestPick's existing
-// supersede-the-current-item behavior).
-export function PickRevealOverlay({ movies }: { movies: AnnouncedMovie[] }) {
-  const announced = useNewestPick(movies, (m) => (m.trailerKey ? 9000 : 4000));
+// trailer is available, playing it as ambient background motion — not meant
+// to be actively watched, just adds life. A later pick landing before the
+// window elapses cuts it short as normal (useNewestPick's existing
+// supersede-the-current-item behavior). The 16s window (vs. 4s with no
+// trailer) gives room to get past TRAILER_TV_SKIP_SECONDS into real content.
+export function PickRevealOverlay({
+  movies,
+  soundEnabled,
+}: {
+  movies: AnnouncedMovie[];
+  soundEnabled: boolean;
+}) {
+  const announced = useNewestPick(movies, (m) => (m.trailerKey ? 16000 : 4000));
+
+  useEffect(() => {
+    if (announced && soundEnabled) playPickChime();
+    // Only the identity of the newly-announced pick should re-trigger the
+    // chime — not every soundEnabled toggle while one's already showing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [announced?.id]);
 
   return (
     <TVTakeoverShell active={announced !== null}>
@@ -79,7 +95,11 @@ export function PickRevealOverlay({ movies }: { movies: AnnouncedMovie[] }) {
               transition={{ delay: 1.3, duration: 0.6 }}
               className="w-full max-w-md"
             >
-              <TrailerEmbed trailerKey={announced.trailerKey} startMuted />
+              <TrailerEmbed
+                trailerKey={announced.trailerKey}
+                startMuted={!soundEnabled}
+                startSeconds={TRAILER_TV_SKIP_SECONDS}
+              />
             </motion.div>
           )}
         </>
