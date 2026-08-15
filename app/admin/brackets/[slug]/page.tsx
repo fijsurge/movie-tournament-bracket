@@ -11,6 +11,8 @@ import { InviteVoters } from "@/components/admin/InviteVoters";
 import { UndoButton } from "@/components/admin/UndoButton";
 import { QuickSeedButton } from "@/components/admin/QuickSeedButton";
 import { DeleteBracketButton } from "@/components/admin/DeleteBracketButton";
+import { AdminAddMovie } from "@/components/admin/AdminAddMovie";
+import { ClearPoolButton } from "@/components/admin/ClearPoolButton";
 import { buildFilterSummary } from "@/lib/bracket-filters";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
 import {
@@ -29,6 +31,7 @@ import {
   deleteBracket,
   promoteVoter,
   demoteVoter,
+  clearNominationPool,
 } from "./actions";
 
 const PRIMARY_BUTTON =
@@ -78,10 +81,12 @@ export default async function AdminBracketDashboard({
   const undoLastPhaseForBracket = undoLastPhase.bind(null, bracket.id);
   const toggleArchivedForBracket = toggleArchived.bind(null, bracket.id);
   const deleteBracketForBracket = deleteBracket.bind(null, bracket.id);
+  const clearNominationPoolForBracket = clearNominationPool.bind(null, bracket.id);
 
   const currentRoundData = bracket.rounds.find((r) => r.roundNumber === bracket.currentRound);
 
-  const { filterSummary } = buildFilterSummary(bracket);
+  const { filterSummary, hasFilters } = buildFilterSummary(bracket);
+  const poolEditable = bracket.status === "SETUP" || bracket.status === "NOMINATING";
 
   const turnOrder = bracket.draftState ? (JSON.parse(bracket.draftState.turnOrder) as string[]) : [];
   const votersById = new Map(bracket.voters.map((v) => [v.id, effectiveVoterName(v)]));
@@ -179,6 +184,25 @@ export default async function AdminBracketDashboard({
           </ul>
         )}
       </section>
+
+      {poolEditable && (
+        <section className="mt-6 rounded border border-gold/20 bg-surface p-4">
+          <h2 className="text-lg font-medium text-rose">Movie pool</h2>
+          <p className="mt-1 text-sm text-cream-dim">{bracket.movies.length} movie(s) in the pool.</p>
+          <div className="mt-3 flex flex-col gap-3">
+            <AdminAddMovie
+              bracketId={bracket.id}
+              excludeTmdbIds={bracket.movies.map((m) => m.tmdbId)}
+              hasFilters={hasFilters}
+            />
+            <ClearPoolButton
+              action={clearNominationPoolForBracket}
+              disabled={bracket.movies.length === 0}
+              className={`${SECONDARY_BUTTON} self-start`}
+            />
+          </div>
+        </section>
+      )}
 
       <section className="mt-6 rounded border border-gold/20 bg-surface p-4">
         <h2 className="text-lg font-medium text-rose">Bracket controls</h2>

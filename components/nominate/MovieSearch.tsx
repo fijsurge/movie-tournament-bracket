@@ -30,12 +30,6 @@ export function MovieSearch({
 
   useEffect(() => {
     const handle = setTimeout(() => {
-      // With no filters configured, an empty query has nothing meaningful to
-      // browse (all of TMDb), so skip the request until the user types.
-      if (!hasFilters && !query.trim()) {
-        setResults([]);
-        return;
-      }
       setLoading(true);
       const params = new URLSearchParams({ bracketId, q: query });
       fetch(`/api/movies/search?${params}`)
@@ -44,14 +38,14 @@ export function MovieSearch({
         .finally(() => setLoading(false));
     }, 350);
     return () => clearTimeout(handle);
-  }, [query, bracketId, hasFilters]);
+  }, [query, bracketId]);
 
   return (
     <div className="flex flex-col gap-2">
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder={hasFilters ? "Search within the filtered list…" : "Search for a movie…"}
+        placeholder={hasFilters ? "Search within the filtered list…" : "Search, or browse popular movies…"}
         disabled={disabled}
         className="rounded border border-gold/25 bg-surface px-3 py-2 text-cream placeholder:text-cream-dim/50 focus:border-gold focus:outline-none disabled:opacity-50"
       />

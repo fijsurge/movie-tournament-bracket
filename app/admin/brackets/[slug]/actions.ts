@@ -6,15 +6,17 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireBracketAdmin } from "@/lib/bracket-auth";
 import { normalizeVoterName } from "@/lib/voter-cookie";
-import { inviteVotersSchema } from "@/lib/validation";
+import { inviteVotersSchema, submitNominationSchema } from "@/lib/validation";
 import { sendInviteEmail } from "@/lib/email";
 import { getBaseUrl } from "@/lib/base-url";
+import { getMovieDetails } from "@/lib/tmdb";
 import {
   closeNominationsCore,
   closeSeedingCore,
   quickSeedCore,
   closeRoundCore,
   undoLastPhase as undoLastPhaseCore,
+  maybeAutoAdvance,
 } from "@/lib/phase-transitions";
 
 function shuffle<T>(arr: T[]): T[] {
@@ -241,4 +243,75 @@ export async function demoteVoter(bracketId: string, voterId: string): Promise<v
   if (voter.bracketId !== bracketId) return;
   await prisma.voter.update({ where: { id: voterId }, data: { role: "VOTER" } });
   revalidatePath(`/admin/brackets/${voter.bracket.slug}`);
+}
+
+export interface AdminAddMovieState {
+  error: string | null;
+}
+
+// Mirrors submitDraftPick (app/b/[slug]/draft/actions.ts) minus the
+// voter/turn checks — an admin-added movie is unattributed
+// (nominatedByVoterId stays null) and never consumes a draft turn, so it can
+// be added mid-draft without disrupting turn order.
+export async function adminAddMovie(bracketId: string, formInput: unknown): Promise<AdminAddMovieState> {
+  await requireBracketAdmin(bracketId);
+  const parsed = submitNominationSchema.safeParse({ bracketId, ...(formInput as object) });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid movie" };
+  }
+  const { tmdbId, title, posterUrl } = parsed.data;
+
+  const bracket = await prisma.bracket.findUniqueOrThrow({ where: { id: bracketId } });
+  if (bracket.status !== "SETUP" && bracket.status !== "NOMINATING") {
+    return { error: "The pool can only be edited before seeding starts" };
+  }
+
+  const existing = await prisma.movie.findUnique({ where: { bracketId_tmdbId: { bracketId, tmdbId } } });
+  if (existing) {
+    return { error: "That movie is already in the pool" };
+  }
+
+  const details = await getMovieDetails(tmdbId);
+  await prisma.movie.create({
+    data: {
+      bracketId,
+      tmdbId,
+      title,
+      posterUrl,
+      overview: details?.overview ?? null,
+      voteAverage: details?.voteAverage ?? null,
+      popularity: details?.popularity ?? null,
+      releaseYear: details?.releaseYear ?? null,
+      runtime: details?.runtime ?? null,
+      trailerKey: details?.trailerKey ?? null,
+    },
+  });
+
+  // DRAFT mode's own pool-target completion check lives inside
+  // submitDraftPick, not maybeAutoAdvance (see its comment) — an admin add
+  // that happens to exactly fill a DRAFT pool completes on the next real
+  // turn rather than instantly. This call still matters for OPEN mode's
+  // per-voter-cap check, which is unaffected by an unattributed admin add.
+  await maybeAutoAdvance(bracketId);
+
+  revalidatePath(`/admin/brackets/${bracket.slug}`);
+  return { error: null };
+}
+
+// Distinct from undoLastPhase, which deliberately never touches Movie rows
+// (it only reverts Bracket.status, so an accidental "close nominations"
+// click can't lose real nominations). This is the actual "start the pool
+// over" action, including the DraftState so a DRAFT bracket cleanly falls
+// back to "Start draft" instead of resuming a stale turn order.
+export async function clearNominationPool(bracketId: string): Promise<void> {
+  await requireBracketAdmin(bracketId);
+  const bracket = await prisma.bracket.findUniqueOrThrow({ where: { id: bracketId } });
+  if (bracket.status !== "SETUP" && bracket.status !== "NOMINATING") return;
+
+  await prisma.$transaction([
+    prisma.movie.deleteMany({ where: { bracketId } }),
+    prisma.draftState.deleteMany({ where: { bracketId } }),
+  ]);
+
+  revalidatePath(`/admin/brackets/${bracket.slug}`);
 }

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { isBracketAdmin } from "@/lib/bracket-auth";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
+import { buildFilterSummary } from "@/lib/bracket-filters";
 import { QuickActionsSheet } from "@/components/admin/QuickActionsSheet";
 
 // Self-gating: runs its own independent query rather than threading data
@@ -17,7 +18,14 @@ export async function QuickActionsButton({ slug }: { slug: string }) {
       status: true,
       currentRound: true,
       voters: { include: { person: true } },
-      _count: { select: { movies: true } },
+      movies: { select: { tmdbId: true } },
+      filterPersonIds: true,
+      filterCompanyIds: true,
+      filterKeywordIds: true,
+      filterCollectionIds: true,
+      filterGenreIds: true,
+      filterYearMin: true,
+      filterYearMax: true,
     },
   });
 
@@ -33,13 +41,17 @@ export async function QuickActionsButton({ slug }: { slug: string }) {
       avatar: effectiveVoterAvatar(v),
     }));
 
+  const { hasFilters } = buildFilterSummary(bracket);
+
   return (
     <QuickActionsSheet
       bracketId={bracket.id}
       status={bracket.status}
-      movieCount={bracket._count.movies}
+      movieCount={bracket.movies.length}
       currentRound={bracket.currentRound}
       invitedVoters={invitedVoters}
+      excludeTmdbIds={bracket.movies.map((m) => m.tmdbId)}
+      hasFilters={hasFilters}
     />
   );
 }

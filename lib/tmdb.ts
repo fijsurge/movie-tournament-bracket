@@ -164,13 +164,14 @@ export async function getMovieDetails(tmdbId: number): Promise<TmdbMovieDetails 
  *      point: TMDb's search results don't carry that data, only Discover's
  *      server-side params do, so a typed title is trusted to already be
  *      on-scope (same trust model genre used to implicitly rely on here).
- *   4. An empty query with company/keyword/genre/year filters — Discover
- *      (sorted by popularity), so admins can browse a scoped list without
- *      knowing exact titles. Genre IDs are comma-joined (AND — "romantic
- *      comedy" needs Comedy *and* Romance); company/keyword IDs are
- *      pipe-joined (OR — matching either of the selected studios/tags is
- *      the more useful default). This is a different axis than genre's
- *      AND — don't conflate the two when editing.
+ *   4. An empty query, with or without company/keyword/genre/year filters —
+ *      Discover (sorted by popularity), so there's always something to
+ *      browse instead of an empty screen, scoped by whatever filters happen
+ *      to be set (none, for an unscoped bracket). Genre IDs are comma-joined
+ *      (AND — "romantic comedy" needs Comedy *and* Romance); company/keyword
+ *      IDs are pipe-joined (OR — matching either of the selected
+ *      studios/tags is the more useful default). This is a different axis
+ *      than genre's AND — don't conflate the two when editing.
  * Genre and year are always re-verified locally afterward (matchesFilters)
  * since every branch's candidates carry that data; company/keyword are not
  * (see matchesFilters).
@@ -201,13 +202,7 @@ export async function searchFilteredMovies(query: string, filters: MovieFilters)
       include_adult: "false",
     });
     candidates = data.results;
-  } else if (
-    (filters.companyIds && filters.companyIds.length > 0) ||
-    (filters.keywordIds && filters.keywordIds.length > 0) ||
-    (filters.genreIds && filters.genreIds.length > 0) ||
-    filters.yearMin ||
-    filters.yearMax
-  ) {
+  } else {
     candidates = await tmdbGetPages(
       "/discover/movie",
       {
@@ -225,8 +220,6 @@ export async function searchFilteredMovies(query: string, filters: MovieFilters)
       },
       5,
     );
-  } else {
-    return [];
   }
 
   return candidates
