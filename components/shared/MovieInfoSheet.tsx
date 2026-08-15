@@ -13,6 +13,8 @@ export interface MovieInfoSheetMovie {
   releaseYear: number | null;
   runtime: number | null;
   trailerKey: string | null;
+  filmTitle?: string | null;
+  filmYear?: number | null;
 }
 
 // A refresher on an already-nominated movie, for a phone-sized "what was
@@ -39,10 +41,18 @@ export function MovieInfoSheet({ movie, onClose }: { movie: MovieInfoSheetMovie 
             )}
             <div className="flex flex-col gap-1">
               <h2 className="font-display text-xl tracking-wide text-gold uppercase">{movie.title}</h2>
-              <p className="text-sm text-cream-dim">
-                {movie.releaseYear ?? "—"} · ⭐ {movie.voteAverage?.toFixed(1) ?? "—"}
-                {movie.runtime ? ` · ${movie.runtime} min` : ""}
-              </p>
+              {(movie.releaseYear || movie.voteAverage) && (
+                <p className="text-sm text-cream-dim">
+                  {movie.releaseYear ?? "—"} · ⭐ {movie.voteAverage?.toFixed(1) ?? "—"}
+                  {movie.runtime ? ` · ${movie.runtime} min` : ""}
+                </p>
+              )}
+              {movie.filmTitle && (
+                <p className="text-sm text-cream-dim">
+                  as seen in {movie.filmTitle}
+                  {movie.filmYear ? ` (${movie.filmYear})` : ""}
+                </p>
+              )}
             </div>
           </div>
           {movie.overview && <p className="mt-4 text-sm text-cream">{movie.overview}</p>}

@@ -21,6 +21,8 @@ export const createBracketSchema = z
     name: z.string().trim().min(1).max(100),
     categories: z.array(categoryInputSchema).min(1).max(8),
     nominationMode: z.enum(["OPEN", "DRAFT"]),
+    contentType: z.enum(["MOVIE", "CHARACTER"]).default("MOVIE"),
+    characterName: z.string().trim().min(1).max(60).optional(),
     nominationCapPerVoter: z.number().int().min(1).max(10).optional(),
     poolTargetSize: z.number().int().min(2).max(64).optional(),
     filterPersonIds: z.array(idNamePair).max(5).optional(),
@@ -69,6 +71,13 @@ export const createBracketSchema = z
         path: ["filterYearMin"],
       });
     }
+    if (data.contentType === "CHARACTER" && !data.characterName) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Character brackets need a character name",
+        path: ["characterName"],
+      });
+    }
   });
 
 export const identifyVoterSchema = z.object({
@@ -96,6 +105,16 @@ export const submitNominationSchema = z.object({
   tmdbId: z.number().int().positive(),
   title: z.string().trim().min(1),
   posterUrl: z.string().url().nullable(),
+});
+
+export const submitCharacterNominationSchema = z.object({
+  bracketId: z.string().min(1),
+  actorTmdbId: z.number().int().positive(),
+  actorName: z.string().trim().min(1),
+  actorPhotoUrl: z.string().url().nullable(),
+  filmTmdbId: z.number().int().positive().nullable().optional(),
+  filmTitle: z.string().trim().min(1).nullable().optional(),
+  filmYear: z.number().int().nullable().optional(),
 });
 
 const scoreValue = z.number().int().min(1).max(5);

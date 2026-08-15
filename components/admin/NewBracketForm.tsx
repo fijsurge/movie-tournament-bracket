@@ -36,6 +36,7 @@ export function NewBracketForm() {
   const [state, formAction, pending] = useActionState(createBracket, initialState);
   const [categories, setCategories] = useState<CategoryRow[]>(DEFAULT_CATEGORIES);
   const [nominationMode, setNominationMode] = useState<"OPEN" | "DRAFT">("OPEN");
+  const [contentType, setContentType] = useState<"MOVIE" | "CHARACTER">("MOVIE");
   const [scopeItems, setScopeItems] = useState<ScopeItem[]>([]);
   const [filterGenreIds, setFilterGenreIds] = useState<number[]>([]);
 
@@ -74,7 +75,46 @@ export function NewBracketForm() {
       </div>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className={LEGEND}>Rating categories (voters score both movies on each, 1-5)</legend>
+        <legend className={LEGEND}>What are you ranking?</legend>
+        <div className="flex gap-4">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="contentType"
+              value="MOVIE"
+              checked={contentType === "MOVIE"}
+              onChange={() => setContentType("MOVIE")}
+              className="accent-gold"
+            />
+            Movies
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="contentType"
+              value="CHARACTER"
+              checked={contentType === "CHARACTER"}
+              onChange={() => setContentType("CHARACTER")}
+              className="accent-gold"
+            />
+            Actors playing a character
+          </label>
+        </div>
+        {contentType === "CHARACTER" && (
+          <label className="flex flex-col gap-1 text-sm text-cream-dim">
+            Which character?
+            <input
+              name="characterName"
+              required
+              placeholder="Batman"
+              className={`max-w-xs ${INPUT}`}
+            />
+          </label>
+        )}
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className={LEGEND}>Rating categories (voters score both nominees on each, 1-5)</legend>
         {categories.map((cat, i) => (
           <div key={i} className="flex items-center gap-2">
             <input
@@ -115,7 +155,7 @@ export function NewBracketForm() {
       </fieldset>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className={LEGEND}>How will movies get nominated?</legend>
+        <legend className={LEGEND}>How will nominees get picked?</legend>
         <div className="flex gap-4">
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -170,59 +210,61 @@ export function NewBracketForm() {
         )}
       </fieldset>
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className={LEGEND}>
-          Restrict the movie search (optional) — keeps nominations in scope, e.g. &ldquo;Marvel
-          movies&rdquo;, &ldquo;Agatha Christie movies&rdquo;, or &ldquo;action movies from the
-          1980s&rdquo;
-        </legend>
+      {contentType === "MOVIE" && (
+        <fieldset className="flex flex-col gap-3">
+          <legend className={LEGEND}>
+            Restrict the movie search (optional) — keeps nominations in scope, e.g. &ldquo;Marvel
+            movies&rdquo;, &ldquo;Agatha Christie movies&rdquo;, or &ldquo;action movies from the
+            1980s&rdquo;
+          </legend>
 
-        <div className="flex flex-col gap-1">
-          <span className="text-sm text-cream-dim">People, studios, or franchises</span>
-          <ScopePicker value={scopeItems} onChange={setScopeItems} />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <span className="text-sm text-cream-dim">Genres</span>
-          <div className="flex flex-wrap gap-2">
-            {TMDB_GENRES.map((g) => (
-              <label
-                key={g.id}
-                className={`cursor-pointer rounded-full border px-3 py-1 text-sm transition ${
-                  filterGenreIds.includes(g.id)
-                    ? "border-gold bg-gold text-ink"
-                    : "border-gold/25 text-cream-dim hover:border-gold/50 active:border-gold/50"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={filterGenreIds.includes(g.id)}
-                  onChange={() => toggleGenre(g.id)}
-                  className="hidden"
-                />
-                {g.name}
-              </label>
-            ))}
+          <div className="flex flex-col gap-1">
+            <span className="text-sm text-cream-dim">People, studios, or franchises</span>
+            <ScopePicker value={scopeItems} onChange={setScopeItems} />
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <label className="flex flex-col gap-1 text-sm text-cream-dim">
-            From year
-            <input type="number" name="filterYearMin" placeholder="1980" min={1888} max={2100} className={`w-24 ${INPUT}`} />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-cream-dim">
-            To year
-            <input type="number" name="filterYearMax" placeholder="1989" min={1888} max={2100} className={`w-24 ${INPUT}`} />
-          </label>
-        </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-sm text-cream-dim">Genres</span>
+            <div className="flex flex-wrap gap-2">
+              {TMDB_GENRES.map((g) => (
+                <label
+                  key={g.id}
+                  className={`cursor-pointer rounded-full border px-3 py-1 text-sm transition ${
+                    filterGenreIds.includes(g.id)
+                      ? "border-gold bg-gold text-ink"
+                      : "border-gold/25 text-cream-dim hover:border-gold/50 active:border-gold/50"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={filterGenreIds.includes(g.id)}
+                    onChange={() => toggleGenre(g.id)}
+                    className="hidden"
+                  />
+                  {g.name}
+                </label>
+              ))}
+            </div>
+          </div>
 
-        <input type="hidden" name="filterPersonIdsJson" value={JSON.stringify(byType("person"))} />
-        <input type="hidden" name="filterCompanyIdsJson" value={JSON.stringify(byType("company"))} />
-        <input type="hidden" name="filterKeywordIdsJson" value={JSON.stringify(byType("keyword"))} />
-        <input type="hidden" name="filterCollectionIdsJson" value={JSON.stringify(byType("collection"))} />
-        <input type="hidden" name="filterGenreIdsJson" value={JSON.stringify(filterGenreIds)} />
-      </fieldset>
+          <div className="flex items-center gap-2">
+            <label className="flex flex-col gap-1 text-sm text-cream-dim">
+              From year
+              <input type="number" name="filterYearMin" placeholder="1980" min={1888} max={2100} className={`w-24 ${INPUT}`} />
+            </label>
+            <label className="flex flex-col gap-1 text-sm text-cream-dim">
+              To year
+              <input type="number" name="filterYearMax" placeholder="1989" min={1888} max={2100} className={`w-24 ${INPUT}`} />
+            </label>
+          </div>
+
+          <input type="hidden" name="filterPersonIdsJson" value={JSON.stringify(byType("person"))} />
+          <input type="hidden" name="filterCompanyIdsJson" value={JSON.stringify(byType("company"))} />
+          <input type="hidden" name="filterKeywordIdsJson" value={JSON.stringify(byType("keyword"))} />
+          <input type="hidden" name="filterCollectionIdsJson" value={JSON.stringify(byType("collection"))} />
+          <input type="hidden" name="filterGenreIdsJson" value={JSON.stringify(filterGenreIds)} />
+        </fieldset>
+      )}
 
       {state.error && <p className="text-sm text-error">{state.error}</p>}
 

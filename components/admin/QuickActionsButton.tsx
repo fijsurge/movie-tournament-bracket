@@ -16,6 +16,8 @@ export async function QuickActionsButton({ slug }: { slug: string }) {
     select: {
       id: true,
       status: true,
+      contentType: true,
+      characterName: true,
       currentRound: true,
       voters: { include: { person: true } },
       movies: { select: { tmdbId: true } },
@@ -47,6 +49,8 @@ export async function QuickActionsButton({ slug }: { slug: string }) {
     <QuickActionsSheet
       bracketId={bracket.id}
       status={bracket.status}
+      contentType={bracket.contentType}
+      characterName={bracket.characterName}
       movieCount={bracket.movies.length}
       currentRound={bracket.currentRound}
       invitedVoters={invitedVoters}

@@ -5,7 +5,8 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import type { MovieSearchResult } from "./MovieSearch";
 import { MovieSearchSheet } from "./MovieSearchSheet";
-import { submitDraftPick } from "@/app/b/[slug]/draft/actions";
+import { CharacterNominationEntry, type CharacterNominationPayload } from "./CharacterNominationEntry";
+import { submitDraftPick, submitCharacterDraftPick } from "@/app/b/[slug]/draft/actions";
 import { Avatar } from "@/components/shared/Avatar";
 import { PickAnnouncement } from "@/components/shared/PickAnnouncement";
 import { PosterButton } from "@/components/shared/PosterButton";
@@ -13,7 +14,14 @@ import { PosterButton } from "@/components/shared/PosterButton";
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface StateResponse {
-  bracket: { status: string; poolTargetSize: number | null; hasFilters: boolean; filterSummary: string | null };
+  bracket: {
+    status: string;
+    contentType: "MOVIE" | "CHARACTER";
+    characterName: string | null;
+    poolTargetSize: number | null;
+    hasFilters: boolean;
+    filterSummary: string | null;
+  };
   movies: {
     id: string;
     tmdbId: number;
@@ -24,6 +32,8 @@ interface StateResponse {
     releaseYear: number | null;
     runtime: number | null;
     trailerKey: string | null;
+    filmTitle: string | null;
+    filmYear: number | null;
     nominatedByName: string | null;
     nominatedByAvatar: string | null;
   }[];
@@ -78,6 +88,18 @@ export function DraftBoard({
     }
   }
 
+  async function handleCharacterPick(payload: CharacterNominationPayload) {
+    setError(null);
+    setIsPicking(true);
+    try {
+      const result = await submitCharacterDraftPick(bracketId, payload);
+      if (result.error) setError(result.error);
+      await mutate();
+    } finally {
+      setIsPicking(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <AnimatePresence mode="wait">
@@ -93,7 +115,9 @@ export function DraftBoard({
           }`}
         >
           {isMyTurn ? (
-            <p className="font-display text-lg tracking-wide text-gold uppercase">It&apos;s your turn — pick a movie!</p>
+            <p className="font-display text-lg tracking-wide text-gold uppercase">
+              It&apos;s your turn — {data.bracket.contentType === "CHARACTER" ? "pick an actor!" : "pick a movie!"}
+            </p>
           ) : (
             <p>
               Waiting on <span className="font-medium text-gold">{data.draft.currentVoterName}</span>…
@@ -124,15 +148,26 @@ export function DraftBoard({
         </p>
       )}
 
-      {isMyTurn && (
-        <MovieSearchSheet
-          bracketId={bracketId}
-          onPick={handlePick}
-          disabled={isPicking}
-          excludeTmdbIds={movies.map((m) => m.tmdbId)}
-          hasFilters={data.bracket.hasFilters}
-        />
-      )}
+      {isMyTurn &&
+        (data.bracket.contentType === "CHARACTER" ? (
+          <CharacterNominationEntry
+            bracketId={bracketId}
+            onSubmit={handleCharacterPick}
+            disabled={isPicking}
+            excludePersonIds={movies.map((m) => m.tmdbId)}
+            triggerLabel={
+              data.bracket.characterName ? `+ Pick an actor for ${data.bracket.characterName}` : "+ Pick an actor"
+            }
+          />
+        ) : (
+          <MovieSearchSheet
+            bracketId={bracketId}
+            onPick={handlePick}
+            disabled={isPicking}
+            excludeTmdbIds={movies.map((m) => m.tmdbId)}
+            hasFilters={data.bracket.hasFilters}
+          />
+        ))}
       {error && <p className="text-sm text-error">{error}</p>}
 
       <div>

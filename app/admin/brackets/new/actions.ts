@@ -20,6 +20,8 @@ export async function createBracket(
     name: String(formData.get("name") ?? ""),
     categories: JSON.parse(String(formData.get("categoriesJson") ?? "[]")),
     nominationMode: String(formData.get("nominationMode") ?? "OPEN"),
+    contentType: String(formData.get("contentType") ?? "MOVIE"),
+    characterName: formData.get("characterName") ? String(formData.get("characterName")) : undefined,
     nominationCapPerVoter: formData.get("nominationCapPerVoter")
       ? Number(formData.get("nominationCapPerVoter"))
       : undefined,
@@ -54,6 +56,8 @@ export async function createBracket(
       slug: slugify(data.name),
       name: data.name,
       nominationMode: data.nominationMode,
+      contentType: data.contentType,
+      characterName: data.characterName ?? null,
       nominationCapPerVoter: data.nominationCapPerVoter ?? null,
       poolTargetSize: data.poolTargetSize ?? null,
       filterPersonIds: data.filterPersonIds && data.filterPersonIds.length > 0 ? JSON.stringify(data.filterPersonIds) : null,

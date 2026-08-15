@@ -23,6 +23,11 @@ enum NominationMode {
   DRAFT
 }
 
+enum BracketContentType {
+  MOVIE
+  CHARACTER
+}
+
 enum RoundStatus {
   PENDING
   VOTING_OPEN
@@ -54,8 +59,10 @@ model Bracket {
   id                    String         @id @default(cuid())
   slug                  String         @unique
   name                  String
-  status                BracketStatus  @default(SETUP)
-  nominationMode        NominationMode @default(OPEN)
+  status                BracketStatus      @default(SETUP)
+  nominationMode        NominationMode     @default(OPEN)
+  contentType           BracketContentType @default(MOVIE)
+  characterName         String? // set for CHARACTER brackets (e.g. "Batman") — the character is bracket-level, one per bracket, actors compete
   nominationCapPerVoter Int?
   poolTargetSize        Int?
   currentRound          Int?
@@ -92,6 +99,12 @@ model Category {
   @@unique([bracketId, key])
 }
 
+// Despite the name, also holds CHARACTER-bracket nominees (an actor's
+// portrayal) — tmdbId/title/posterUrl are reused for the actor's TMDb
+// person id/name/profile photo rather than forking a parallel model, since
+// bracket generation and every display component only ever operate on
+// those two fields generically (see filmTmdbId/filmTitle/filmYear below
+// for the optional representative-film context specific to that mode).
 model Movie {
   id                 String   @id @default(cuid())
   bracketId          String
@@ -105,6 +118,9 @@ model Movie {
   releaseYear        Int?
   runtime            Int?
   trailerKey         String?
+  filmTmdbId         Int? // CHARACTER brackets only: the optional representative film's TMDb id
+  filmTitle          String?
+  filmYear           Int?
   nominatedByVoterId String?
   nominatedByVoter   Voter?   @relation(fields: [nominatedByVoterId], references: [id])
   seed               Int?

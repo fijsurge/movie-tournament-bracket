@@ -2,10 +2,10 @@
 
 import { prisma } from "@/lib/db";
 import { getVoterId } from "@/lib/voter-cookie";
-import { submitNominationSchema } from "@/lib/validation";
+import { submitNominationSchema, submitCharacterNominationSchema } from "@/lib/validation";
 import { maybeAutoAdvance } from "@/lib/phase-transitions";
 import { notifyCurrentTurn } from "@/lib/turn-notify";
-import { getMovieDetails } from "@/lib/tmdb";
+import { getMovieDetails, getPersonDetails } from "@/lib/tmdb";
 
 export interface DraftPickState {
   error: string | null;
@@ -79,6 +79,85 @@ export async function submitDraftPick(bracketId: string, formInput: unknown): Pr
 
   // Only notify when there's a next turn to notify about — not when this
   // pick just filled the pool and moved the bracket straight to SEEDING.
+  if (turnAdvanced) {
+    await notifyCurrentTurn(bracketId);
+  }
+
+  await maybeAutoAdvance(bracketId);
+  return { error: null };
+}
+
+export async function submitCharacterDraftPick(bracketId: string, formInput: unknown): Promise<DraftPickState> {
+  const parsed = submitCharacterNominationSchema.safeParse({ bracketId, ...(formInput as object) });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid nominee" };
+  }
+  const { actorTmdbId, actorName, actorPhotoUrl, filmTmdbId, filmTitle, filmYear } = parsed.data;
+
+  const voterId = await getVoterId(bracketId);
+  if (!voterId) {
+    return { error: "You need to identify yourself first" };
+  }
+
+  const bracket = await prisma.bracket.findUnique({
+    where: { id: bracketId },
+    include: { draftState: true },
+  });
+  if (
+    !bracket ||
+    bracket.status !== "NOMINATING" ||
+    bracket.nominationMode !== "DRAFT" ||
+    bracket.contentType !== "CHARACTER" ||
+    !bracket.draftState
+  ) {
+    return { error: "The draft hasn't started yet" };
+  }
+
+  const turnOrder = JSON.parse(bracket.draftState.turnOrder) as string[];
+  const currentVoterId = turnOrder[bracket.draftState.currentTurnIndex % turnOrder.length];
+  if (currentVoterId !== voterId) {
+    return { error: "It's not your turn" };
+  }
+
+  const existing = await prisma.movie.findUnique({
+    where: { bracketId_tmdbId: { bracketId, tmdbId: actorTmdbId } },
+  });
+  if (existing) {
+    return { error: "That actor is already in the pool — pick another" };
+  }
+
+  const details = await getPersonDetails(actorTmdbId);
+
+  let turnAdvanced = false;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.movie.create({
+      data: {
+        bracketId,
+        tmdbId: actorTmdbId,
+        title: details?.name ?? actorName,
+        posterUrl: details?.profileUrl ?? actorPhotoUrl,
+        filmTmdbId: filmTmdbId ?? null,
+        filmTitle: filmTitle ?? null,
+        filmYear: filmYear ?? null,
+        nominatedByVoterId: voterId,
+      },
+    });
+
+    const poolCount = await tx.movie.count({ where: { bracketId } });
+    const nextIndex = bracket.draftState!.currentTurnIndex + 1;
+
+    if (bracket.autoAdvance && bracket.poolTargetSize && poolCount >= bracket.poolTargetSize) {
+      await tx.bracket.update({ where: { id: bracketId }, data: { status: "SEEDING" } });
+    } else {
+      await tx.draftState.update({
+        where: { bracketId },
+        data: { currentTurnIndex: nextIndex % turnOrder.length },
+      });
+      turnAdvanced = true;
+    }
+  });
+
   if (turnAdvanced) {
     await notifyCurrentTurn(bracketId);
   }
