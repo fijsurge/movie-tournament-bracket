@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import useSWR from "swr";
 import type { BracketState } from "@/types/bracket";
 import { NominationPool } from "@/components/nominate/NominationPool";
@@ -8,13 +9,36 @@ import { BracketTree } from "@/components/bracket/BracketTree";
 import { ChampionBanner } from "@/components/bracket/ChampionBanner";
 import { PickRevealOverlay } from "@/components/bracket/PickRevealOverlay";
 import { RoundTransitionOverlay } from "@/components/bracket/RoundTransitionOverlay";
+import { unlockAudio } from "@/lib/sfx";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const SOUND_STORAGE_KEY = "tv-sound-enabled";
 
 export function TVView({ slug }: { slug: string }) {
   const { data } = useSWR<BracketState>(`/api/brackets/${slug}/state`, fetcher, {
     refreshInterval: 5000,
   });
+
+  // Starts false and syncs from localStorage in an effect (not read
+  // directly during render) to avoid an SSR/hydration mismatch — the
+  // server has no localStorage to read from.
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  useEffect(() => {
+    setSoundEnabled(localStorage.getItem(SOUND_STORAGE_KEY) === "1");
+  }, []);
+
+  function toggleSound() {
+    // Trailer/SFX autoplay-with-sound only has a real chance of working if
+    // the browser sees this as the user gesture that unlocked it — calling
+    // unlockAudio() synchronously inside the click handler, not later, is
+    // what makes that work for the AudioContext-based chimes.
+    unlockAudio();
+    setSoundEnabled((prev) => {
+      const next = !prev;
+      localStorage.setItem(SOUND_STORAGE_KEY, next ? "1" : "0");
+      return next;
+    });
+  }
 
   if (!data) {
     return <p className="flex flex-1 items-center justify-center text-2xl text-cream-dim">Loading…</p>;
@@ -24,7 +48,14 @@ export function TVView({ slug }: { slug: string }) {
 
   return (
     <>
-      <PickRevealOverlay movies={movies} />
+      <button
+        type="button"
+        onClick={toggleSound}
+        className="fixed bottom-4 left-4 z-40 rounded-full border border-gold/40 bg-ink/80 px-3 py-1.5 text-sm text-cream backdrop-blur transition hover:border-gold active:scale-95"
+      >
+        {soundEnabled ? "🔊 Sound on" : "🔈 Tap for sound"}
+      </button>
+      <PickRevealOverlay movies={movies} soundEnabled={soundEnabled} />
       <RoundTransitionOverlay rounds={rounds} />
       {bracket.status === "SETUP" && (
         <p className="flex flex-1 items-center justify-center text-2xl text-cream-dim">
@@ -50,6 +81,7 @@ export function TVView({ slug }: { slug: string }) {
                   ? finalMatchup?.movieA?.trailerKey
                   : finalMatchup?.movieB?.trailerKey) ?? null
               }
+              soundEnabled={soundEnabled}
             />
           );
         })()}

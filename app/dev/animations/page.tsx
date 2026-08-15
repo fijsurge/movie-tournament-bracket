@@ -247,7 +247,7 @@ export default function AnimationsPreviewPage() {
             On the real TV both come from the same live data, so adding a pick below also triggers the full-screen
             takeover — fixed full-screen, so it&apos;ll cover the whole page for a few seconds.
           </p>
-          <PickRevealOverlay movies={pool} />
+          <PickRevealOverlay movies={pool} soundEnabled={false} />
           <div className="rounded-lg bg-ink">
             <NominationPool state={makeBracketState(pool)} />
           </div>
@@ -313,6 +313,7 @@ export default function AnimationsPreviewPage() {
               championTitle="Top Gun: Maverick"
               posterUrl={POSTERS[0]}
               trailerKey={MOCK_TRAILER_KEY}
+              soundEnabled={false}
             />
           </div>
           <TriggerForm onTrigger={() => setChampionKey((k) => k + 1)}>Replay reveal</TriggerForm>

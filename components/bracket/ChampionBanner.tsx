@@ -1,18 +1,32 @@
+"use client";
+
+import { useEffect } from "react";
 import Image from "next/image";
 import { motion } from "motion/react";
-import { TrailerEmbed } from "@/components/shared/TrailerEmbed";
+import { TrailerEmbed, TRAILER_TV_SKIP_SECONDS } from "@/components/shared/TrailerEmbed";
+import { playWinnerFanfare } from "@/lib/sfx";
 
 export function ChampionBanner({
   bracketName,
   championTitle,
   posterUrl,
   trailerKey,
+  soundEnabled,
 }: {
   bracketName: string;
   championTitle: string;
   posterUrl: string | null;
   trailerKey?: string | null;
+  soundEnabled: boolean;
 }) {
+  // This component only mounts once, the moment the bracket flips to
+  // COMPLETE — a mount-only effect is the right trigger, not something
+  // keyed on props that stay stable for the rest of its lifetime.
+  useEffect(() => {
+    if (soundEnabled) playWinnerFanfare();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="relative flex flex-1 flex-col items-center justify-center gap-6 overflow-hidden p-8 text-center">
       <motion.p
@@ -78,7 +92,11 @@ export function ChampionBanner({
           transition={{ delay: 1.9, duration: 0.6 }}
           className="w-full max-w-xl"
         >
-          <TrailerEmbed trailerKey={trailerKey} startMuted />
+          <TrailerEmbed
+            trailerKey={trailerKey}
+            startMuted={!soundEnabled}
+            startSeconds={TRAILER_TV_SKIP_SECONDS}
+          />
         </motion.div>
       )}
     </div>
