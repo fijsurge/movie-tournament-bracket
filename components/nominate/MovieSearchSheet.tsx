@@ -12,12 +12,14 @@ export function MovieSearchSheet({
   disabled,
   excludeTmdbIds,
   hasFilters,
+  triggerLabel = "+ Search for a movie",
 }: {
   bracketId: string;
   onPick: (movie: MovieSearchResult) => void;
   disabled?: boolean;
   excludeTmdbIds?: number[];
   hasFilters?: boolean;
+  triggerLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -29,7 +31,7 @@ export function MovieSearchSheet({
         disabled={disabled}
         className="w-full rounded-full bg-gold px-4 py-2.5 font-medium text-ink transition hover:bg-gold-dim active:scale-[0.98] disabled:opacity-50"
       >
-        + Search for a movie
+        {triggerLabel}
       </button>
       <BottomSheet open={open} onClose={() => setOpen(false)}>
         <MovieSearch

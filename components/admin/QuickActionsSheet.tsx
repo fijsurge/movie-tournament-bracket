@@ -7,6 +7,7 @@ import { BottomSheet } from "@/components/shared/BottomSheet";
 import { SubmitButton } from "@/components/shared/SubmitButton";
 import { QuickSeedButton } from "@/components/admin/QuickSeedButton";
 import { InviteVoters } from "@/components/admin/InviteVoters";
+import { AdminAddMovie } from "@/components/admin/AdminAddMovie";
 import { BoltIcon } from "@/components/shared/Icons";
 
 const PRIMARY_BUTTON =
@@ -27,12 +28,16 @@ export function QuickActionsSheet({
   movieCount,
   currentRound,
   invitedVoters,
+  excludeTmdbIds,
+  hasFilters,
 }: {
   bracketId: string;
   status: "NOMINATING" | "SEEDING" | "ACTIVE";
   movieCount: number;
   currentRound: number | null;
   invitedVoters: InvitedVoter[];
+  excludeTmdbIds: number[];
+  hasFilters: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -59,6 +64,7 @@ export function QuickActionsSheet({
         {status === "NOMINATING" && (
           <div className="mt-3 flex flex-col gap-4">
             <InviteVoters bracketId={bracketId} invitedVoters={invitedVoters} onSuccess={() => router.refresh()} />
+            <AdminAddMovie bracketId={bracketId} excludeTmdbIds={excludeTmdbIds} hasFilters={hasFilters} />
             <form action={closeNominationsForBracket}>
               <SubmitButton disabled={movieCount < 2} pendingLabel="Closing…" className={PRIMARY_BUTTON}>
                 Close nominations &amp; move to seeding
