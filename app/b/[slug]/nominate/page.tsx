@@ -48,7 +48,7 @@ export default async function NominatePage({ params }: { params: Promise<{ slug:
     <main className="mx-auto max-w-xl p-6">
       <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
       <PhaseWatcher slug={bracket.slug} status={bracket.status} />
-      <h1 className="mb-4 font-display text-2xl tracking-wide text-gold uppercase">{bracket.name}: Nominate movies</h1>
+      <h1 className="mb-4 font-display text-2xl tracking-wide text-gold uppercase">Nominate movies</h1>
       {voter ? (
         <div className="flex flex-col gap-4">
           <FirstTimeTip id="nominate">
