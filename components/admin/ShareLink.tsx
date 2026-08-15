@@ -26,7 +26,7 @@ export function ShareLink({ url, label }: { url: string; label: string }) {
 
   return (
     <div className="flex items-center gap-2 rounded-lg bg-surface p-2 shadow-[0_8px_20px_-14px_rgba(0,0,0,0.7)]">
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 overflow-hidden">
         <p className="text-xs text-cream-dim">{label}</p>
         <p className="truncate text-sm text-gold">{url}</p>
       </div>

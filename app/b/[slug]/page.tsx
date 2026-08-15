@@ -28,7 +28,7 @@ export default async function PublicBracketLanding({
   const nextHref = phaseHref(bracket);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col p-6">
+    <main className="mx-auto w-full flex min-h-screen max-w-md flex-col p-6">
       <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
       <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
         <Image src={iconMark} alt="" width={64} className="opacity-90 drop-shadow-[0_0_24px_rgba(232,163,61,0.25)]" />

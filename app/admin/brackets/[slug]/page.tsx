@@ -97,7 +97,7 @@ export default async function AdminBracketDashboard({
     : null;
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
+    <main className="mx-auto w-full max-w-2xl p-6">
       <AdminNav bracketSlug={bracket.slug} />
       <h1 className="font-display text-3xl tracking-wide text-gold uppercase">{bracket.name}</h1>
       <div className="mt-2 flex flex-wrap items-center gap-3">

@@ -19,7 +19,7 @@ export default async function LoginPage({
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 p-6">
+    <main className="mx-auto w-full flex min-h-screen max-w-sm flex-col justify-center gap-4 p-6">
       <h1 className="font-display text-3xl tracking-wide text-gold uppercase">Log in</h1>
       {sent === "1" ? (
         <div className="flex flex-col gap-3">

@@ -5,7 +5,7 @@ import { HomeIcon } from "@/components/shared/Icons";
 
 export default function AboutPage() {
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-6 p-6">
+    <main className="mx-auto w-full flex max-w-2xl flex-col gap-6 p-6">
       <div className="flex flex-col items-center gap-4 py-2 text-center">
         <Image src={splashLogo} alt="Movie Madness Bracket" width={160} priority />
         <h1 className="font-display text-3xl tracking-wide text-gold uppercase">About this bracket</h1>

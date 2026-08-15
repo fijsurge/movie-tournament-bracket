@@ -21,7 +21,7 @@ export default async function NominatePage({ params }: { params: Promise<{ slug:
     const dest = phaseHref(bracket);
     if (dest) redirect(dest);
     return (
-      <main className="mx-auto max-w-xl p-6">
+      <main className="mx-auto w-full max-w-xl p-6">
         <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
         <PhaseWatcher slug={bracket.slug} status={bracket.status} />
         <p>This bracket uses draft-style nominations. Head to the draft page instead.</p>
@@ -33,7 +33,7 @@ export default async function NominatePage({ params }: { params: Promise<{ slug:
     const dest = phaseHref(bracket);
     if (dest) redirect(dest);
     return (
-      <main className="mx-auto max-w-xl p-6">
+      <main className="mx-auto w-full max-w-xl p-6">
         <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
         <PhaseWatcher slug={bracket.slug} status={bracket.status} />
         <p>Nominations aren&apos;t open for this bracket right now (status: {bracket.status}).</p>
@@ -45,7 +45,7 @@ export default async function NominatePage({ params }: { params: Promise<{ slug:
   const voter = voterId ? bracket.voters.find((v) => v.id === voterId) : null;
 
   return (
-    <main className="mx-auto max-w-xl p-6">
+    <main className="mx-auto w-full max-w-xl p-6">
       <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
       <PhaseWatcher slug={bracket.slug} status={bracket.status} />
       <h1 className="mb-4 font-display text-2xl tracking-wide text-gold uppercase">Nominate movies</h1>

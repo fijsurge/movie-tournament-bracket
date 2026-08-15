@@ -21,7 +21,7 @@ export default async function SeedPage({ params }: { params: Promise<{ slug: str
     const dest = phaseHref(bracket);
     if (dest) redirect(dest);
     return (
-      <main className="mx-auto max-w-xl p-6">
+      <main className="mx-auto w-full max-w-xl p-6">
         <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
         <PhaseWatcher slug={bracket.slug} status={bracket.status} />
         <p>Seeding isn&apos;t open for this bracket right now (status: {bracket.status}).</p>
@@ -39,7 +39,7 @@ export default async function SeedPage({ params }: { params: Promise<{ slug: str
   }
 
   return (
-    <main className="mx-auto max-w-xl p-6">
+    <main className="mx-auto w-full max-w-xl p-6">
       <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
       <PhaseWatcher slug={bracket.slug} status={bracket.status} />
       <h1 className="mb-4 font-display text-2xl tracking-wide text-gold uppercase">{bracket.name}: Seed the bracket</h1>
