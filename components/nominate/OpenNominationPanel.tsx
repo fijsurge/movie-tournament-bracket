@@ -98,14 +98,6 @@ export function OpenNominationPanel({
         {cap !== null && ` of ${cap}`}.
       </p>
 
-      <PickAnnouncement movies={movies} />
-
-      {data?.bracket.filterSummary && (
-        <p className="text-sm text-cream-dim">
-          Search is scoped to: <span className="font-medium text-gold">{data.bracket.filterSummary}</span>
-        </p>
-      )}
-
       {atCap ? (
         <p className="text-sm text-cream-dim">You&apos;ve used all your nominations. Waiting on everyone else…</p>
       ) : data?.bracket.contentType === "CHARACTER" ? (
@@ -128,6 +120,14 @@ export function OpenNominationPanel({
         />
       )}
       {error && <p className="text-sm text-error">{error}</p>}
+
+      <PickAnnouncement movies={movies} />
+
+      {data?.bracket.filterSummary && (
+        <p className="text-sm text-cream-dim">
+          Search is scoped to: <span className="font-medium text-gold">{data.bracket.filterSummary}</span>
+        </p>
+      )}
 
       <div>
         <h2 className="font-display text-lg tracking-wide text-rose uppercase">Pool so far ({movies.length})</h2>

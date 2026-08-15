@@ -130,24 +130,6 @@ export function DraftBoard({
         </motion.div>
       </AnimatePresence>
 
-      {isUpNext && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center text-sm text-cream-dim"
-        >
-          🎬 You&apos;re up next — get ready!
-        </motion.p>
-      )}
-
-      <PickAnnouncement movies={movies} />
-
-      {data.bracket.filterSummary && (
-        <p className="text-center text-sm text-cream-dim">
-          Search is scoped to: <span className="font-medium text-gold">{data.bracket.filterSummary}</span>
-        </p>
-      )}
-
       {isMyTurn &&
         (data.bracket.contentType === "CHARACTER" ? (
           <CharacterNominationEntry
@@ -169,6 +151,24 @@ export function DraftBoard({
           />
         ))}
       {error && <p className="text-sm text-error">{error}</p>}
+
+      {isUpNext && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center text-sm text-cream-dim"
+        >
+          🎬 You&apos;re up next — get ready!
+        </motion.p>
+      )}
+
+      <PickAnnouncement movies={movies} />
+
+      {data.bracket.filterSummary && (
+        <p className="text-center text-sm text-cream-dim">
+          Search is scoped to: <span className="font-medium text-gold">{data.bracket.filterSummary}</span>
+        </p>
+      )}
 
       <div>
         <h2 className="font-display text-lg tracking-wide text-rose uppercase">Draft board</h2>

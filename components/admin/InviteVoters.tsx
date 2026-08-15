@@ -76,30 +76,32 @@ export function InviteVoters({
 
       <form action={formAction} className="flex flex-col gap-2">
         {rows.map((row, i) => (
-          <div key={i} className="flex items-center gap-2">
+          <div key={i} className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <input
               value={row.name}
               onChange={(e) => updateRow(i, "name", e.target.value)}
               placeholder="Name"
-              className={`w-32 ${INPUT}`}
+              className={`min-w-0 sm:w-32 ${INPUT}`}
             />
-            <input
-              value={row.email}
-              onChange={(e) => updateRow(i, "email", e.target.value)}
-              placeholder="email@example.com"
-              type="email"
-              className={`flex-1 ${INPUT}`}
-            />
-            {rows.length > 1 && (
-              <button
-                type="button"
-                onClick={() => removeRow(i)}
-                className="text-sm text-cream-dim hover:text-error active:scale-95"
-                aria-label="Remove row"
-              >
-                ✕
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              <input
+                value={row.email}
+                onChange={(e) => updateRow(i, "email", e.target.value)}
+                placeholder="email@example.com"
+                type="email"
+                className={`min-w-0 flex-1 ${INPUT}`}
+              />
+              {rows.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeRow(i)}
+                  className="shrink-0 text-sm text-cream-dim hover:text-error active:scale-95"
+                  aria-label="Remove row"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
         ))}
         <button

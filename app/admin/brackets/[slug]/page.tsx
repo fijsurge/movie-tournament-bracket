@@ -155,21 +155,23 @@ export default async function AdminBracketDashboard({
               const canPromote = Boolean(v.person?.emailVerifiedAt);
               return (
                 <li key={v.id} className="flex items-center justify-between gap-3 rounded border border-gold/15 p-2">
-                  <span className="flex items-center gap-2 text-sm">
+                  <span className="flex min-w-0 items-center gap-2 text-sm">
                     <Avatar name={effectiveVoterName(v)} avatar={effectiveVoterAvatar(v)} size="sm" />
-                    {effectiveVoterName(v)}
+                    <span className="truncate">{effectiveVoterName(v)}</span>
                     {isBracketAdminVoter && (
-                      <span className="rounded-full border border-gold/40 px-2 py-0.5 text-xs text-gold">Admin</span>
+                      <span className="shrink-0 rounded-full border border-gold/40 px-2 py-0.5 text-xs text-gold">
+                        Admin
+                      </span>
                     )}
                   </span>
                   {isBracketAdminVoter ? (
-                    <form action={demoteVoter.bind(null, bracket.id, v.id)}>
+                    <form action={demoteVoter.bind(null, bracket.id, v.id)} className="shrink-0">
                       <SubmitButton pendingLabel="…" className={`${SECONDARY_BUTTON} px-2 py-1 text-xs`}>
                         Remove admin
                       </SubmitButton>
                     </form>
                   ) : (
-                    <form action={promoteVoter.bind(null, bracket.id, v.id)}>
+                    <form action={promoteVoter.bind(null, bracket.id, v.id)} className="shrink-0">
                       <SubmitButton
                         pendingLabel="…"
                         disabled={!canPromote}
@@ -201,15 +203,21 @@ export default async function AdminBracketDashboard({
               {bracket.movies.map((m) => (
                 <li key={m.id} className="flex items-center gap-3 rounded border border-gold/10 p-2 text-sm">
                   {m.posterUrl ? (
-                    <Image src={m.posterUrl} alt="" width={36} height={54} className="rounded object-cover" />
+                    <Image
+                      src={m.posterUrl}
+                      alt=""
+                      width={36}
+                      height={54}
+                      className="shrink-0 rounded object-cover"
+                    />
                   ) : (
                     <div className="h-[54px] w-9 shrink-0 rounded bg-surface-raised" />
                   )}
-                  <span>
+                  <span className="min-w-0">
                     <span className="font-medium">{m.title}</span>
                     {bracket.characterName && <span className="text-cream-dim"> as {bracket.characterName}</span>}
                     {m.filmTitle && (
-                      <span className="block text-xs text-cream-dim">
+                      <span className="block truncate text-xs text-cream-dim">
                         {m.filmTitle}
                         {m.filmYear ? ` (${m.filmYear})` : ""}
                       </span>
@@ -290,10 +298,10 @@ export default async function AdminBracketDashboard({
 
             {bracket.nominationMode === "DRAFT" && bracket.draftState && (
               <div className="flex items-center gap-3">
-                <p className="text-sm">
+                <p className="min-w-0 truncate text-sm">
                   Current turn: <span className="font-medium text-gold">{currentTurnVoterName}</span>
                 </p>
-                <form action={skipDraftTurnForBracket}>
+                <form action={skipDraftTurnForBracket} className="shrink-0">
                   <SubmitButton pendingLabel="…" className={SECONDARY_BUTTON}>
                     Skip turn
                   </SubmitButton>
