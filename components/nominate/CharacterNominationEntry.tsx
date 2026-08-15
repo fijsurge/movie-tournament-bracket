@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { CharacterSearchSheet, type CharacterSearchResult } from "./CharacterSearchSheet";
+import { CharacterSearchSheet } from "./CharacterSearchSheet";
+import type { CharacterSearchResult } from "./CharacterSearch";
 import { MovieSearchSheet } from "./MovieSearchSheet";
 import type { MovieSearchResult } from "./MovieSearch";
 

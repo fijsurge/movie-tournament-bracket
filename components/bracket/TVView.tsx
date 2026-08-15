@@ -21,9 +21,11 @@ export function TVView({ slug }: { slug: string }) {
 
   // Starts false and syncs from localStorage in an effect (not read
   // directly during render) to avoid an SSR/hydration mismatch — the
-  // server has no localStorage to read from.
+  // server has no localStorage to read from. The one-time post-mount
+  // correction is intentional here, not a synchronization smell.
   const [soundEnabled, setSoundEnabled] = useState(false);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSoundEnabled(localStorage.getItem(SOUND_STORAGE_KEY) === "1");
   }, []);
 
