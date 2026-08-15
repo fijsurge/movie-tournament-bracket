@@ -5,7 +5,8 @@ export type { MovieFilters };
 
 const TMDB_API_BASE = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w342";
-const TMDB_PROFILE_BASE = "https://image.tmdb.org/t/p/w92";
+const TMDB_PROFILE_BASE = "https://image.tmdb.org/t/p/w92"; // small — filter chips, search result rows
+const TMDB_PROFILE_LARGE_BASE = "https://image.tmdb.org/t/p/w185"; // primary card image — character-bracket nominees
 
 export interface TmdbMovieResult {
   tmdbId: number;
@@ -145,6 +146,23 @@ export async function getMovieDetails(tmdbId: number): Promise<TmdbMovieDetails 
       releaseYear: data.release_date ? Number(data.release_date.slice(0, 4)) : null,
       runtime: data.runtime ?? null,
       trailerKey: pickTrailerKey(data.videos?.results),
+    };
+  } catch {
+    return null;
+  }
+}
+
+// Detail fetch by id, mirroring getMovieDetails — used to hydrate a
+// character-bracket nomination's actor name/photo at submit time, since
+// searchPeople only returns what /search/person exposes (small w92 photo).
+export async function getPersonDetails(
+  personId: number,
+): Promise<{ name: string; profileUrl: string | null } | null> {
+  try {
+    const data = await tmdbGet<{ name: string; profile_path?: string | null }>(`/person/${personId}`, {});
+    return {
+      name: data.name,
+      profileUrl: data.profile_path ? `${TMDB_PROFILE_LARGE_BASE}${data.profile_path}` : null,
     };
   } catch {
     return null;

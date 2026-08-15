@@ -33,6 +33,8 @@ export interface BracketStateMovie {
   releaseYear: number | null;
   runtime: number | null;
   trailerKey: string | null;
+  filmTitle: string | null;
+  filmYear: number | null;
   nominatedByName: string | null;
   nominatedByAvatar: string | null;
   seed: number | null;
@@ -74,6 +76,8 @@ export interface BracketState {
     name: string;
     status: "SETUP" | "NOMINATING" | "SEEDING" | "ACTIVE" | "COMPLETE";
     nominationMode: "OPEN" | "DRAFT";
+    contentType: "MOVIE" | "CHARACTER";
+    characterName: string | null;
     nominationCapPerVoter: number | null;
     poolTargetSize: number | null;
     hasFilters: boolean;

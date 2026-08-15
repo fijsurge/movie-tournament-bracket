@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { requireBracketAdmin } from "@/lib/bracket-auth";
 import { prisma } from "@/lib/db";
@@ -12,6 +13,7 @@ import { UndoButton } from "@/components/admin/UndoButton";
 import { QuickSeedButton } from "@/components/admin/QuickSeedButton";
 import { DeleteBracketButton } from "@/components/admin/DeleteBracketButton";
 import { AdminAddMovie } from "@/components/admin/AdminAddMovie";
+import { AdminAddCharacter } from "@/components/admin/AdminAddCharacter";
 import { ClearPoolButton } from "@/components/admin/ClearPoolButton";
 import { buildFilterSummary } from "@/lib/bracket-filters";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
@@ -187,14 +189,51 @@ export default async function AdminBracketDashboard({
 
       {poolEditable && (
         <section className="mt-6 rounded border border-gold/20 bg-surface p-4">
-          <h2 className="text-lg font-medium text-rose">Movie pool</h2>
-          <p className="mt-1 text-sm text-cream-dim">{bracket.movies.length} movie(s) in the pool.</p>
+          <h2 className="text-lg font-medium text-rose">
+            {bracket.contentType === "CHARACTER" ? "Actor pool" : "Movie pool"}
+          </h2>
+          <p className="mt-1 text-sm text-cream-dim">
+            {bracket.movies.length} {bracket.contentType === "CHARACTER" ? "actor(s)" : "movie(s)"} in the pool.
+          </p>
+
+          {bracket.contentType === "CHARACTER" && bracket.movies.length > 0 && (
+            <ul className="mt-3 flex flex-col gap-2">
+              {bracket.movies.map((m) => (
+                <li key={m.id} className="flex items-center gap-3 rounded border border-gold/10 p-2 text-sm">
+                  {m.posterUrl ? (
+                    <Image src={m.posterUrl} alt="" width={36} height={54} className="rounded object-cover" />
+                  ) : (
+                    <div className="h-[54px] w-9 shrink-0 rounded bg-surface-raised" />
+                  )}
+                  <span>
+                    <span className="font-medium">{m.title}</span>
+                    {bracket.characterName && <span className="text-cream-dim"> as {bracket.characterName}</span>}
+                    {m.filmTitle && (
+                      <span className="block text-xs text-cream-dim">
+                        {m.filmTitle}
+                        {m.filmYear ? ` (${m.filmYear})` : ""}
+                      </span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+
           <div className="mt-3 flex flex-col gap-3">
-            <AdminAddMovie
-              bracketId={bracket.id}
-              excludeTmdbIds={bracket.movies.map((m) => m.tmdbId)}
-              hasFilters={hasFilters}
-            />
+            {bracket.contentType === "CHARACTER" ? (
+              <AdminAddCharacter
+                bracketId={bracket.id}
+                excludePersonIds={bracket.movies.map((m) => m.tmdbId)}
+                characterName={bracket.characterName}
+              />
+            ) : (
+              <AdminAddMovie
+                bracketId={bracket.id}
+                excludeTmdbIds={bracket.movies.map((m) => m.tmdbId)}
+                hasFilters={hasFilters}
+              />
+            )}
             <ClearPoolButton
               action={clearNominationPoolForBracket}
               disabled={bracket.movies.length === 0}

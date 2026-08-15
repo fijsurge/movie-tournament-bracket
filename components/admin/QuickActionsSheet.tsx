@@ -8,6 +8,7 @@ import { SubmitButton } from "@/components/shared/SubmitButton";
 import { QuickSeedButton } from "@/components/admin/QuickSeedButton";
 import { InviteVoters } from "@/components/admin/InviteVoters";
 import { AdminAddMovie } from "@/components/admin/AdminAddMovie";
+import { AdminAddCharacter } from "@/components/admin/AdminAddCharacter";
 import { BoltIcon } from "@/components/shared/Icons";
 
 const PRIMARY_BUTTON =
@@ -25,6 +26,8 @@ interface InvitedVoter {
 export function QuickActionsSheet({
   bracketId,
   status,
+  contentType,
+  characterName,
   movieCount,
   currentRound,
   invitedVoters,
@@ -33,6 +36,8 @@ export function QuickActionsSheet({
 }: {
   bracketId: string;
   status: "NOMINATING" | "SEEDING" | "ACTIVE";
+  contentType: "MOVIE" | "CHARACTER";
+  characterName: string | null;
   movieCount: number;
   currentRound: number | null;
   invitedVoters: InvitedVoter[];
@@ -64,7 +69,11 @@ export function QuickActionsSheet({
         {status === "NOMINATING" && (
           <div className="mt-3 flex flex-col gap-4">
             <InviteVoters bracketId={bracketId} invitedVoters={invitedVoters} onSuccess={() => router.refresh()} />
-            <AdminAddMovie bracketId={bracketId} excludeTmdbIds={excludeTmdbIds} hasFilters={hasFilters} />
+            {contentType === "CHARACTER" ? (
+              <AdminAddCharacter bracketId={bracketId} excludePersonIds={excludeTmdbIds} characterName={characterName} />
+            ) : (
+              <AdminAddMovie bracketId={bracketId} excludeTmdbIds={excludeTmdbIds} hasFilters={hasFilters} />
+            )}
             <form action={closeNominationsForBracket}>
               <SubmitButton disabled={movieCount < 2} pendingLabel="Closing…" className={PRIMARY_BUTTON}>
                 Close nominations &amp; move to seeding

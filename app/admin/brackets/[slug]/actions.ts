@@ -6,10 +6,10 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireBracketAdmin } from "@/lib/bracket-auth";
 import { normalizeVoterName } from "@/lib/voter-cookie";
-import { inviteVotersSchema, submitNominationSchema } from "@/lib/validation";
+import { inviteVotersSchema, submitNominationSchema, submitCharacterNominationSchema } from "@/lib/validation";
 import { sendInviteEmail } from "@/lib/email";
 import { getBaseUrl } from "@/lib/base-url";
-import { getMovieDetails } from "@/lib/tmdb";
+import { getMovieDetails, getPersonDetails } from "@/lib/tmdb";
 import {
   closeNominationsCore,
   closeSeedingCore,
@@ -295,6 +295,49 @@ export async function adminAddMovie(bracketId: string, formInput: unknown): Prom
   // that happens to exactly fill a DRAFT pool completes on the next real
   // turn rather than instantly. This call still matters for OPEN mode's
   // per-voter-cap check, which is unaffected by an unattributed admin add.
+  await maybeAutoAdvance(bracketId);
+
+  revalidatePath(`/admin/brackets/${bracket.slug}`);
+  return { error: null };
+}
+
+// Mirrors adminAddMovie exactly, for CHARACTER-bracket nominees.
+export async function adminAddCharacterNominee(
+  bracketId: string,
+  formInput: unknown,
+): Promise<AdminAddMovieState> {
+  await requireBracketAdmin(bracketId);
+  const parsed = submitCharacterNominationSchema.safeParse({ bracketId, ...(formInput as object) });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid nominee" };
+  }
+  const { actorTmdbId, actorName, actorPhotoUrl, filmTmdbId, filmTitle, filmYear } = parsed.data;
+
+  const bracket = await prisma.bracket.findUniqueOrThrow({ where: { id: bracketId } });
+  if (bracket.status !== "SETUP" && bracket.status !== "NOMINATING") {
+    return { error: "The pool can only be edited before seeding starts" };
+  }
+
+  const existing = await prisma.movie.findUnique({
+    where: { bracketId_tmdbId: { bracketId, tmdbId: actorTmdbId } },
+  });
+  if (existing) {
+    return { error: "That actor is already in the pool" };
+  }
+
+  const details = await getPersonDetails(actorTmdbId);
+  await prisma.movie.create({
+    data: {
+      bracketId,
+      tmdbId: actorTmdbId,
+      title: details?.name ?? actorName,
+      posterUrl: details?.profileUrl ?? actorPhotoUrl,
+      filmTmdbId: filmTmdbId ?? null,
+      filmTitle: filmTitle ?? null,
+      filmYear: filmYear ?? null,
+    },
+  });
+
   await maybeAutoAdvance(bracketId);
 
   revalidatePath(`/admin/brackets/${bracket.slug}`);
