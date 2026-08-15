@@ -18,6 +18,7 @@ import {
   undoLastPhase as undoLastPhaseCore,
   maybeAutoAdvance,
 } from "@/lib/phase-transitions";
+import { notifyCurrentTurn } from "@/lib/turn-notify";
 
 function shuffle<T>(arr: T[]): T[] {
   const copy = [...arr];
@@ -78,6 +79,7 @@ export async function startDraft(bracketId: string): Promise<void> {
     update: { turnOrder: JSON.stringify(shuffle(bracket.voters.map((v) => v.id))), currentTurnIndex: 0 },
     create: { bracketId, turnOrder: JSON.stringify(shuffle(bracket.voters.map((v) => v.id))), currentTurnIndex: 0 },
   });
+  await notifyCurrentTurn(bracketId);
   revalidatePath(`/admin/brackets/${bracket.slug}`);
 }
 
@@ -93,6 +95,7 @@ export async function skipDraftTurn(bracketId: string): Promise<void> {
     where: { bracketId },
     data: { currentTurnIndex: (bracket.draftState.currentTurnIndex + 1) % turnOrder.length },
   });
+  await notifyCurrentTurn(bracketId);
   revalidatePath(`/admin/brackets/${bracket.slug}`);
 }
 
