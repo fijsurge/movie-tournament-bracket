@@ -21,7 +21,7 @@ export default async function AdminHomePage() {
   });
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
+    <main className="mx-auto w-full max-w-2xl p-6">
       <PageNav
         backHref="/"
         backLabel="Home"

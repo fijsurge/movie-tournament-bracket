@@ -19,7 +19,7 @@ export default async function AccountPage({ params }: { params: Promise<{ slug: 
     : null;
 
   return (
-    <main className="mx-auto max-w-xl p-6">
+    <main className="mx-auto w-full max-w-xl p-6">
       <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
       <h1 className="mb-4 font-display text-2xl tracking-wide text-gold uppercase">My account</h1>
       {voter ? (

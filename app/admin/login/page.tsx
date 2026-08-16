@@ -17,7 +17,7 @@ export default async function AdminLoginPage({
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 p-6">
+    <main className="mx-auto w-full flex min-h-screen max-w-sm flex-col justify-center gap-4 p-6">
       <h1 className="font-display text-3xl tracking-wide text-gold uppercase">Admin login</h1>
       <LoginForm next={safeNext} />
       <Link

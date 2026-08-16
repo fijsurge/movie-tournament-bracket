@@ -23,7 +23,7 @@ export default async function AccountPage() {
 
   if (!person) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
+      <main className="mx-auto w-full flex min-h-screen max-w-md flex-col gap-4 p-6">
         <h1 className="font-display text-2xl tracking-wide text-gold uppercase">My account</h1>
         <p className="text-sm text-cream-dim">Log in to see your account and the brackets you&apos;ve joined.</p>
         <Link
@@ -38,7 +38,7 @@ export default async function AccountPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
+    <main className="mx-auto w-full flex min-h-screen max-w-md flex-col gap-6 p-6">
       <h1 className="font-display text-2xl tracking-wide text-gold uppercase">My account</h1>
 
       <div>

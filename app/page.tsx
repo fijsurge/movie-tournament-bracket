@@ -30,7 +30,7 @@ export default async function Home() {
   ]);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-8 p-6">
+    <main className="mx-auto w-full flex min-h-screen max-w-2xl flex-col gap-8 p-6">
       <div className="flex flex-col items-center gap-3 py-4 text-center">
         <Image src={iconMark} alt="" width={72} priority className="drop-shadow-[0_0_30px_rgba(232,163,61,0.3)]" />
         <h1 className="font-display text-4xl tracking-wide text-gold uppercase">Movie Madness Bracket</h1>
