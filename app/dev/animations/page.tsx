@@ -297,7 +297,7 @@ export default function AnimationsPreviewPage() {
             Round transition (TV full-screen takeover)
           </h2>
           <p className="text-sm text-cream-dim">Also fixed full-screen — same caveat as above.</p>
-          <RoundTransitionOverlay rounds={overlayRounds} />
+          <RoundTransitionOverlay rounds={overlayRounds} soundEnabled={false} />
           <div className="mt-4 flex gap-2">
             <button type="button" onClick={() => setOverlayRounds((prev) => advanceRound(prev))} className={BUTTON}>
               Advance round

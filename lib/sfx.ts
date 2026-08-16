@@ -38,6 +38,36 @@ function playTone(context: AudioContext, freq: number, startTime: number, durati
   osc.stop(start + duration);
 }
 
+function createNoiseBuffer(context: AudioContext, duration: number): AudioBuffer {
+  const length = Math.ceil(context.sampleRate * duration);
+  const buffer = context.createBuffer(1, length, context.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+  return buffer;
+}
+
+// One "clap" — filtered white noise, band centered randomly per burst so a
+// crowd of them doesn't sound like one sound repeated.
+function playClap(context: AudioContext, startTime: number, peakGain: number): void {
+  const duration = 0.12;
+  const start = context.currentTime + startTime;
+  const noise = context.createBufferSource();
+  noise.buffer = createNoiseBuffer(context, duration);
+  const filter = context.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.value = 1800 + Math.random() * 2200;
+  filter.Q.value = 0.8;
+  const gain = context.createGain();
+  gain.gain.setValueAtTime(0, start);
+  gain.gain.linearRampToValueAtTime(peakGain, start + 0.004);
+  gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(context.destination);
+  noise.start(start);
+  noise.stop(start + duration);
+}
+
 // Two-note rising chime — a pick just landed.
 export function playPickChime(): void {
   const context = getContext();
@@ -51,4 +81,44 @@ export function playWinnerFanfare(): void {
   const context = getContext();
   if (!context) return;
   [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => playTone(context, freq, i * 0.12, 0.3, 0.18));
+}
+
+// A crowd's worth of overlapping claps, swelling in then tapering off —
+// paired with playWinnerFanfare() for the champion reveal.
+export function playApplause(): void {
+  const context = getContext();
+  if (!context) return;
+  const totalDuration = 2.2;
+  const clapCount = 45;
+  for (let i = 0; i < clapCount; i++) {
+    const t = Math.random() * totalDuration;
+    const progress = t / totalDuration;
+    const envelope = progress < 0.15 ? progress / 0.15 : progress > 0.75 ? Math.max(0, (1 - progress) / 0.25) : 1;
+    playClap(context, t, 0.05 + envelope * 0.06);
+  }
+}
+
+// A rising filtered-noise sweep — the "whoosh" beat before a new round's
+// title card, same beat trailers use for a scene transition.
+export function playRoundWhoosh(): void {
+  const context = getContext();
+  if (!context) return;
+  const duration = 0.6;
+  const start = context.currentTime;
+  const noise = context.createBufferSource();
+  noise.buffer = createNoiseBuffer(context, duration);
+  const filter = context.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.Q.value = 1;
+  filter.frequency.setValueAtTime(200, start);
+  filter.frequency.exponentialRampToValueAtTime(4000, start + duration);
+  const gain = context.createGain();
+  gain.gain.setValueAtTime(0, start);
+  gain.gain.linearRampToValueAtTime(0.22, start + duration * 0.5);
+  gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(context.destination);
+  noise.start(start);
+  noise.stop(start + duration);
 }

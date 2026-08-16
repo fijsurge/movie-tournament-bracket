@@ -58,7 +58,7 @@ export function TVView({ slug }: { slug: string }) {
         {soundEnabled ? "🔊 Sound on" : "🔈 Tap for sound"}
       </button>
       <PickRevealOverlay movies={movies} soundEnabled={soundEnabled} />
-      <RoundTransitionOverlay rounds={rounds} />
+      <RoundTransitionOverlay rounds={rounds} soundEnabled={soundEnabled} />
       {bracket.status === "SETUP" && (
         <p className="flex flex-1 items-center justify-center text-2xl text-cream-dim">
           Waiting for the host to open nominations…
