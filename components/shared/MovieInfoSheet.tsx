@@ -15,13 +15,27 @@ export interface MovieInfoSheetMovie {
   trailerKey: string | null;
   filmTitle?: string | null;
   filmYear?: number | null;
+  director?: string | null;
+  cast?: string[] | null;
 }
 
 // A refresher on an already-nominated movie, for a phone-sized "what was
 // that one again?" lookup — a bottom sheet rather than the TV's full-screen
 // takeover style, which is reserved for the TV's own "big moments" and would
-// be too heavy for this.
-export function MovieInfoSheet({ movie, onClose }: { movie: MovieInfoSheetMovie | null; onClose: () => void }) {
+// be too heavy for this. `actionLabel`/`onAction` are optional — only the
+// nomination-search preview passes them (for "+ Nominate this movie");
+// every other caller stays read-only.
+export function MovieInfoSheet({
+  movie,
+  onClose,
+  actionLabel,
+  onAction,
+}: {
+  movie: MovieInfoSheetMovie | null;
+  onClose: () => void;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   const [showTrailer, setShowTrailer] = useState(false);
 
   return (
@@ -53,9 +67,22 @@ export function MovieInfoSheet({ movie, onClose }: { movie: MovieInfoSheetMovie 
                   {movie.filmYear ? ` (${movie.filmYear})` : ""}
                 </p>
               )}
+              {movie.director && <p className="text-sm text-cream-dim">Directed by {movie.director}</p>}
+              {movie.cast && movie.cast.length > 0 && (
+                <p className="text-sm text-cream-dim">Starring {movie.cast.join(", ")}</p>
+              )}
             </div>
           </div>
           {movie.overview && <p className="mt-4 text-sm text-cream">{movie.overview}</p>}
+          {actionLabel && onAction && (
+            <button
+              type="button"
+              onClick={onAction}
+              className="mt-4 w-full rounded-full bg-gold px-4 py-2 text-sm font-medium text-ink transition hover:bg-gold-dim active:scale-95"
+            >
+              {actionLabel}
+            </button>
+          )}
           {movie.trailerKey && !showTrailer && (
             <button
               type="button"
