@@ -142,8 +142,8 @@ export function VoteForm({
   return (
     <div className="rounded-xl bg-surface p-4 shadow-[0_16px_36px_-16px_rgba(0,0,0,0.75)]">
       {!showSwipeCard && (
-        <div className="mb-4 flex items-center justify-center gap-4 text-center">
-          <div className="flex flex-col items-center gap-2">
+        <div className="mb-4 flex items-start justify-center gap-4 text-center">
+          <div className="flex w-[84px] shrink-0 flex-col items-center gap-2">
             {movieA.posterUrl && (
               <PosterButton
                 movie={movieA}
@@ -152,10 +152,10 @@ export function VoteForm({
                 imageClassName="rounded-md shadow-[0_10px_22px_-8px_rgba(0,0,0,0.8)]"
               />
             )}
-            <span className="font-medium">{movieA.title}</span>
+            <span className="text-sm font-medium break-words">{movieA.title}</span>
           </div>
           <span className="font-display text-rose">vs</span>
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex w-[84px] shrink-0 flex-col items-center gap-2">
             {movieB.posterUrl && (
               <PosterButton
                 movie={movieB}
@@ -164,7 +164,7 @@ export function VoteForm({
                 imageClassName="rounded-md shadow-[0_10px_22px_-8px_rgba(0,0,0,0.8)]"
               />
             )}
-            <span className="font-medium">{movieB.title}</span>
+            <span className="text-sm font-medium break-words">{movieB.title}</span>
           </div>
         </div>
       )}
