@@ -2,11 +2,20 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 // The shared full-screen-backdrop + slide-up-sheet shell — first built for
 // MovieInfoSheet, reused here for movie search. Controlled by `open` rather
 // than by presence of data, so callers that don't have a natural "nullable
 // selection" (like a search sheet) don't need to invent one.
+//
+// Portaled to document.body rather than rendered inline: Framer Motion
+// animates via CSS transform, and a transformed ancestor becomes the
+// containing block for `position: fixed` descendants — so a sheet nested
+// inside another sheet (nomination search's poster-tap preview, opened from
+// inside the search sheet) would render clipped to the outer sheet's box
+// instead of covering the screen. Portaling makes nesting safe everywhere,
+// not just for that one case.
 export function BottomSheet({
   open,
   onClose,
@@ -18,7 +27,9 @@ export function BottomSheet({
   onExitComplete?: () => void;
   children: ReactNode;
 }) {
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <AnimatePresence onExitComplete={onExitComplete}>
       {open && (
         <>
@@ -42,6 +53,7 @@ export function BottomSheet({
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

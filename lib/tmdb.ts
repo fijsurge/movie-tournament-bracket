@@ -45,6 +45,8 @@ export interface TmdbMovieDetails {
   releaseYear: number | null;
   runtime: number | null;
   trailerKey: string | null;
+  director: string | null;
+  cast: string[] | null;
 }
 
 interface TmdbVideo {
@@ -61,6 +63,10 @@ interface TmdbMovieDetailsRaw {
   release_date?: string;
   runtime?: number | null;
   videos?: { results: TmdbVideo[] };
+  credits?: {
+    cast?: { name: string; order: number }[];
+    crew?: { job: string; name: string }[];
+  };
 }
 
 function getApiKey(): string {
@@ -138,7 +144,12 @@ function pickTrailerKey(videos: TmdbVideo[] | undefined): string | null {
 // trailer both resolve to null, so callers don't need their own try/catch.
 export async function getMovieDetails(tmdbId: number): Promise<TmdbMovieDetails | null> {
   try {
-    const data = await tmdbGet<TmdbMovieDetailsRaw>(`/movie/${tmdbId}`, { append_to_response: "videos" });
+    const data = await tmdbGet<TmdbMovieDetailsRaw>(`/movie/${tmdbId}`, { append_to_response: "videos,credits" });
+    const cast = data.credits?.cast
+      ?.slice()
+      .sort((a, b) => a.order - b.order)
+      .slice(0, 6)
+      .map((c) => c.name);
     return {
       overview: data.overview ?? null,
       voteAverage: data.vote_average ?? null,
@@ -146,6 +157,8 @@ export async function getMovieDetails(tmdbId: number): Promise<TmdbMovieDetails 
       releaseYear: data.release_date ? Number(data.release_date.slice(0, 4)) : null,
       runtime: data.runtime ?? null,
       trailerKey: pickTrailerKey(data.videos?.results),
+      director: data.credits?.crew?.find((c) => c.job === "Director")?.name ?? null,
+      cast: cast && cast.length > 0 ? cast : null,
     };
   } catch {
     return null;
