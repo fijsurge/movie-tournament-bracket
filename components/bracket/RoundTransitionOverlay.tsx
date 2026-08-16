@@ -1,17 +1,30 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "motion/react";
 import { TVTakeoverShell } from "@/components/bracket/TVTakeoverShell";
 import { useRoundTransition } from "@/hooks/useRoundTransition";
+import { playRoundWhoosh } from "@/lib/sfx";
 import type { BracketStateRound } from "@/types/bracket";
 
 // Full-screen TV takeover when voting advances to a new round — only ever
 // receives new data while the bracket is ACTIVE, so it never collides with
 // PickRevealOverlay (NOMINATING-only).
-export function RoundTransitionOverlay({ rounds }: { rounds: BracketStateRound[] }) {
+export function RoundTransitionOverlay({
+  rounds,
+  soundEnabled,
+}: {
+  rounds: BracketStateRound[];
+  soundEnabled: boolean;
+}) {
   const currentRound = rounds.find((r) => r.status === "VOTING_OPEN")?.roundNumber ?? null;
   const announced = useRoundTransition(currentRound, 3500);
   const isFinal = announced !== null && announced === rounds.length;
+
+  useEffect(() => {
+    if (announced !== null && soundEnabled) playRoundWhoosh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [announced]);
 
   return (
     <TVTakeoverShell active={announced !== null}>

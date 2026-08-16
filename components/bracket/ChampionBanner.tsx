@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
 import { TrailerEmbed, TRAILER_TV_SKIP_SECONDS } from "@/components/shared/TrailerEmbed";
-import { playWinnerFanfare } from "@/lib/sfx";
+import { playWinnerFanfare, playApplause } from "@/lib/sfx";
 
 // Safety net in case the YouTube IFrame API's ENDED event never fires (ad
 // blocker, flaky script load) — the TV can't get stuck on a finished video
@@ -42,7 +42,10 @@ export function ChampionBanner({
   // Fires once per transition into the reveal phase — on mount for the
   // no-trailer case, or once the trailer phase hands off via onEnded/Skip.
   useEffect(() => {
-    if (phase === "reveal" && soundEnabled) playWinnerFanfare();
+    if (phase === "reveal" && soundEnabled) {
+      playWinnerFanfare();
+      playApplause();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
