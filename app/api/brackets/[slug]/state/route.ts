@@ -2,11 +2,19 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { buildFilterSummary } from "@/lib/bracket-filters";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
+import { maybeAutoAdvance } from "@/lib/phase-transitions";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+
+  // Every bracket page polls this route every 5s (PhaseWatcher/TVView), so
+  // it's also the passive sweep that closes a round once its review window
+  // (Round.closesAt) has expired — nothing else re-checks that on its own
+  // if no one submits another vote after the window opens.
+  const bracketRef = await prisma.bracket.findUnique({ where: { slug }, select: { id: true } });
+  if (bracketRef) await maybeAutoAdvance(bracketRef.id);
 
   const bracket = await prisma.bracket.findUnique({
     where: { slug },
@@ -25,6 +33,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
             orderBy: { position: "asc" },
             include: { movieA: true, movieB: true, winnerMovie: true },
           },
+          confirmations: { select: { voterId: true } },
         },
       },
     },
@@ -70,6 +79,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       poolTargetSize: bracket.poolTargetSize,
       hasFilters,
       filterSummary,
+      invitedVoterCount: bracket.voters.filter((v) => v.email !== null).length,
     },
     categories: bracket.categories.map((c) => ({ key: c.key, label: c.label, isTiebreaker: c.isTiebreaker })),
     movies: bracket.movies.map((m) => ({
@@ -98,6 +108,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     rounds: bracket.rounds.map((r) => ({
       roundNumber: r.roundNumber,
       status: r.status,
+      closesAt: r.closesAt ? r.closesAt.toISOString() : null,
+      confirmedVoterIds: r.confirmations.map((c) => c.voterId),
       matchups: r.matchups.map((m) => ({
         id: m.id,
         position: m.position,

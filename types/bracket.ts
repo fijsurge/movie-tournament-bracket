@@ -56,6 +56,8 @@ export interface BracketStateMatchup {
 export interface BracketStateRound {
   roundNumber: number;
   status: "PENDING" | "VOTING_OPEN" | "VOTING_CLOSED" | "COMPLETE";
+  closesAt: string | null;
+  confirmedVoterIds: string[];
   matchups: BracketStateMatchup[];
 }
 
@@ -82,6 +84,7 @@ export interface BracketState {
     poolTargetSize: number | null;
     hasFilters: boolean;
     filterSummary: string | null;
+    invitedVoterCount: number;
   };
   categories: { key: string; label: string; isTiebreaker: boolean }[];
   movies: BracketStateMovie[];
