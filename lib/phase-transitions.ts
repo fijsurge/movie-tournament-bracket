@@ -180,6 +180,14 @@ export async function closeRoundCore(bracketId: string): Promise<void> {
   revalidatePath(`/admin/brackets/${bracket.slug}`);
 }
 
+// A round doesn't close the instant everyone's voted — it opens a review
+// window first, giving anyone who wants to double back and edit a score a
+// clear chance to before their (possibly stale) vote gets used. See the
+// ACTIVE branch of maybeAutoAdvance below, and confirmRoundVote in
+// app/b/[slug]/vote/actions.ts for the "everyone confirmed, skip the wait"
+// shortcut.
+export const ROUND_CLOSE_GRACE_MS = 60_000;
+
 // ---------------------------------------------------------------------------
 // Auto-advance — checks whether every *invited* voter (Voter.email set, i.e.
 // added through the admin's email-invite flow) has finished the current
@@ -230,6 +238,10 @@ export async function maybeAutoAdvance(bracketId: string): Promise<void> {
   }
 
   if (bracket.status === "ACTIVE" && bracket.currentRound) {
+    const round = await prisma.round.findUniqueOrThrow({
+      where: { bracketId_roundNumber: { bracketId, roundNumber: bracket.currentRound } },
+    });
+
     const invitedVoters = await prisma.voter.findMany({ where: { bracketId, email: { not: null } } });
     const openMatchups = await prisma.matchup.findMany({
       where: { bracketId, round: { roundNumber: bracket.currentRound }, status: "OPEN" },
@@ -241,9 +253,35 @@ export async function maybeAutoAdvance(bracketId: string): Promise<void> {
       select: { matchupId: true, voterId: true },
     });
     const votedPairs = new Set(votes.map((v) => `${v.matchupId}:${v.voterId}`));
-    if (isRoundComplete(invitedVoters.map((v) => v.id), openMatchupIds, votedPairs)) {
-      await closeRoundCore(bracketId);
+    if (!isRoundComplete(invitedVoters.map((v) => v.id), openMatchupIds, votedPairs)) return;
+
+    if (round.closesAt) {
+      if (round.closesAt <= new Date()) {
+        await closeRoundCore(bracketId);
+      }
+      return;
     }
+
+    await prisma.$transaction([
+      prisma.roundConfirmation.deleteMany({ where: { roundId: round.id } }),
+      prisma.round.update({
+        where: { id: round.id },
+        data: { closesAt: new Date(Date.now() + ROUND_CLOSE_GRACE_MS) },
+      }),
+    ]);
+  }
+}
+
+// Called from confirmRoundVote once a voter confirms — closes the round
+// right away if every invited voter has now confirmed, instead of waiting
+// out the rest of the review window.
+export async function maybeCloseIfAllConfirmed(bracketId: string, roundId: string): Promise<void> {
+  const invitedVoters = await prisma.voter.findMany({ where: { bracketId, email: { not: null } } });
+  if (invitedVoters.length === 0) return;
+  const confirmations = await prisma.roundConfirmation.findMany({ where: { roundId }, select: { voterId: true } });
+  const confirmedIds = new Set(confirmations.map((c) => c.voterId));
+  if (invitedVoters.every((v) => confirmedIds.has(v.id))) {
+    await closeRoundCore(bracketId);
   }
 }
 

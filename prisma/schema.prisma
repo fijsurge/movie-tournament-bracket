@@ -175,9 +175,10 @@ model Voter {
   role           VoterRole @default(VOTER) // ADMIN requires a linked, verified Person — see promoteVoter
   createdAt      DateTime  @default(now())
 
-  nominatedMovies Movie[]
-  seedVotes       SeedVote[]
-  votes           Vote[]
+  nominatedMovies    Movie[]
+  seedVotes          SeedVote[]
+  votes              Vote[]
+  roundConfirmations RoundConfirmation[]
 
   @@unique([bracketId, normalizedName])
   @@unique([bracketId, email])
@@ -202,10 +203,29 @@ model Round {
   bracket     Bracket     @relation(fields: [bracketId], references: [id], onDelete: Cascade)
   roundNumber Int
   status      RoundStatus @default(PENDING)
+  closesAt    DateTime? // set once every invited voter has voted on every open matchup; null outside the review window — see lib/phase-transitions.ts
 
-  matchups Matchup[]
+  matchups      Matchup[]
+  confirmations RoundConfirmation[]
 
   @@unique([bracketId, roundNumber])
+}
+
+// A voter explicitly signaling "I'm done, don't wait on me" during a
+// round's review window — once every invited voter has one of these for the
+// current round, the round closes immediately instead of waiting out
+// Round.closesAt. Cleared (all rows for the round deleted) whenever any
+// voter edits a vote during the window, since the picks changed underneath
+// whoever already confirmed.
+model RoundConfirmation {
+  id          String   @id @default(cuid())
+  roundId     String
+  round       Round    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  voterId     String
+  voter       Voter    @relation(fields: [voterId], references: [id], onDelete: Cascade)
+  confirmedAt DateTime @default(now())
+
+  @@unique([roundId, voterId])
 }
 
 model Matchup {

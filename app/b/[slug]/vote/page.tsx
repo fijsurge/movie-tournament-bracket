@@ -4,6 +4,7 @@ import { getVoterId } from "@/lib/voter-cookie";
 import { VoterIdentify } from "@/components/voting/VoterIdentify";
 import { BracketNav } from "@/components/voting/BracketNav";
 import { VoteForm } from "@/components/voting/VoteForm";
+import { RoundReviewBanner } from "@/components/voting/RoundReviewBanner";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
 import { PhaseWatcher } from "@/components/shared/PhaseWatcher";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
@@ -72,6 +73,14 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
             Score both movies on each category, 1-5. Your votes stay anonymous — only the combined totals
             are ever shown. Ties are broken by the tiebreaker category, then a coin flip or revote.
           </FirstTimeTip>
+          {bracket.currentRound && (
+            <RoundReviewBanner
+              bracketId={bracket.id}
+              slug={bracket.slug}
+              voterId={voter.id}
+              currentRound={bracket.currentRound}
+            />
+          )}
           {openMatchups.length === 0 ? (
             <p className="text-cream-dim">No matchups need your vote right now — check back soon.</p>
           ) : (

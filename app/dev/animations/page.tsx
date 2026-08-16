@@ -82,6 +82,7 @@ function makeBracketState(movies: BracketStateMovie[]): BracketState {
       poolTargetSize: null,
       hasFilters: false,
       filterSummary: null,
+      invitedVoterCount: VOTER_NAMES.length,
     },
     categories: [],
     movies,
@@ -97,6 +98,8 @@ function makeBracket(): BracketStateRound[] {
     {
       roundNumber: 1,
       status: "VOTING_OPEN",
+      closesAt: null,
+      confirmedVoterIds: [],
       matchups: [
         {
           id: "m1",
@@ -123,6 +126,8 @@ function makeBracket(): BracketStateRound[] {
     {
       roundNumber: 2,
       status: "PENDING",
+      closesAt: null,
+      confirmedVoterIds: [],
       matchups: [
         { id: "m3", position: 0, isBye: false, status: "PENDING", movieA: null, movieB: null, winnerMovieId: null, winnerTitle: null },
       ],
