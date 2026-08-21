@@ -7,29 +7,58 @@ export interface AvatarPreset {
   key: string;
   label: string;
   promptFragment: string;
+  // Themes/styles show an emoji; palettes show a CSS gradient swatch
+  // instead — each catalog only fills in the one it uses.
+  emoji?: string;
+  swatch?: string;
 }
 
 export const AVATAR_THEMES: AvatarPreset[] = [
-  { key: "movie-hero", label: "Movie poster hero", promptFragment: "cinematic movie poster portrait of a hero" },
-  { key: "space", label: "Cosmic explorer", promptFragment: "a cosmic space explorer among stars and nebulae" },
-  { key: "fantasy", label: "Fantasy adventurer", promptFragment: "a fantasy adventurer with magical aura" },
-  { key: "arcade", label: "Retro arcade", promptFragment: "a retro 80s arcade game character" },
-  { key: "noir", label: "Noir detective", promptFragment: "a noir film detective in shadow and light" },
+  { key: "movie-hero", label: "Movie poster hero", emoji: "🦸", promptFragment: "cinematic movie poster portrait of a hero" },
+  { key: "space", label: "Cosmic explorer", emoji: "🚀", promptFragment: "a cosmic space explorer among stars and nebulae" },
+  { key: "fantasy", label: "Fantasy adventurer", emoji: "🧙", promptFragment: "a fantasy adventurer with magical aura" },
+  { key: "arcade", label: "Retro arcade", emoji: "👾", promptFragment: "a retro 80s arcade game character" },
+  { key: "noir", label: "Noir detective", emoji: "🕵️", promptFragment: "a noir film detective in shadow and light" },
 ];
 
 export const AVATAR_PALETTES: AvatarPreset[] = [
-  { key: "gold-ink", label: "Gold & ink", promptFragment: "rich gold and deep ink black color palette" },
-  { key: "neon", label: "Neon nights", promptFragment: "vibrant neon pink and cyan color palette" },
-  { key: "pastel", label: "Pastel dream", promptFragment: "soft pastel color palette" },
-  { key: "mono", label: "Black & white", promptFragment: "high-contrast black and white, monochrome" },
-  { key: "sunset", label: "Sunset warm", promptFragment: "warm sunset orange and red color palette" },
+  {
+    key: "gold-ink",
+    label: "Gold & ink",
+    swatch: "linear-gradient(135deg, #e8a33d, #1b1420)",
+    promptFragment: "rich gold and deep ink black color palette",
+  },
+  {
+    key: "neon",
+    label: "Neon nights",
+    swatch: "linear-gradient(135deg, #ff2ec4, #22e0ff)",
+    promptFragment: "vibrant neon pink and cyan color palette",
+  },
+  {
+    key: "pastel",
+    label: "Pastel dream",
+    swatch: "linear-gradient(135deg, #ffc6d9, #c6e2ff)",
+    promptFragment: "soft pastel color palette",
+  },
+  {
+    key: "mono",
+    label: "Black & white",
+    swatch: "linear-gradient(135deg, #ffffff, #111111)",
+    promptFragment: "high-contrast black and white, monochrome",
+  },
+  {
+    key: "sunset",
+    label: "Sunset warm",
+    swatch: "linear-gradient(135deg, #ff7a3d, #b8202e)",
+    promptFragment: "warm sunset orange and red color palette",
+  },
 ];
 
 export const AVATAR_STYLES: AvatarPreset[] = [
-  { key: "minimalist", label: "Minimalist", promptFragment: "minimalist flat illustration style" },
-  { key: "painterly", label: "Painterly", promptFragment: "painterly digital art style" },
-  { key: "pixel", label: "Pixel art", promptFragment: "16-bit pixel art style" },
-  { key: "comic", label: "Comic book", promptFragment: "bold comic book illustration style" },
+  { key: "minimalist", label: "Minimalist", emoji: "◆", promptFragment: "minimalist flat illustration style" },
+  { key: "painterly", label: "Painterly", emoji: "🖌️", promptFragment: "painterly digital art style" },
+  { key: "pixel", label: "Pixel art", emoji: "🕹️", promptFragment: "16-bit pixel art style" },
+  { key: "comic", label: "Comic book", emoji: "💥", promptFragment: "bold comic book illustration style" },
 ];
 
 function findPreset(list: AvatarPreset[], key: string): AvatarPreset | undefined {

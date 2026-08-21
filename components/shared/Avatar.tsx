@@ -4,6 +4,7 @@ const SIZE_CLASSES = {
   sm: "h-6 w-6 text-xs",
   md: "h-8 w-8 text-sm",
   lg: "h-14 w-14 text-xl",
+  xl: "h-28 w-28 text-5xl",
 } as const;
 
 export function Avatar({
