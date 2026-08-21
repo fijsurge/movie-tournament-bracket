@@ -265,6 +265,7 @@ model Vote {
   scoresMovieB  String // JSON-encoded { [categoryKey]: 1-5 }
   totalA        Int
   totalB        Int
+  viaSwipeOnly  Boolean  @default(false) // true only if every score is still the raw swipe default — see swipeToScores in lib/swipe-vote.ts. Excluded when pre-filling a later matchup's baseline (app/b/[slug]/vote/page.tsx), since it was never a deliberate rating.
   createdAt     DateTime @default(now())
 
   @@unique([matchupId, voterId])

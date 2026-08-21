@@ -15,7 +15,7 @@ export async function submitVote(formInput: unknown): Promise<SubmitVoteState> {
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid vote" };
   }
-  const { matchupId, scoresMovieA, scoresMovieB } = parsed.data;
+  const { matchupId, scoresMovieA, scoresMovieB, viaSwipeOnly = false } = parsed.data;
 
   const matchup = await prisma.matchup.findUnique({
     where: { id: matchupId },
@@ -56,6 +56,7 @@ export async function submitVote(formInput: unknown): Promise<SubmitVoteState> {
       scoresMovieB: JSON.stringify(scoresMovieB),
       totalA,
       totalB,
+      viaSwipeOnly,
     },
     create: {
       matchupId,
@@ -64,6 +65,7 @@ export async function submitVote(formInput: unknown): Promise<SubmitVoteState> {
       scoresMovieB: JSON.stringify(scoresMovieB),
       totalA,
       totalB,
+      viaSwipeOnly,
     },
   });
 
