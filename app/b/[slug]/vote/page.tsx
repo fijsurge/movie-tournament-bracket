@@ -5,10 +5,12 @@ import { VoterIdentify } from "@/components/voting/VoterIdentify";
 import { BracketNav } from "@/components/voting/BracketNav";
 import { VoteForm } from "@/components/voting/VoteForm";
 import { RoundReviewBanner } from "@/components/voting/RoundReviewBanner";
+import { BracketTree } from "@/components/bracket/BracketTree";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
 import { PhaseWatcher } from "@/components/shared/PhaseWatcher";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
 import { phaseHref } from "@/lib/phase-nav";
+import type { BracketStateRound } from "@/types/bracket";
 
 export default async function VotePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -23,16 +25,47 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
       where: { bracketId: bracket.id, nextMatchupId: null },
       include: { winnerMovie: true },
     });
+    const completedRounds = await prisma.round.findMany({
+      where: { bracketId: bracket.id },
+      orderBy: { roundNumber: "asc" },
+      include: {
+        matchups: {
+          orderBy: { position: "asc" },
+          include: { movieA: true, movieB: true, winnerMovie: true },
+        },
+      },
+    });
+    const treeRounds: BracketStateRound[] = completedRounds.map((r) => ({
+      roundNumber: r.roundNumber,
+      status: r.status,
+      closesAt: null,
+      confirmedVoterIds: [],
+      matchups: r.matchups.map((m) => ({
+        id: m.id,
+        position: m.position,
+        isBye: m.isBye,
+        status: m.status,
+        movieA: m.movieA
+          ? { id: m.movieA.id, title: m.movieA.title, posterUrl: m.movieA.posterUrl, seed: m.movieA.seed, trailerKey: m.movieA.trailerKey }
+          : null,
+        movieB: m.movieB
+          ? { id: m.movieB.id, title: m.movieB.title, posterUrl: m.movieB.posterUrl, seed: m.movieB.seed, trailerKey: m.movieB.trailerKey }
+          : null,
+        winnerMovieId: m.winnerMovieId,
+        winnerTitle: m.winnerMovie?.title ?? null,
+      })),
+    }));
     return (
-      <main className="mx-auto w-full flex min-h-screen max-w-md flex-col p-6">
+      <main className="mx-auto w-full flex min-h-screen max-w-4xl flex-col p-6">
         <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
         <PhaseWatcher slug={bracket.slug} status={bracket.status} />
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
+        <div className="flex flex-col items-center gap-2 py-6 text-center">
           <h1 className="font-display text-2xl tracking-wide text-gold uppercase">{bracket.name}</h1>
           <p className="text-lg">
             🏆 Champion: <span className="font-semibold text-gold">{championMatchup?.winnerMovie?.title}</span>
           </p>
         </div>
+        <BracketTree rounds={treeRounds} />
       </main>
     );
   }
