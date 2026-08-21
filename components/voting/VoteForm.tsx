@@ -80,6 +80,8 @@ export function VoteForm({
   movieB,
   initialScoresA,
   initialScoresB,
+  baselineScoresA,
+  baselineScoresB,
   onSubmitted,
 }: {
   matchupId: string;
@@ -88,15 +90,26 @@ export function VoteForm({
   movieB: MovieInfo;
   initialScoresA?: Record<string, number>;
   initialScoresB?: Record<string, number>;
+  // Pre-fills a not-yet-voted matchup from the voter's last deliberately
+  // rated matchup (never a swipe-only one — see viaSwipeOnly), so their
+  // usual category weighting carries forward instead of starting blank.
+  // Ignored once initialScoresA is set — that always wins as the real vote.
+  baselineScoresA?: Record<string, number>;
+  baselineScoresB?: Record<string, number>;
   onSubmitted?: () => void;
 }) {
-  const [scoresA, setScoresA] = useState<Record<string, number>>(initialScoresA ?? {});
-  const [scoresB, setScoresB] = useState<Record<string, number>>(initialScoresB ?? {});
+  const [scoresA, setScoresA] = useState<Record<string, number>>(initialScoresA ?? baselineScoresA ?? {});
+  const [scoresB, setScoresB] = useState<Record<string, number>>(initialScoresB ?? baselineScoresB ?? {});
   const [submitted, setSubmitted] = useState(Boolean(initialScoresA));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [swiped, setSwiped] = useState(false);
   const [swipedWinnerTitle, setSwipedWinnerTitle] = useState<string | null>(null);
+  // Flips true the moment the voter touches an individual score button —
+  // distinguishes "swiped, then actually adjusted something" from "swiped
+  // and hit submit as-is", so only the latter gets flagged viaSwipeOnly and
+  // excluded from becoming a future matchup's baseline.
+  const [manuallyEdited, setManuallyEdited] = useState(false);
   // Only ever set true as a direct result of a swipe — manual-only voting
   // and re-opening an already-voted matchup never touch this, so the grid
   // stays exactly as expanded as it's always been for both of those cases.
@@ -113,6 +126,16 @@ export function VoteForm({
   // swiped this session, the card gives way to the static header + a
   // confirmation line instead of leaving its own reserved space behind.
   const showSwipeCard = !initialScoresA && !swiped;
+  const showBaselineHint = !initialScoresA && !swiped && Boolean(baselineScoresA);
+
+  function editScoresA(fn: (prev: Record<string, number>) => Record<string, number>) {
+    setManuallyEdited(true);
+    setScoresA(fn);
+  }
+  function editScoresB(fn: (prev: Record<string, number>) => Record<string, number>) {
+    setManuallyEdited(true);
+    setScoresB(fn);
+  }
 
   function handleSwipe(winner: "A" | "B") {
     const { scoresA: a, scoresB: b } = swipeToScores(
@@ -129,7 +152,12 @@ export function VoteForm({
   function handleSubmit() {
     setError(null);
     startTransition(async () => {
-      const result = await submitVote({ matchupId, scoresMovieA: scoresA, scoresMovieB: scoresB });
+      const result = await submitVote({
+        matchupId,
+        scoresMovieA: scoresA,
+        scoresMovieB: scoresB,
+        viaSwipeOnly: swiped && !manuallyEdited,
+      });
       if (result.error) {
         setError(result.error);
       } else {
@@ -176,6 +204,12 @@ export function VoteForm({
         </p>
       )}
 
+      {showBaselineHint && (
+        <p className="mb-4 text-center text-sm text-cream-dim">
+          Pre-filled with your usual ratings — adjust below if this one&apos;s different.
+        </p>
+      )}
+
       {showSwipeCard && (
         <SwipeMatchupCard
           movieA={{ title: movieA.title, posterUrl: movieA.posterUrl }}
@@ -218,12 +252,12 @@ export function VoteForm({
             exit={{ opacity: 0 }}
             className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6"
           >
-            <ScorePicker title={movieA.title} categories={categories} scores={scoresA} setScores={setScoresA} />
+            <ScorePicker title={movieA.title} categories={categories} scores={scoresA} setScores={editScoresA} />
             <ScorePicker
               title={movieB.title}
               categories={categories}
               scores={scoresB}
-              setScores={setScoresB}
+              setScores={editScoresB}
               divider
             />
           </motion.div>

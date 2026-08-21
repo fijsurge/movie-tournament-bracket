@@ -129,6 +129,7 @@ export const submitVoteSchema = z.object({
   matchupId: z.string().min(1),
   scoresMovieA: z.record(z.string(), scoreValue),
   scoresMovieB: z.record(z.string(), scoreValue),
+  viaSwipeOnly: z.boolean().optional(),
 });
 
 export const requestLoginLinkSchema = z.object({

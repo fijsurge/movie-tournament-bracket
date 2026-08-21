@@ -58,6 +58,18 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
     orderBy: { position: "asc" },
   });
 
+  // The voter's most recent deliberately-rated vote anywhere in this
+  // bracket (any round) — pre-fills a not-yet-voted matchup's score grid so
+  // their usual category weighting carries forward instead of starting
+  // blank. A swipe-only vote never counts (see Vote.viaSwipeOnly) — it was
+  // never a real rating to remember.
+  const baselineVote = voter
+    ? await prisma.vote.findFirst({
+        where: { voterId: voter.id, viaSwipeOnly: false, matchup: { bracketId: bracket.id } },
+        orderBy: { createdAt: "desc" },
+      })
+    : null;
+
   const categories = bracket.categories.map((c) => ({ key: c.key, label: c.label }));
 
   return (
@@ -114,6 +126,8 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
                   }}
                   initialScoresA={myVote ? JSON.parse(myVote.scoresMovieA) : undefined}
                   initialScoresB={myVote ? JSON.parse(myVote.scoresMovieB) : undefined}
+                  baselineScoresA={baselineVote ? JSON.parse(baselineVote.scoresMovieA) : undefined}
+                  baselineScoresB={baselineVote ? JSON.parse(baselineVote.scoresMovieB) : undefined}
                 />
               );
             })
