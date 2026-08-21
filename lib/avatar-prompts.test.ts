@@ -47,4 +47,52 @@ describe("buildAvatarPrompt", () => {
   it("throws on an invalid preset key", () => {
     expect(() => buildAvatarPrompt({ themeKey: "not-real", paletteKey: palette, styleKey: style })).toThrow();
   });
+
+  it("defaults to a square headshot composition", () => {
+    const prompt = buildAvatarPrompt({ themeKey: theme, paletteKey: palette, styleKey: style });
+    expect(prompt).toContain("square portrait headshot");
+  });
+
+  it("switches to a poster composition when format is poster", () => {
+    const prompt = buildAvatarPrompt({ themeKey: theme, paletteKey: palette, styleKey: style, format: "poster" });
+    expect(prompt).toContain("vertical movie poster composition");
+    expect(prompt).not.toContain("square portrait headshot");
+  });
+
+  it("includes a poster title fragment only in poster format", () => {
+    const posterPrompt = buildAvatarPrompt({
+      themeKey: theme,
+      paletteKey: palette,
+      styleKey: style,
+      format: "poster",
+      posterTitle: "THE LAST STAND",
+    });
+    expect(posterPrompt).toContain('bold poster title text reading "THE LAST STAND"');
+
+    const headshotPrompt = buildAvatarPrompt({
+      themeKey: theme,
+      paletteKey: palette,
+      styleKey: style,
+      format: "headshot",
+      posterTitle: "THE LAST STAND",
+    });
+    expect(headshotPrompt).not.toContain("THE LAST STAND");
+  });
+
+  it("falls back to a custom preset when the key isn't a builtin", () => {
+    const customTheme = { key: "custom:abc123", label: "My theme", promptFragment: "a custom cosmic wizard scene" };
+    const prompt = buildAvatarPrompt({
+      themeKey: customTheme.key,
+      paletteKey: palette,
+      styleKey: style,
+      customPresets: [customTheme],
+    });
+    expect(prompt).toContain(customTheme.promptFragment);
+  });
+
+  it("throws when a custom-prefixed key isn't found among the provided custom presets", () => {
+    expect(() =>
+      buildAvatarPrompt({ themeKey: "custom:missing", paletteKey: palette, styleKey: style, customPresets: [] }),
+    ).toThrow();
+  });
 });

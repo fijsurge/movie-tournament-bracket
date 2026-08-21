@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { motion } from "motion/react";
 import { PRESET_AVATARS } from "@/lib/avatars";
-import { AVATAR_THEMES, AVATAR_PALETTES, AVATAR_STYLES, type AvatarPreset } from "@/lib/avatar-prompts";
+import { AVATAR_THEMES, AVATAR_PALETTES, AVATAR_STYLES, type AvatarPreset, type AvatarFormat } from "@/lib/avatar-prompts";
 import { Avatar } from "@/components/shared/Avatar";
 import { Spinner } from "@/components/shared/Spinner";
 import { UploadIcon } from "@/components/shared/Icons";
@@ -96,14 +96,23 @@ export function AvatarPicker({
   initialValue?: string;
 }) {
   const [value, setValue] = useState(initialValue);
+  // Tracks the shape of whatever's currently in `value` — only generated
+  // images can be poster-shaped, so this resets to "headshot" (circular)
+  // for emoji picks and photo uploads, which are always meant to read as
+  // round. Picker-local UI state only; the DB still just stores the data:
+  // URI, unchanged — every other avatar display in the app keeps cropping
+  // it into the usual circle via object-cover.
+  const [previewFormat, setPreviewFormat] = useState<AvatarFormat>("headshot");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [generatorOpen, setGeneratorOpen] = useState(false);
   const [status, setStatus] = useState<ServiceStatus>("checking");
+  const [format, setFormat] = useState<AvatarFormat>("headshot");
   const [theme, setTheme] = useState(AVATAR_THEMES[0].key);
   const [palette, setPalette] = useState(AVATAR_PALETTES[0].key);
   const [style, setStyle] = useState(AVATAR_STYLES[0].key);
   const [detail, setDetail] = useState("");
+  const [posterTitle, setPosterTitle] = useState("");
   const [generating, setGenerating] = useState(false);
   const [generatePhase, setGeneratePhase] = useState<"waking" | "painting">("waking");
   const [generateError, setGenerateError] = useState<string | null>(null);
@@ -114,6 +123,7 @@ export function AvatarPicker({
     try {
       const dataUrl = await resizeToDataUrl(file);
       setValue(dataUrl);
+      setPreviewFormat("headshot");
     } catch {
       // silently ignore — falls back to initial-letter avatar
     }
@@ -144,7 +154,14 @@ export function AvatarPicker({
     fetch("/api/avatar-service/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ themeKey: theme, paletteKey: palette, styleKey: style, detail }),
+      body: JSON.stringify({
+        themeKey: theme,
+        paletteKey: palette,
+        styleKey: style,
+        detail,
+        format,
+        posterTitle: format === "poster" ? posterTitle : undefined,
+      }),
     })
       .then(async (res) => {
         const data = (await res.json()) as { dataUrl?: string; error?: string };
@@ -153,6 +170,7 @@ export function AvatarPicker({
           return;
         }
         setValue(data.dataUrl);
+        setPreviewFormat(format);
         setGeneratorOpen(false);
       })
       .catch(() => setGenerateError("Couldn't generate an avatar right now"))
@@ -172,9 +190,16 @@ export function AvatarPicker({
         <motion.div
           animate={generating ? { opacity: [1, 0.55, 1], scale: [1, 0.97, 1] } : { opacity: 1, scale: 1 }}
           transition={generating ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" } : {}}
-          className={`rounded-full transition-shadow ${generating ? "ring-2 ring-gold/50" : "ring-2 ring-transparent"}`}
+          className={`transition-shadow ${previewFormat === "poster" ? "rounded-2xl" : "rounded-full"} ${
+            generating ? "ring-2 ring-gold/50" : "ring-2 ring-transparent"
+          }`}
         >
-          <Avatar name={displayName || "?"} avatar={value || null} size="xl" />
+          {previewFormat === "poster" && value.startsWith("data:") ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={value} alt="" className="h-56 w-40 shrink-0 rounded-2xl object-cover" />
+          ) : (
+            <Avatar name={displayName || "?"} avatar={value || null} size="xl" />
+          )}
         </motion.div>
 
         <button
@@ -198,6 +223,36 @@ export function AvatarPicker({
             >
               ✕
             </button>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <p className="text-sm text-cream-dim">Format</p>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  { key: "headshot", label: "Headshot", emoji: "🖼️" },
+                  { key: "poster", label: "Movie poster", emoji: "🎬" },
+                ] as const
+              ).map((opt) => {
+                const selected = format === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setFormat(opt.key)}
+                    aria-pressed={selected}
+                    className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition active:scale-95 ${
+                      selected
+                        ? "border-gold bg-gold/15 text-gold"
+                        : "border-gold/20 text-cream hover:border-gold/50 active:border-gold/50"
+                    }`}
+                  >
+                    <span aria-hidden="true">{opt.emoji}</span>
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -226,6 +281,22 @@ export function AvatarPicker({
             />
           </label>
 
+          {format === "poster" && (
+            <label className="flex flex-col gap-1 text-sm text-cream-dim">
+              Poster title (optional, experimental)
+              <input
+                value={posterTitle}
+                onChange={(e) => setPosterTitle(e.target.value)}
+                maxLength={40}
+                placeholder="e.g. THE LAST STAND"
+                className="rounded border border-gold/25 bg-ink px-3 py-2 text-cream placeholder:text-cream-dim/50 focus:border-gold focus:outline-none"
+              />
+              <span className="text-xs text-cream-dim/70">
+                Small AI models often render text as gibberish — worth a try, no guarantees.
+              </span>
+            </label>
+          )}
+
           {generateError && <p className="text-sm text-error">{generateError}</p>}
 
           <button
@@ -253,7 +324,10 @@ export function AvatarPicker({
             <button
               key={emoji}
               type="button"
-              onClick={() => setValue(emoji)}
+              onClick={() => {
+                setValue(emoji);
+                setPreviewFormat("headshot");
+              }}
               aria-pressed={value === emoji}
               className={`flex h-8 w-8 items-center justify-center rounded-full border text-base transition active:scale-90 ${
                 value === emoji ? "border-gold bg-gold/15" : "border-gold/20 hover:border-gold/50 active:border-gold/50"
