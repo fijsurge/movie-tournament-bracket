@@ -28,6 +28,7 @@ import {
   resolveTiebreakCoinFlip,
   reopenForRevote,
   toggleAutoAdvance,
+  toggleEmailNotifications,
   undoLastPhase,
   toggleArchived,
   deleteBracket,
@@ -80,6 +81,7 @@ export default async function AdminBracketDashboard({
   const quickSeedForBracket = quickSeed.bind(null, bracket.id);
   const closeRoundForBracket = closeRound.bind(null, bracket.id);
   const toggleAutoAdvanceForBracket = toggleAutoAdvance.bind(null, bracket.id);
+  const toggleEmailNotificationsForBracket = toggleEmailNotifications.bind(null, bracket.id);
   const undoLastPhaseForBracket = undoLastPhase.bind(null, bracket.id);
   const toggleArchivedForBracket = toggleArchived.bind(null, bracket.id);
   const deleteBracketForBracket = deleteBracket.bind(null, bracket.id);
@@ -124,6 +126,18 @@ export default async function AdminBracketDashboard({
             </SubmitButton>
           </form>
         )}
+        <form action={toggleEmailNotificationsForBracket}>
+          <SubmitButton
+            pendingLabel="…"
+            className={`rounded-full border px-3 py-1 text-xs transition active:scale-95 ${
+              bracket.emailNotificationsEnabled
+                ? "border-gold/50 bg-gold/10 text-gold hover:border-gold active:border-gold"
+                : "border-cream-dim/30 text-cream-dim hover:border-cream-dim/60 active:border-cream-dim/60"
+            }`}
+          >
+            Draft turn emails: {bracket.emailNotificationsEnabled ? "On" : "Off"}
+          </SubmitButton>
+        </form>
       </div>
 
       <section className="mt-6">
