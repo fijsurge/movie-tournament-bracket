@@ -29,28 +29,52 @@ unchanged, which Spaces couldn't anymore.)
    (e.g. `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`).
    This gates `/generate` — Cloud Run services are invoked over a public
    URL by default, so without this anyone with the URL could hit it.
-5. From this `avatar-service/` directory, deploy directly from source —
+5. Google may prompt to enable the Cloud Run and Artifact Registry APIs
+   the first time you deploy anything in this project — say yes. If you
+   hit `PERMISSION_DENIED ... could not resolve source` on the very first
+   deploy, it's a known Google Cloud Build change: newer projects don't
+   automatically grant the default Compute service account the role Cloud
+   Build needs. Fix it once with (swap in your actual project number,
+   shown in the error message, or find it via
+   `gcloud projects describe YOUR_PROJECT_ID --format='value(projectNumber)'`):
+   ```bash
+   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+     --member="serviceAccount:YOUR_PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
+     --role="roles/cloudbuild.builds.builder"
+   ```
+6. From this `avatar-service/` directory, deploy directly from source —
    Cloud Build reads the Dockerfile and builds it for you, no separate
-   registry push step needed:
+   registry push step needed. **This first build is slow** (the Dockerfile
+   downloads the model weights at build time — see "What to expect" below
+   for why) — expect several minutes, not seconds:
    ```bash
    gcloud run deploy avatar-service \
      --source . \
      --region us-central1 \
      --allow-unauthenticated \
-     --memory 4Gi \
+     --memory 8Gi \
      --cpu 2 \
      --timeout 300 \
      --min-instances 0 \
      --max-instances 1 \
+     --no-cpu-throttling \
      --set-env-vars AVATAR_SERVICE_SECRET=your-secret-here
    ```
+   These settings are the ones actually verified working end-to-end
+   against a real deployment, not just theoretical defaults:
    - `--allow-unauthenticated`: Cloud Run's own IAM-based invoker auth is
      separate from `AVATAR_SERVICE_SECRET` — this makes the URL publicly
      reachable so our own app-level secret check (not GCP's) is what
      actually gates it.
-   - `--memory 4Gi --cpu 2`: SD-Turbo + torch + diffusers needs real RAM;
-     Cloud Run's 512Mi default isn't enough. Adjust if generation is too
-     slow or the container gets OOM-killed.
+   - `--memory 8Gi --cpu 2`: SD-Turbo + torch + diffusers genuinely needs
+     this much — `4Gi` OOM-killed mid-generation in testing (memory limit
+     of 4096 MiB exceeded by ~25 MiB, right at the edge). If generation
+     still fails with an OOM error, go higher.
+   - `--no-cpu-throttling`: Cloud Run throttles CPU to near-zero between
+     requests by default, which stalls the background model-loading
+     thread almost entirely (loading appeared to hang indefinitely in
+     testing until this was added) — this keeps CPU available so it can
+     actually finish.
    - `--min-instances 0`: scales to zero when idle — no cost while
      nobody's generating avatars, at the cost of a cold start (container
      boot + model load) on the next request after a quiet spell. This is
@@ -58,7 +82,7 @@ unchanged, which Spaces couldn't anymore.)
      status is designed around.
    - `--max-instances 1`: caps concurrency as an extra guard against
      unexpected scaling/cost for a small app with low, bursty traffic.
-6. The deploy command prints a **Service URL** when it finishes — that's
+7. The deploy command prints a **Service URL** when it finishes — that's
    `AVATAR_SERVICE_URL`. In the main app's environment (Vercel project
    settings, and your local `.env` if you want to test against it), set:
    - `AVATAR_SERVICE_URL` = that Service URL
@@ -66,13 +90,29 @@ unchanged, which Spaces couldn't anymore.)
 
 ## What to expect
 
+- **The Dockerfile bakes the model weights into the image at build time**
+  (a `RUN python -c "..."` step that downloads them during `docker build`)
+  rather than downloading them at container startup — without this, every
+  cold start would re-download several gigabytes from Hugging Face over
+  the network before it could even begin loading into memory, on top of
+  Cloud Run's own container-boot cold start. This trades a slower one-time
+  build for much faster cold starts afterward.
 - **Scaled to zero, every request after a quiet spell is a cold start.**
   Unlike a sleep/wake model that might stay warm through a whole session,
   `--min-instances 0` means Cloud Run can spin the container down between
-  any two requests that aren't close together — cold start (container
-  boot + model load) plus the generation itself (10-30+ seconds on CPU).
-  The main app pings this service's `/` the moment the generate panel
-  opens, before the voter's finished picking presets, to get a head start.
+  any two requests that aren't close together. In testing: a cold start
+  (container boot + model load from the baked-in cache) took well under
+  10 seconds; the generation itself — one SD-Turbo inference step on
+  2 vCPUs — took about 60-85 seconds. Total worst case (cold + generate)
+  landed around 90-125 seconds, comfortably inside the app's 150-second
+  request timeout (`app/api/avatar-service/generate/route.ts`). The main
+  app pings this service's `/` the moment the generate panel opens, before
+  the voter's finished picking presets, to get a head start regardless.
+- **`GET /` reports true readiness in its response body, not just the
+  HTTP status** (`{"status": "loading"}` vs `{"status": "ready"}`) — the
+  container binds its port and starts responding immediately on boot,
+  before the model has necessarily finished loading in the background
+  (see `app.py`), so a bare 200 alone doesn't mean the model is ready.
 - **Licensing**: SD-Turbo ships under Stability AI's community license —
   free for non-commercial/small-scale use, not a fully permissive OSI
   license. Fine for this hobby project; worth knowing if this ever grows
@@ -80,8 +120,9 @@ unchanged, which Spaces couldn't anymore.)
 
 ## API
 
-`GET /` — health check. Any successful response means the model is loaded
-and ready (nothing responds until the module-level model load finishes).
+`GET /` — health check, always responds immediately. Body is
+`{"status": "loading"}` or `{"status": "ready"}` — the model loads in a
+background thread, so a bare 200 doesn't by itself mean it's finished.
 
 `POST /generate` — body `{"prompt": string, "secret": string}`, returns
 `{"image_base64": string}` (a PNG, base64-encoded, no data: prefix) on

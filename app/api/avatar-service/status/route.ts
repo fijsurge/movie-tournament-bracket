@@ -18,7 +18,12 @@ export async function GET() {
 
   try {
     const res = await fetch(serviceUrl, { signal: AbortSignal.timeout(READY_CHECK_TIMEOUT_MS) });
-    return NextResponse.json({ status: res.ok ? "ready" : "warming_up" });
+    if (!res.ok) return NextResponse.json({ status: "warming_up" });
+    // The container can be up (port bound) before the model itself has
+    // finished loading in the background — GET / reports the true state
+    // in its body (see avatar-service/app.py), not just the HTTP status.
+    const body = (await res.json().catch(() => null)) as { status?: string } | null;
+    return NextResponse.json({ status: body?.status === "ready" ? "ready" : "warming_up" });
   } catch {
     // Timeout or network error while the service is cold-starting — not a
     // failure, just not ready yet. The request above already triggered

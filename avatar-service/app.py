@@ -1,29 +1,35 @@
-"""SD-Turbo avatar generation service, deployed as a Hugging Face Space.
+"""SD-Turbo avatar generation service, deployed to Google Cloud Run.
 
-Plain FastAPI rather than Gradio's own auto-generated API: Gradio 5.x's
-HTTP contract is a two-step async call-then-poll-over-SSE dance, which
-adds real complexity for a contract this app's server has to call
-correctly without ever seeing it run live. A single POST endpoint with a
-JSON response is simpler to write, call, and reason about — HF Spaces'
-Docker SDK runs any container listening on port 7860, not just Gradio
-apps, so this deploys the same way.
+Plain FastAPI rather than a wrapping framework (Gradio, etc.): a single
+POST endpoint with a JSON response is simple to write, call, and reason
+about — this app's server has to call it correctly without ever seeing it
+run live.
 
-The model loads once at import time, not per-request, so only the very
-first request after the Space wakes from sleep pays the load cost on top
-of inference — and since nothing responds until that import finishes, a
-plain successful response from GET / already means "awake and ready,"
-doubling as both the wake-up trigger and the readiness check.
+The model loads in a background thread kicked off at startup, not
+synchronously at import time — Cloud Run's own startup health check
+requires the container to bind its port within a timeout window, and
+loading a multi-gigabyte model can take longer than that. Blocking at
+import time means the port never opens in time and the deployment fails
+outright, not just slowly — this isn't a slow-first-request trade-off,
+it's a hard failure. Loading in the background lets uvicorn bind
+immediately; GET / reports the true "loading" vs "ready" state in its
+response body so the caller (app/api/avatar-service/status/route.ts)
+still gets an accurate readiness signal, just via the body instead of the
+raw HTTP status. /generate still blocks on the model actually being ready
+if it's called before loading finishes, so it's always correct, just
+occasionally slow right after a cold start.
 
-The Space itself is public on the free tier (private Spaces need a paid
-plan), so /generate requires the shared secret set as this Space's
-AVATAR_SERVICE_SECRET setting — this isn't billing protection (the free
-tier has no usage cost), just keeping the compute for the app that's
-actually supposed to be calling it.
+The service is reachable at a public Cloud Run URL (--allow-unauthenticated
+was needed since Cloud Run's own IAM invoker auth is separate from this
+app's own gating), so /generate requires the shared secret set as this
+service's AVATAR_SERVICE_SECRET env var — this isn't billing protection,
+just keeping the compute for the app that's actually supposed to call it.
 """
 
 import base64
 import io
 import os
+import threading
 
 import torch
 from diffusers import AutoPipelineForText2Image
@@ -34,9 +40,22 @@ MODEL_ID = "stabilityai/sd-turbo"
 
 app = FastAPI()
 
-# Loaded once at startup, not per-request.
-pipe = AutoPipelineForText2Image.from_pretrained(MODEL_ID, torch_dtype=torch.float32)
-pipe.to("cpu")
+pipe = None
+pipe_lock = threading.Lock()
+
+
+def load_model() -> None:
+    global pipe
+    with pipe_lock:
+        if pipe is None:
+            loaded = AutoPipelineForText2Image.from_pretrained(MODEL_ID, torch_dtype=torch.float32)
+            loaded.to("cpu")
+            pipe = loaded
+
+
+@app.on_event("startup")
+def start_loading_model() -> None:
+    threading.Thread(target=load_model, daemon=True).start()
 
 
 class GenerateRequest(BaseModel):
@@ -50,7 +69,7 @@ class GenerateResponse(BaseModel):
 
 @app.get("/")
 def health() -> dict:
-    return {"status": "ready"}
+    return {"status": "ready" if pipe is not None else "loading"}
 
 
 @app.post("/generate", response_model=GenerateResponse)
@@ -60,6 +79,12 @@ def generate(body: GenerateRequest) -> GenerateResponse:
         raise HTTPException(status_code=401, detail="Unauthorized")
     if not body.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt is required")
+
+    # Blocks here if a request lands before the background load finishes
+    # (e.g. right after a cold start) — always correct, just occasionally
+    # slower than the common case where it's already loaded.
+    if pipe is None:
+        load_model()
 
     # SD-Turbo is distilled for few-step inference — 1 step is the
     # documented usage, guidance_scale=0 disables classifier-free guidance
