@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { motion } from "motion/react";
 import { PRESET_AVATARS } from "@/lib/avatars";
-import { AVATAR_THEMES, AVATAR_PALETTES, AVATAR_STYLES } from "@/lib/avatar-prompts";
+import { AVATAR_THEMES, AVATAR_PALETTES, AVATAR_STYLES, type AvatarPreset } from "@/lib/avatar-prompts";
 import { Avatar } from "@/components/shared/Avatar";
 import { Spinner } from "@/components/shared/Spinner";
 import { UploadIcon } from "@/components/shared/Icons";
@@ -11,7 +12,7 @@ type ServiceStatus = "checking" | "ready" | "warming_up" | "not_configured";
 
 const STATUS_COPY: Record<ServiceStatus, string> = {
   checking: "Checking the generator…",
-  ready: "Ready",
+  ready: "Ready to generate",
   warming_up: "Warming up — first generation can take a minute",
   not_configured: "Avatar generation isn't set up yet",
 };
@@ -37,6 +38,52 @@ function resizeToDataUrl(file: File): Promise<string> {
     img.onerror = () => reject(new Error("Could not read image"));
     img.src = URL.createObjectURL(file);
   });
+}
+
+// Tappable chip grid shared by the theme/palette/style pickers below —
+// an emoji or color swatch per option instead of a plain <select>, closer
+// to the emoji-preset picker already used elsewhere in the app than to a
+// form field.
+function PresetChips({
+  options,
+  value,
+  onChange,
+}: {
+  options: AvatarPreset[];
+  value: string;
+  onChange: (key: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((opt) => {
+        const selected = value === opt.key;
+        return (
+          <button
+            key={opt.key}
+            type="button"
+            onClick={() => onChange(opt.key)}
+            aria-pressed={selected}
+            className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition active:scale-95 ${
+              selected
+                ? "border-gold bg-gold/15 text-gold"
+                : "border-gold/20 text-cream hover:border-gold/50 active:border-gold/50"
+            }`}
+          >
+            {opt.swatch ? (
+              <span
+                className="h-4 w-4 shrink-0 rounded-full border border-cream/20"
+                style={{ background: opt.swatch }}
+                aria-hidden="true"
+              />
+            ) : (
+              <span aria-hidden="true">{opt.emoji}</span>
+            )}
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 export function AvatarPicker({
@@ -74,7 +121,7 @@ export function AvatarPicker({
   }
 
   function openGenerator() {
-    setGeneratorOpen(true);
+    setGeneratorOpen((open) => !open);
     setGenerateError(null);
     // Fired the moment the panel opens, before the voter's even finished
     // picking presets — gives a sleeping Space a head start waking up.
@@ -116,48 +163,27 @@ export function AvatarPicker({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <input type="hidden" name={name} value={value} />
-      <div className="flex items-center gap-3">
-        <Avatar name={displayName || "?"} avatar={value || null} size="lg" />
-        <div className="flex flex-wrap gap-1.5">
-          {PRESET_AVATARS.map((emoji) => (
-            <button
-              key={emoji}
-              type="button"
-              onClick={() => setValue(emoji)}
-              aria-pressed={value === emoji}
-              className={`flex h-8 w-8 items-center justify-center rounded-full border text-base transition active:scale-90 ${
-                value === emoji ? "border-gold bg-gold/15" : "border-gold/20 hover:border-gold/50 active:border-gold/50"
-              }`}
-            >
-              {emoji}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-gold/20 text-cream-dim transition hover:border-gold/50 active:scale-90 active:border-gold/50"
-            aria-label="Upload photo"
-          >
-            <UploadIcon className="h-4 w-4" />
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFile}
-            className="hidden"
-          />
-          <button
-            type="button"
-            onClick={openGenerator}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-gold/20 text-cream-dim transition hover:border-gold/50 active:scale-90 active:border-gold/50"
-            aria-label="Generate an avatar with AI"
-          >
-            ✨
-          </button>
-        </div>
+
+      {/* The avatar itself is the focal point — generating pulses it gently
+          instead of hiding it behind a separate loading indicator. */}
+      <div className="flex flex-col items-center gap-3">
+        <motion.div
+          animate={generating ? { opacity: [1, 0.55, 1], scale: [1, 0.97, 1] } : { opacity: 1, scale: 1 }}
+          transition={generating ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" } : {}}
+          className={`rounded-full transition-shadow ${generating ? "ring-2 ring-gold/50" : "ring-2 ring-transparent"}`}
+        >
+          <Avatar name={displayName || "?"} avatar={value || null} size="xl" />
+        </motion.div>
+
+        <button
+          type="button"
+          onClick={openGenerator}
+          className="rounded-full bg-gold px-5 py-2.5 text-sm font-medium text-ink transition hover:bg-gold-dim active:scale-95"
+        >
+          ✨ Generate with AI
+        </button>
       </div>
 
       {generatorOpen && (
@@ -174,50 +200,20 @@ export function AvatarPicker({
             </button>
           </div>
 
-          <label className="flex flex-col gap-1 text-sm text-cream-dim">
-            Theme
-            <select
-              value={theme}
-              onChange={(e) => setTheme(e.target.value)}
-              className="rounded border border-gold/25 bg-ink px-3 py-2 text-cream focus:border-gold focus:outline-none"
-            >
-              {AVATAR_THEMES.map((t) => (
-                <option key={t.key} value={t.key}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="flex flex-col gap-1.5">
+            <p className="text-sm text-cream-dim">Theme</p>
+            <PresetChips options={AVATAR_THEMES} value={theme} onChange={setTheme} />
+          </div>
 
-          <label className="flex flex-col gap-1 text-sm text-cream-dim">
-            Color palette
-            <select
-              value={palette}
-              onChange={(e) => setPalette(e.target.value)}
-              className="rounded border border-gold/25 bg-ink px-3 py-2 text-cream focus:border-gold focus:outline-none"
-            >
-              {AVATAR_PALETTES.map((p) => (
-                <option key={p.key} value={p.key}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="flex flex-col gap-1.5">
+            <p className="text-sm text-cream-dim">Color palette</p>
+            <PresetChips options={AVATAR_PALETTES} value={palette} onChange={setPalette} />
+          </div>
 
-          <label className="flex flex-col gap-1 text-sm text-cream-dim">
-            Style
-            <select
-              value={style}
-              onChange={(e) => setStyle(e.target.value)}
-              className="rounded border border-gold/25 bg-ink px-3 py-2 text-cream focus:border-gold focus:outline-none"
-            >
-              {AVATAR_STYLES.map((s) => (
-                <option key={s.key} value={s.key}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="flex flex-col gap-1.5">
+            <p className="text-sm text-cream-dim">Style</p>
+            <PresetChips options={AVATAR_STYLES} value={style} onChange={setStyle} />
+          </div>
 
           <label className="flex flex-col gap-1 text-sm text-cream-dim">
             Add a detail (optional)
@@ -249,6 +245,34 @@ export function AvatarPicker({
           </button>
         </div>
       )}
+
+      <div className="flex flex-col gap-1.5">
+        <p className="text-xs text-cream-dim">Or pick one instead</p>
+        <div className="flex flex-wrap gap-1.5">
+          {PRESET_AVATARS.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => setValue(emoji)}
+              aria-pressed={value === emoji}
+              className={`flex h-8 w-8 items-center justify-center rounded-full border text-base transition active:scale-90 ${
+                value === emoji ? "border-gold bg-gold/15" : "border-gold/20 hover:border-gold/50 active:border-gold/50"
+              }`}
+            >
+              {emoji}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-gold/20 text-cream-dim transition hover:border-gold/50 active:scale-90 active:border-gold/50"
+            aria-label="Upload photo"
+          >
+            <UploadIcon className="h-4 w-4" />
+          </button>
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+        </div>
+      </div>
     </div>
   );
 }
