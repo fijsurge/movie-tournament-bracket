@@ -74,6 +74,7 @@ model Bracket {
   filterYearMin         Int?
   filterYearMax         Int?
   autoAdvance           Boolean        @default(true)
+  emailNotificationsEnabled Boolean    @default(false) // gates draft turn-reminder emails only — invites and login links always send
   archived              Boolean        @default(false)
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
