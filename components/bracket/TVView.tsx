@@ -6,6 +6,7 @@ import type { BracketState } from "@/types/bracket";
 import { NominationPool } from "@/components/nominate/NominationPool";
 import { SeedLeaderboard } from "@/components/seed/SeedLeaderboard";
 import { BracketTree } from "@/components/bracket/BracketTree";
+import { ScoreLeaderboard } from "@/components/bracket/ScoreLeaderboard";
 import { ChampionBanner } from "@/components/bracket/ChampionBanner";
 import { PickRevealOverlay } from "@/components/bracket/PickRevealOverlay";
 import { RoundTransitionOverlay } from "@/components/bracket/RoundTransitionOverlay";
@@ -46,7 +47,7 @@ export function TVView({ slug }: { slug: string }) {
     return <p className="flex flex-1 items-center justify-center text-2xl text-cream-dim">Loading…</p>;
   }
 
-  const { bracket, rounds, voterNames, movies } = data;
+  const { bracket, rounds, voterNames, movies, leaderboard } = data;
 
   return (
     <>
@@ -84,10 +85,20 @@ export function TVView({ slug }: { slug: string }) {
                   : finalMatchup?.movieB?.trailerKey) ?? null
               }
               soundEnabled={soundEnabled}
+              leaderboard={leaderboard}
             />
           );
         })()}
-      {bracket.status === "ACTIVE" && <BracketTree rounds={rounds} />}
+      {bracket.status === "ACTIVE" && (
+        <div className="flex flex-1 items-start gap-4 overflow-hidden">
+          <BracketTree rounds={rounds} />
+          {leaderboard && (
+            <div className="w-64 shrink-0 py-6 pr-6">
+              <ScoreLeaderboard entries={leaderboard} />
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 }

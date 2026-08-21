@@ -71,6 +71,13 @@ export interface BracketStateDraft {
   isComplete: boolean;
 }
 
+export interface BracketStateLeaderboardEntry {
+  voterId: string;
+  voterName: string;
+  voterAvatar: string | null;
+  points: number;
+}
+
 export interface BracketState {
   bracket: {
     id: string;
@@ -90,5 +97,6 @@ export interface BracketState {
   movies: BracketStateMovie[];
   voterNames: string[];
   draft: BracketStateDraft | null;
+  leaderboard: BracketStateLeaderboardEntry[] | null;
   rounds: BracketStateRound[];
 }

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
 import { TrailerEmbed, TRAILER_TV_SKIP_SECONDS } from "@/components/shared/TrailerEmbed";
 import { playWinnerFanfare, playApplause } from "@/lib/sfx";
+import type { BracketStateLeaderboardEntry } from "@/types/bracket";
 
 // Safety net in case the YouTube IFrame API's ENDED event never fires (ad
 // blocker, flaky script load) — the TV can't get stuck on a finished video
@@ -17,13 +18,20 @@ export function ChampionBanner({
   posterUrl,
   trailerKey,
   soundEnabled,
+  leaderboard,
 }: {
   bracketName: string;
   championTitle: string;
   posterUrl: string | null;
   trailerKey?: string | null;
   soundEnabled: boolean;
+  leaderboard?: BracketStateLeaderboardEntry[] | null;
 }) {
+  // Every co-leader gets named — a tie for first is a real outcome here,
+  // not an edge case to arbitrarily resolve to one name.
+  const topScore = leaderboard?.[0]?.points;
+  const poolWinners =
+    topScore !== undefined ? (leaderboard?.filter((e) => e.points === topScore) ?? []) : [];
   // Suspense: with a trailer, play it first (poster/title withheld) and
   // only reveal the champion once it ends or is skipped — without one,
   // there's nothing to build suspense with, so go straight to the reveal.
@@ -138,6 +146,20 @@ export function ChampionBanner({
             >
               Champion!
             </motion.p>
+            {poolWinners.length > 0 && (
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.6, duration: 0.5 }}
+                className="text-lg text-cream"
+              >
+                🎯{" "}
+                <span className="font-medium text-gold">
+                  {poolWinners.map((w) => w.voterName).join(" & ")}
+                </span>{" "}
+                {poolWinners.length > 1 ? "tie for" : "wins"} the pool with {topScore} points!
+              </motion.p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

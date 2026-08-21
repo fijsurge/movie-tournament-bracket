@@ -88,6 +88,7 @@ function makeBracketState(movies: BracketStateMovie[]): BracketState {
     movies,
     voterNames: VOTER_NAMES,
     draft: null,
+    leaderboard: null,
     rounds: [],
   };
 }
@@ -323,6 +324,10 @@ export default function AnimationsPreviewPage() {
               posterUrl={POSTERS[0]}
               trailerKey={MOCK_TRAILER_KEY}
               soundEnabled={false}
+              leaderboard={[
+                { voterId: "you", voterName: "You", voterAvatar: null, points: 14 },
+                { voterId: "jordan", voterName: "Jordan", voterAvatar: null, points: 9 },
+              ]}
             />
           </div>
           <TriggerForm onTrigger={() => setChampionKey((k) => k + 1)}>Replay reveal</TriggerForm>

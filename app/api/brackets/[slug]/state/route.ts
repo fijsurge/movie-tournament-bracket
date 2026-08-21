@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { buildFilterSummary } from "@/lib/bracket-filters";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
 import { maybeAutoAdvance } from "@/lib/phase-transitions";
+import { computeDraftScores } from "@/lib/scoring";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +67,32 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     };
   }
 
+  // Draft-mode-only for now (see lib/scoring.ts) — a voter's "entry" is
+  // implicitly the movies they drafted, so this needs no extra data beyond
+  // what's already fetched above.
+  let leaderboard: { voterId: string; voterName: string; voterAvatar: string | null; points: number }[] | null =
+    null;
+  if (bracket.scoringEnabled && bracket.nominationMode === "DRAFT") {
+    const votersById = new Map(bracket.voters.map((v) => [v.id, v]));
+    const resolvedMatchups = bracket.rounds.flatMap((r) =>
+      r.matchups.map((m) => ({ roundNumber: r.roundNumber, winnerMovieId: m.winnerMovieId })),
+    );
+    const movieInputs = bracket.movies.map((m) => ({
+      id: m.id,
+      seed: m.seed,
+      nominatedByVoterId: m.nominatedByVoterId,
+    }));
+    leaderboard = computeDraftScores(resolvedMatchups, movieInputs).map((s) => {
+      const voter = votersById.get(s.voterId);
+      return {
+        voterId: s.voterId,
+        voterName: voter ? effectiveVoterName(voter) : "Unknown",
+        voterAvatar: voter ? effectiveVoterAvatar(voter) : null,
+        points: s.points,
+      };
+    });
+  }
+
   return NextResponse.json({
     bracket: {
       id: bracket.id,
@@ -105,6 +132,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     })),
     voterNames: bracket.voters.map((v) => effectiveVoterName(v)),
     draft,
+    leaderboard,
     rounds: bracket.rounds.map((r) => ({
       roundNumber: r.roundNumber,
       status: r.status,
