@@ -159,7 +159,31 @@ model Person {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  voters Voter[]
+  voters                Voter[]
+  customAvatarPresets   CustomAvatarPreset[]
+}
+
+enum AvatarPresetCategory {
+  THEME
+  PALETTE
+  STYLE
+}
+
+// A voter's own saved theme/palette/style presets for AI avatar
+// generation (see lib/avatar-prompts.ts), alongside the fixed built-in
+// catalogs there. Person-scoped, not Voter-scoped — same cross-bracket
+// tier as avatar/name persistence itself, which already only survives
+// once a voter links an email (see AccountForm's existing messaging).
+model CustomAvatarPreset {
+  id             String               @id @default(cuid())
+  personId       String
+  person         Person               @relation(fields: [personId], references: [id], onDelete: Cascade)
+  category       AvatarPresetCategory
+  label          String
+  promptFragment String
+  emoji          String?
+  swatch         String?
+  createdAt      DateTime             @default(now())
 }
 
 model Voter {

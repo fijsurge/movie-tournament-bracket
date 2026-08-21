@@ -28,7 +28,7 @@ export function AccountForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <AvatarPicker name="avatar" displayName={name} initialValue={currentAvatar ?? ""} />
+      <AvatarPicker name="avatar" displayName={name} initialValue={currentAvatar ?? ""} isLinked={isLinked} />
 
       <label className="flex flex-col gap-1 text-sm text-cream-dim">
         Name
