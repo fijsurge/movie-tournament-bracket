@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { buildAvatarPrompt, isPromptSafe, type AvatarFormat } from "@/lib/avatar-prompts";
+import { prisma } from "@/lib/db";
+import { getPersonId } from "@/lib/person-session";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +42,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "That title isn't allowed — try something else" }, { status: 400 });
   }
 
+  // Custom presets are only ever fetched scoped to the caller's own
+  // personId — referencing someone else's "custom:<id>" key just fails to
+  // resolve below (not a security check to bypass, since the id space
+  // isn't guessable-but-sensitive, but there's no reason to leak another
+  // person's preset content either).
+  const needsCustomPresets = [themeKey, paletteKey, styleKey].some((k) => k.startsWith("custom:"));
+  const customPresets = needsCustomPresets
+    ? await (async () => {
+        const personId = await getPersonId();
+        if (!personId) return [];
+        const rows = await prisma.customAvatarPreset.findMany({ where: { personId } });
+        return rows.map((r) => ({
+          key: `custom:${r.id}`,
+          label: r.label,
+          promptFragment: r.promptFragment,
+          emoji: r.emoji ?? undefined,
+          swatch: r.swatch ?? undefined,
+        }));
+      })()
+    : [];
+
   let prompt: string;
   try {
     prompt = buildAvatarPrompt({
@@ -49,6 +72,7 @@ export async function POST(request: Request) {
       detail: trimmedDetail,
       format: resolvedFormat,
       posterTitle: trimmedTitle,
+      customPresets,
     });
   } catch {
     return NextResponse.json({ error: "Pick a theme, palette, and style" }, { status: 400 });
