@@ -41,23 +41,44 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Pick a theme, palette, and style" }, { status: 400 });
   }
 
-  let response: Response;
-  try {
-    response = await fetch(`${serviceUrl.replace(/\/$/, "")}/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, secret }),
-      // Cold start (Space waking up) plus CPU inference can genuinely take
-      // a couple of minutes worst-case — this is the one call in the app
-      // meant to wait that long.
-      signal: AbortSignal.timeout(150_000),
-    });
-  } catch {
-    return NextResponse.json({ error: "The avatar generator isn't responding right now" }, { status: 502 });
+  const endpoint = `${serviceUrl.replace(/\/$/, "")}/generate`;
+  const requestInit: RequestInit = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt, secret }),
+  };
+
+  // Cloud Run occasionally aborts a request with "no available instance"
+  // when it lands right as a fresh (scale-from-zero) instance is still
+  // starting, instead of queueing it — a transient infra hiccup, not a
+  // real failure. One retry after a short pause (long enough for that
+  // instance to finish booting) turns it back into a success rather than
+  // a hard error reaching the voter.
+  let response: Response | null = null;
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 3_000));
+    try {
+      // Cold start (instance booting) plus CPU inference can genuinely
+      // take a couple of minutes worst-case — this is the one call in the
+      // app meant to wait that long. The retry's backoff eats into this
+      // route's own duration budget, so the first attempt gets less than
+      // the full 150s to leave room for a second try.
+      const timeoutMs = attempt === 0 ? 100_000 : 150_000;
+      const res = await fetch(endpoint, { ...requestInit, signal: AbortSignal.timeout(timeoutMs) });
+      if (res.ok) {
+        response = res;
+        break;
+      }
+      lastError = new Error(`Avatar service responded ${res.status}`);
+    } catch (err) {
+      lastError = err;
+    }
   }
 
-  if (!response.ok) {
-    return NextResponse.json({ error: "The avatar generator couldn't create an image" }, { status: 502 });
+  if (!response) {
+    console.error("Avatar generation failed after retry", lastError);
+    return NextResponse.json({ error: "The avatar generator couldn't create an image — please try again" }, { status: 502 });
   }
 
   const data = (await response.json().catch(() => null)) as { image_base64?: string } | null;
