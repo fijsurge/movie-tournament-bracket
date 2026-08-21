@@ -5,8 +5,7 @@ import { VoterIdentify } from "@/components/voting/VoterIdentify";
 import { BracketNav } from "@/components/voting/BracketNav";
 import { VoteForm } from "@/components/voting/VoteForm";
 import { RoundReviewBanner } from "@/components/voting/RoundReviewBanner";
-import { BracketTree } from "@/components/bracket/BracketTree";
-import { ScoreLeaderboard } from "@/components/bracket/ScoreLeaderboard";
+import { CompletedBracketView } from "@/components/bracket/CompletedBracketView";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
 import { PhaseWatcher } from "@/components/shared/PhaseWatcher";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
@@ -89,23 +88,14 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
         <PhaseWatcher slug={bracket.slug} status={bracket.status} />
         <div className="flex flex-col items-center gap-2 py-6 text-center">
           <h1 className="font-display text-2xl tracking-wide text-gold uppercase">{bracket.name}</h1>
-          <p className="text-lg">
-            🏆 Champion: <span className="font-semibold text-gold">{championMatchup?.winnerMovie?.title}</span>
-          </p>
-          {poolWinners.length > 0 && (
-            <p className="text-lg">
-              🎯{" "}
-              <span className="font-semibold text-gold">{poolWinners.map((w) => w.voterName).join(" & ")}</span>{" "}
-              {poolWinners.length > 1 ? "tie for" : "wins"} the pool with {poolWinners[0].points} points!
-            </p>
-          )}
         </div>
-        <BracketTree rounds={treeRounds} />
-        {leaderboard.length > 0 && (
-          <div className="mx-auto w-full max-w-sm px-6 pb-6">
-            <ScoreLeaderboard entries={leaderboard} />
-          </div>
-        )}
+        <CompletedBracketView
+          championTitle={championMatchup?.winnerMovie?.title ?? "Unknown"}
+          posterUrl={championMatchup?.winnerMovie?.posterUrl ?? null}
+          poolWinners={poolWinners}
+          rounds={treeRounds}
+          leaderboard={leaderboard}
+        />
       </main>
     );
   }
