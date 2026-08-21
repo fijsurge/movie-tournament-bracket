@@ -29,6 +29,7 @@ import {
   reopenForRevote,
   toggleAutoAdvance,
   toggleEmailNotifications,
+  toggleScoring,
   undoLastPhase,
   toggleArchived,
   deleteBracket,
@@ -82,6 +83,7 @@ export default async function AdminBracketDashboard({
   const closeRoundForBracket = closeRound.bind(null, bracket.id);
   const toggleAutoAdvanceForBracket = toggleAutoAdvance.bind(null, bracket.id);
   const toggleEmailNotificationsForBracket = toggleEmailNotifications.bind(null, bracket.id);
+  const toggleScoringForBracket = toggleScoring.bind(null, bracket.id);
   const undoLastPhaseForBracket = undoLastPhase.bind(null, bracket.id);
   const toggleArchivedForBracket = toggleArchived.bind(null, bracket.id);
   const deleteBracketForBracket = deleteBracket.bind(null, bracket.id);
@@ -138,6 +140,20 @@ export default async function AdminBracketDashboard({
             Draft turn emails: {bracket.emailNotificationsEnabled ? "On" : "Off"}
           </SubmitButton>
         </form>
+        {bracket.nominationMode === "DRAFT" && (
+          <form action={toggleScoringForBracket}>
+            <SubmitButton
+              pendingLabel="…"
+              className={`rounded-full border px-3 py-1 text-xs transition active:scale-95 ${
+                bracket.scoringEnabled
+                  ? "border-gold/50 bg-gold/10 text-gold hover:border-gold active:border-gold"
+                  : "border-cream-dim/30 text-cream-dim hover:border-cream-dim/60 active:border-cream-dim/60"
+              }`}
+            >
+              Points competition: {bracket.scoringEnabled ? "On" : "Off"}
+            </SubmitButton>
+          </form>
+        )}
       </div>
 
       <section className="mt-6">

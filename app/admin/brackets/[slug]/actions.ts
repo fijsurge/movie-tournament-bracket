@@ -51,6 +51,13 @@ export async function toggleEmailNotifications(bracketId: string): Promise<void>
   revalidatePath(`/admin/brackets/${bracket.slug}`);
 }
 
+export async function toggleScoring(bracketId: string): Promise<void> {
+  await requireBracketAdmin(bracketId);
+  const bracket = await prisma.bracket.findUniqueOrThrow({ where: { id: bracketId } });
+  await prisma.bracket.update({ where: { id: bracketId }, data: { scoringEnabled: !bracket.scoringEnabled } });
+  revalidatePath(`/admin/brackets/${bracket.slug}`);
+}
+
 export async function toggleArchived(bracketId: string): Promise<void> {
   await requireBracketAdmin(bracketId);
   const bracket = await prisma.bracket.findUniqueOrThrow({ where: { id: bracketId } });

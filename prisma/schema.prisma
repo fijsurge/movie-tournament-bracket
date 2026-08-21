@@ -75,6 +75,7 @@ model Bracket {
   filterYearMax         Int?
   autoAdvance           Boolean        @default(true)
   emailNotificationsEnabled Boolean    @default(false) // gates draft turn-reminder emails only — invites and login links always send
+  scoringEnabled        Boolean        @default(false) // NCAA-pool-style points competition — see lib/scoring.ts. Only meaningful for DRAFT-mode brackets until open-mode predictions exist.
   archived              Boolean        @default(false)
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt

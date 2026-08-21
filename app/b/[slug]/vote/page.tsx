@@ -6,10 +6,12 @@ import { BracketNav } from "@/components/voting/BracketNav";
 import { VoteForm } from "@/components/voting/VoteForm";
 import { RoundReviewBanner } from "@/components/voting/RoundReviewBanner";
 import { BracketTree } from "@/components/bracket/BracketTree";
+import { ScoreLeaderboard } from "@/components/bracket/ScoreLeaderboard";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
 import { PhaseWatcher } from "@/components/shared/PhaseWatcher";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
 import { phaseHref } from "@/lib/phase-nav";
+import { computeDraftScores } from "@/lib/scoring";
 import type { BracketStateRound } from "@/types/bracket";
 
 export default async function VotePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -55,6 +57,32 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
         winnerTitle: m.winnerMovie?.title ?? null,
       })),
     }));
+
+    let leaderboard: { voterId: string; voterName: string; voterAvatar: string | null; points: number }[] = [];
+    let poolWinners: { voterName: string; points: number }[] = [];
+    if (bracket.scoringEnabled && bracket.nominationMode === "DRAFT") {
+      const movies = await prisma.movie.findMany({ where: { bracketId: bracket.id } });
+      const votersById = new Map(bracket.voters.map((v) => [v.id, v]));
+      const resolvedMatchups = completedRounds.flatMap((r) =>
+        r.matchups.map((m) => ({ roundNumber: r.roundNumber, winnerMovieId: m.winnerMovieId })),
+      );
+      const scores = computeDraftScores(
+        resolvedMatchups,
+        movies.map((m) => ({ id: m.id, seed: m.seed, nominatedByVoterId: m.nominatedByVoterId })),
+      );
+      leaderboard = scores.map((s) => {
+        const voter = votersById.get(s.voterId);
+        return {
+          voterId: s.voterId,
+          voterName: voter ? effectiveVoterName(voter) : "Unknown",
+          voterAvatar: voter ? effectiveVoterAvatar(voter) : null,
+          points: s.points,
+        };
+      });
+      const topScore = scores[0]?.points;
+      poolWinners = leaderboard.filter((e) => e.points === topScore);
+    }
+
     return (
       <main className="mx-auto w-full flex min-h-screen max-w-4xl flex-col p-6">
         <BracketNav slug={bracket.slug} bracketName={bracket.name} bracketId={bracket.id} />
@@ -64,8 +92,20 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
           <p className="text-lg">
             🏆 Champion: <span className="font-semibold text-gold">{championMatchup?.winnerMovie?.title}</span>
           </p>
+          {poolWinners.length > 0 && (
+            <p className="text-lg">
+              🎯{" "}
+              <span className="font-semibold text-gold">{poolWinners.map((w) => w.voterName).join(" & ")}</span>{" "}
+              {poolWinners.length > 1 ? "tie for" : "wins"} the pool with {poolWinners[0].points} points!
+            </p>
+          )}
         </div>
         <BracketTree rounds={treeRounds} />
+        {leaderboard.length > 0 && (
+          <div className="mx-auto w-full max-w-sm px-6 pb-6">
+            <ScoreLeaderboard entries={leaderboard} />
+          </div>
+        )}
       </main>
     );
   }
