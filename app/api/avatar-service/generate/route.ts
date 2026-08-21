@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { buildAvatarPrompt, isPromptSafe } from "@/lib/avatar-prompts";
+import { buildAvatarPrompt, isPromptSafe, type AvatarFormat } from "@/lib/avatar-prompts";
 
 export const dynamic = "force-dynamic";
 
@@ -25,18 +25,31 @@ export async function POST(request: Request) {
   if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
-  const { themeKey, paletteKey, styleKey, detail } = body as Record<string, unknown>;
+  const { themeKey, paletteKey, styleKey, detail, format, posterTitle } = body as Record<string, unknown>;
   if (typeof themeKey !== "string" || typeof paletteKey !== "string" || typeof styleKey !== "string") {
     return NextResponse.json({ error: "Pick a theme, palette, and style" }, { status: 400 });
   }
+  const resolvedFormat: AvatarFormat = format === "poster" ? "poster" : "headshot";
   const trimmedDetail = typeof detail === "string" ? detail.trim().slice(0, 200) : undefined;
   if (trimmedDetail && !isPromptSafe(trimmedDetail)) {
     return NextResponse.json({ error: "That detail isn't allowed — try describing it differently" }, { status: 400 });
   }
+  const trimmedTitle =
+    resolvedFormat === "poster" && typeof posterTitle === "string" ? posterTitle.trim().slice(0, 40) : undefined;
+  if (trimmedTitle && !isPromptSafe(trimmedTitle)) {
+    return NextResponse.json({ error: "That title isn't allowed — try something else" }, { status: 400 });
+  }
 
   let prompt: string;
   try {
-    prompt = buildAvatarPrompt({ themeKey, paletteKey, styleKey, detail: trimmedDetail });
+    prompt = buildAvatarPrompt({
+      themeKey,
+      paletteKey,
+      styleKey,
+      detail: trimmedDetail,
+      format: resolvedFormat,
+      posterTitle: trimmedTitle,
+    });
   } catch {
     return NextResponse.json({ error: "Pick a theme, palette, and style" }, { status: 400 });
   }
@@ -45,7 +58,7 @@ export async function POST(request: Request) {
   const requestInit: RequestInit = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, secret }),
+    body: JSON.stringify({ prompt, secret, aspect: resolvedFormat === "poster" ? "portrait" : "square" }),
   };
 
   // Cloud Run occasionally aborts a request with "no available instance"

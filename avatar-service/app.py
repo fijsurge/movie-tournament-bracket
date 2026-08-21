@@ -58,9 +58,18 @@ def start_loading_model() -> None:
     threading.Thread(target=load_model, daemon=True).start()
 
 
+# SD-Turbo requires dimensions divisible by 8 — fixed, known-good sizes
+# rather than trusting arbitrary pixel dimensions from the caller.
+ASPECT_SIZES = {
+    "square": (512, 512),
+    "portrait": (512, 768),
+}
+
+
 class GenerateRequest(BaseModel):
     prompt: str
     secret: str
+    aspect: str = "square"
 
 
 class GenerateResponse(BaseModel):
@@ -80,20 +89,34 @@ def generate(body: GenerateRequest) -> GenerateResponse:
     if not body.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt is required")
 
+    width, height = ASPECT_SIZES.get(body.aspect, ASPECT_SIZES["square"])
+
     # Blocks here if a request lands before the background load finishes
     # (e.g. right after a cold start) — always correct, just occasionally
     # slower than the common case where it's already loaded.
     if pipe is None:
         load_model()
 
-    # SD-Turbo is distilled for few-step inference — 1 step is the
-    # documented usage, guidance_scale=0 disables classifier-free guidance
-    # (which SD-Turbo wasn't trained with and doesn't need).
-    image = pipe(
-        prompt=body.prompt.strip(),
-        num_inference_steps=1,
-        guidance_scale=0.0,
-    ).images[0]
+    # The pipe's scheduler carries mutable state (sigmas, step_index) across
+    # a call — two requests running inference concurrently on the same
+    # instance corrupt each other's state (observed live as an unrelated
+    # IndexError deep in diffusers' scheduler). A client-side abort/retry
+    # doesn't stop the abandoned request from still running here, so this
+    # lock is the only thing making that safe: a second request just waits
+    # its turn instead of racing the first. Reusing pipe_lock rather than a
+    # separate lock keeps "the shared pipe" guarded by exactly one lock for
+    # its whole lifecycle, load included.
+    with pipe_lock:
+        # SD-Turbo is distilled for few-step inference — 1 step is the
+        # documented usage, guidance_scale=0 disables classifier-free
+        # guidance (which SD-Turbo wasn't trained with and doesn't need).
+        image = pipe(
+            prompt=body.prompt.strip(),
+            num_inference_steps=1,
+            guidance_scale=0.0,
+            width=width,
+            height=height,
+        ).images[0]
 
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")

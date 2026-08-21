@@ -61,7 +61,14 @@ export const AVATAR_STYLES: AvatarPreset[] = [
   { key: "comic", label: "Comic book", emoji: "💥", promptFragment: "bold comic book illustration style" },
 ];
 
-function findPreset(list: AvatarPreset[], key: string): AvatarPreset | undefined {
+// Custom presets (lib/avatar-prompts route, backed by CustomAvatarPreset)
+// are referenced by a "custom:<id>" key so one string field still
+// unambiguously picks "which preset" across both catalogs without the
+// two id spaces ever colliding.
+function findPreset(list: AvatarPreset[], key: string, customPresets: AvatarPreset[] = []): AvatarPreset | undefined {
+  if (key.startsWith("custom:")) {
+    return customPresets.find((p) => p.key === key);
+  }
   return list.find((p) => p.key === key);
 }
 
@@ -76,17 +83,35 @@ export function isPromptSafe(detail: string): boolean {
   return !words.some((w) => BLOCKED_WORDS.includes(w));
 }
 
+export type AvatarFormat = "headshot" | "poster";
+
 export interface AvatarPromptInput {
   themeKey: string;
   paletteKey: string;
   styleKey: string;
   detail?: string;
+  format?: AvatarFormat;
+  posterTitle?: string;
+  // Resolved custom presets to fall back to when a key isn't in the
+  // builtin catalogs — kept out of this module's own concerns (no DB
+  // access here), the caller (the generate route) fetches and passes
+  // these in. Same list is checked for all three categories since a
+  // "custom:<id>" key already unambiguously names one preset.
+  customPresets?: AvatarPreset[];
 }
 
-export function buildAvatarPrompt({ themeKey, paletteKey, styleKey, detail }: AvatarPromptInput): string {
-  const theme = findPreset(AVATAR_THEMES, themeKey);
-  const palette = findPreset(AVATAR_PALETTES, paletteKey);
-  const style = findPreset(AVATAR_STYLES, styleKey);
+export function buildAvatarPrompt({
+  themeKey,
+  paletteKey,
+  styleKey,
+  detail,
+  format = "headshot",
+  posterTitle,
+  customPresets = [],
+}: AvatarPromptInput): string {
+  const theme = findPreset(AVATAR_THEMES, themeKey, customPresets);
+  const palette = findPreset(AVATAR_PALETTES, paletteKey, customPresets);
+  const style = findPreset(AVATAR_STYLES, styleKey, customPresets);
   if (!theme || !palette || !style) {
     throw new Error("Invalid avatar preset selection");
   }
@@ -94,7 +119,14 @@ export function buildAvatarPrompt({ themeKey, paletteKey, styleKey, detail }: Av
   const parts = [theme.promptFragment, palette.promptFragment, style.promptFragment];
   const trimmedDetail = detail?.trim();
   if (trimmedDetail) parts.push(trimmedDetail);
-  parts.push("square avatar portrait, centered, high quality");
+
+  if (format === "poster") {
+    const trimmedTitle = posterTitle?.trim();
+    if (trimmedTitle) parts.push(`bold poster title text reading "${trimmedTitle}"`);
+    parts.push("vertical movie poster composition, dramatic lighting, cinematic framing, high quality");
+  } else {
+    parts.push("square portrait headshot, centered, high quality");
+  }
 
   return parts.join(", ");
 }
