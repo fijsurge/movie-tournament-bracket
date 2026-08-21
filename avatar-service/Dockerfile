@@ -7,7 +7,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py .
 
-# Hugging Face Spaces expects the app to listen on 7860.
-EXPOSE 7860
+# Cloud Run injects the port to listen on via $PORT (defaults to 8080) —
+# unlike Hugging Face Spaces' fixed 7860, this has to be read at container
+# start, not baked in, so CMD uses a shell form to expand the env var.
+ENV PORT=8080
+EXPOSE 8080
 
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD exec uvicorn app:app --host 0.0.0.0 --port ${PORT}

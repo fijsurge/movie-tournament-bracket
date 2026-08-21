@@ -1,6 +1,6 @@
 // Preset catalogs for AI avatar generation — kept as prompt fragments here
 // (not baked into the avatar-service itself) so the actual wording is
-// iterable without redeploying the Hugging Face Space. Mirrors the shape
+// iterable without redeploying the Cloud Run service. Mirrors the shape
 // of PRESET_AVATARS in lib/avatars.ts: a small fixed set, not open text.
 
 export interface AvatarPreset {
