@@ -30,11 +30,13 @@ import base64
 import io
 import os
 import threading
+import time
 
 import torch
 from diffusers import AutoPipelineForText2Image
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
+from starlette.concurrency import run_in_threadpool
 
 MODEL_ID = "stabilityai/sd-turbo"
 
@@ -81,13 +83,32 @@ def health() -> dict:
     return {"status": "ready" if pipe is not None else "loading"}
 
 
+# How often a request queued behind the lock re-checks whether it should
+# give up, rather than sitting blocked for however long the ones ahead of
+# it take.
+QUEUE_POLL_INTERVAL = 2.0
+
+# The longest a request will wait in queue before giving up on its own.
+# app/api/avatar-service/generate/route.ts never waits longer than 150s
+# for a single attempt (AbortSignal.timeout) — a request still queued
+# well past that is essentially guaranteed to have already been abandoned
+# by its caller, whether or not Cloud Run's proxy has actually surfaced
+# that disconnect to this container yet (observed live: it often hasn't,
+# even 200+ seconds after the client gave up — request.is_disconnected()
+# alone isn't reliable enough here to depend on). Kept comfortably under
+# that 150s ceiling so this always fires first.
+MAX_QUEUE_WAIT_SECONDS = 140.0
+
+
 @app.post("/generate", response_model=GenerateResponse)
-def generate(body: GenerateRequest) -> GenerateResponse:
+async def generate(request: Request, body: GenerateRequest) -> GenerateResponse:
     expected = os.environ.get("AVATAR_SERVICE_SECRET")
     if not expected or body.secret != expected:
         raise HTTPException(status_code=401, detail="Unauthorized")
     if not body.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt is required")
+    if await request.is_disconnected():
+        raise HTTPException(status_code=408, detail="Client disconnected")
 
     width, height = ASPECT_SIZES.get(body.aspect, ASPECT_SIZES["square"])
 
@@ -95,28 +116,48 @@ def generate(body: GenerateRequest) -> GenerateResponse:
     # (e.g. right after a cold start) — always correct, just occasionally
     # slower than the common case where it's already loaded.
     if pipe is None:
-        load_model()
+        await run_in_threadpool(load_model)
 
     # The pipe's scheduler carries mutable state (sigmas, step_index) across
     # a call — two requests running inference concurrently on the same
     # instance corrupt each other's state (observed live as an unrelated
-    # IndexError deep in diffusers' scheduler). A client-side abort/retry
-    # doesn't stop the abandoned request from still running here, so this
-    # lock is the only thing making that safe: a second request just waits
-    # its turn instead of racing the first. Reusing pipe_lock rather than a
-    # separate lock keeps "the shared pipe" guarded by exactly one lock for
-    # its whole lifecycle, load included.
-    with pipe_lock:
-        # SD-Turbo is distilled for few-step inference — 1 step is the
-        # documented usage, guidance_scale=0 disables classifier-free
-        # guidance (which SD-Turbo wasn't trained with and doesn't need).
-        image = pipe(
-            prompt=body.prompt.strip(),
-            num_inference_steps=1,
-            guidance_scale=0.0,
-            width=width,
-            height=height,
-        ).images[0]
+    # IndexError deep in diffusers' scheduler), so only one request may
+    # hold the pipe at a time.
+    #
+    # A client-side abort/retry doesn't stop an abandoned request from
+    # still sitting here waiting its turn — observed live as a cluster of
+    # requests each running the full 300s to Cloud Run's own timeout,
+    # queued behind each other with no way to notice their own caller had
+    # already given up. Polling with a timeout instead of blocking on the
+    # lock outright, and enforcing MAX_QUEUE_WAIT_SECONDS as a hard ceiling
+    # on top of the (unreliable, but free) is_disconnected() check, lets a
+    # stale request exit well before it would otherwise burn a full 300s
+    # doing nothing useful.
+    queued_since = time.monotonic()
+    while not await run_in_threadpool(pipe_lock.acquire, timeout=QUEUE_POLL_INTERVAL):
+        if await request.is_disconnected():
+            raise HTTPException(status_code=408, detail="Client disconnected while waiting")
+        if time.monotonic() - queued_since > MAX_QUEUE_WAIT_SECONDS:
+            raise HTTPException(status_code=408, detail="Timed out waiting for the generator")
+    try:
+        if await request.is_disconnected():
+            raise HTTPException(status_code=408, detail="Client disconnected while waiting")
+
+        def run_inference():
+            # SD-Turbo is distilled for few-step inference — 1 step is the
+            # documented usage, guidance_scale=0 disables classifier-free
+            # guidance (which SD-Turbo wasn't trained with and doesn't need).
+            return pipe(
+                prompt=body.prompt.strip(),
+                num_inference_steps=1,
+                guidance_scale=0.0,
+                width=width,
+                height=height,
+            ).images[0]
+
+        image = await run_in_threadpool(run_inference)
+    finally:
+        pipe_lock.release()
 
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
