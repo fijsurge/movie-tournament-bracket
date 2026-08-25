@@ -4,6 +4,16 @@ import { prisma } from "@/lib/db";
 import { getPersonId } from "@/lib/person-session";
 
 export const dynamic = "force-dynamic";
+// Without this, the route runs on Vercel's platform default duration —
+// as low as 10s on Hobby — while a real generation (cold start plus CPU
+// inference, occasionally queued behind another request) legitimately
+// takes 30-200+ seconds. This was silently killing every deployed
+// generation regardless of how well the rest of this route behaved; only
+// caught because every earlier test this session went through the local
+// dev server, which has no such platform-level cap to reveal it. Set to
+// match Cloud Run's own --timeout (300s) with a few seconds of margin
+// for this route's own JSON handling on top of the fetch itself.
+export const maxDuration = 300;
 
 // AvatarPicker (components/voting/AvatarPicker.tsx) is shared by both the
 // bracket-scoped account form and the global one (app/account), so this
@@ -91,17 +101,21 @@ export async function POST(request: Request) {
   // real failure. One retry after a short pause (long enough for that
   // instance to finish booting) turns it back into a success rather than
   // a hard error reaching the voter.
+  //
+  // avatar-service's own /generate now enforces a ~140s ceiling on how
+  // long it'll sit queued behind another request before failing fast
+  // (see MAX_QUEUE_WAIT_SECONDS in avatar-service/app.py) — so the first
+  // attempt here can afford a genuinely long timeout to cover the normal
+  // "queued, then successfully runs" case (up to ~140s wait + inference)
+  // without needing to abandon it early. The retry then only has to cover
+  // fast failures (bad response, or that queue ceiling firing), not
+  // another full-length attempt, which is why its own budget is shorter.
   let response: Response | null = null;
   let lastError: unknown = null;
   for (let attempt = 0; attempt < 2; attempt++) {
     if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 3_000));
     try {
-      // Cold start (instance booting) plus CPU inference can genuinely
-      // take a couple of minutes worst-case — this is the one call in the
-      // app meant to wait that long. The retry's backoff eats into this
-      // route's own duration budget, so the first attempt gets less than
-      // the full 150s to leave room for a second try.
-      const timeoutMs = attempt === 0 ? 100_000 : 150_000;
+      const timeoutMs = attempt === 0 ? 200_000 : 90_000;
       const res = await fetch(endpoint, { ...requestInit, signal: AbortSignal.timeout(timeoutMs) });
       if (res.ok) {
         response = res;
