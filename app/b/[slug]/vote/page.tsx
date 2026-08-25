@@ -193,7 +193,18 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
               const myVote = "votes" in m && Array.isArray(m.votes) ? m.votes[0] : undefined;
               return (
                 <VoteForm
-                  key={m.id}
+                  // Keying on the vote row's own id (not just the matchup's)
+                  // is deliberate: PhaseWatcher's live-refresh path is a soft
+                  // router.refresh(), which keeps the same VoteForm instance
+                  // mounted for a matchup that stays in this round — so its
+                  // internal useState (submitted vote, scores) never
+                  // re-initializes from fresh props on its own. A tie
+                  // auto-reopen deletes the old Vote row and later creates a
+                  // new one on revote (an edit instead reuses the same row
+                  // via upsert), so this id changes exactly when the form
+                  // needs to forget a stale "already submitted" vote and
+                  // remount fresh — and never on an ordinary edit.
+                  key={`${m.id}:${myVote?.id ?? "none"}`}
                   matchupId={m.id}
                   categories={categories}
                   movieA={{
