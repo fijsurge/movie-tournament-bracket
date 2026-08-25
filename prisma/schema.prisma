@@ -274,6 +274,8 @@ model Matchup {
   nextMatchup      Matchup?          @relation("Advancement", fields: [nextMatchupId], references: [id])
   previousMatchups Matchup[]         @relation("Advancement")
   nextMatchupSlot  String? // "A" | "B"
+  forceCategoryVoting Boolean        @default(false) // set true on an auto-reopened tiebreak revote — VoteForm hides the swipe card so voters rate deliberately instead of re-swiping (which would very likely reproduce the same tie, since swipe scores are a fixed 5/2 split per category)
+  tiebreakAttempt     Int            @default(0) // 0 = never tied; 1 = already been through one auto-reopened revote — a second tie at this point auto-resolves via coin flip instead of reopening again
 
   votes Vote[]
 

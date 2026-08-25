@@ -10,6 +10,7 @@ import { ScoreLeaderboard } from "@/components/bracket/ScoreLeaderboard";
 import { ChampionBanner } from "@/components/bracket/ChampionBanner";
 import { PickRevealOverlay } from "@/components/bracket/PickRevealOverlay";
 import { RoundTransitionOverlay } from "@/components/bracket/RoundTransitionOverlay";
+import { CoinFlipOverlay } from "@/components/bracket/CoinFlipOverlay";
 import { unlockAudio } from "@/lib/sfx";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -99,6 +100,7 @@ export function TVView({ slug }: { slug: string }) {
       )}
       <PickRevealOverlay movies={movies} soundEnabled={soundEnabled} />
       <RoundTransitionOverlay rounds={rounds} soundEnabled={soundEnabled} />
+      <CoinFlipOverlay rounds={rounds} soundEnabled={soundEnabled} />
       {bracket.status === "SETUP" && (
         <p className="flex flex-1 items-center justify-center text-2xl text-cream-dim">
           Waiting for the host to open nominations…

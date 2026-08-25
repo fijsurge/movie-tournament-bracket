@@ -9,6 +9,8 @@ import { NominationPool } from "@/components/nominate/NominationPool";
 import { PickAnnouncement } from "@/components/shared/PickAnnouncement";
 import { PickRevealOverlay } from "@/components/bracket/PickRevealOverlay";
 import { RoundTransitionOverlay } from "@/components/bracket/RoundTransitionOverlay";
+import { CoinFlipOverlay } from "@/components/bracket/CoinFlipOverlay";
+import { CoinFlipBanner } from "@/components/voting/CoinFlipBanner";
 import { SwipeMatchupCard } from "@/components/voting/SwipeMatchupCard";
 import type { BracketState, BracketStateMovie, BracketStateRound } from "@/types/bracket";
 
@@ -60,10 +62,15 @@ function makeMovie(index: number): BracketStateMovie {
   };
 }
 
+// Deterministic, not Math.random() — this runs during both the server
+// render and the client's initial hydration pass (even inside a useState
+// lazy initializer), and a different random value each time is exactly
+// what produces a hydration mismatch. Real randomization only happens
+// client-side, later, via the "Shuffle scores" button's click handler.
 function makeMovies(count: number, withScores = false): BracketStateMovie[] {
   return Array.from({ length: count }, (_, i) => ({
     ...makeMovie(i),
-    seedVoteAverage: withScores ? Math.round((Math.random() * 3 + 2) * 10) / 10 : null,
+    seedVoteAverage: withScores ? Math.round((2 + ((i * 37) % 30) / 10) * 10) / 10 : null,
     seedVoteCount: withScores ? 3 : 0,
   }));
 }
@@ -111,6 +118,7 @@ function makeBracket(): BracketStateRound[] {
           movieB: { id: m[1].id, title: m[1].title, posterUrl: m[1].posterUrl, seed: 4, trailerKey: m[1].trailerKey },
           winnerMovieId: null,
           winnerTitle: null,
+          resolutionMethod: null,
         },
         {
           id: "m2",
@@ -121,6 +129,7 @@ function makeBracket(): BracketStateRound[] {
           movieB: { id: m[3].id, title: m[3].title, posterUrl: m[3].posterUrl, seed: 3, trailerKey: m[3].trailerKey },
           winnerMovieId: null,
           winnerTitle: null,
+          resolutionMethod: null,
         },
       ],
     },
@@ -130,7 +139,7 @@ function makeBracket(): BracketStateRound[] {
       closesAt: null,
       confirmedVoterIds: [],
       matchups: [
-        { id: "m3", position: 0, isBye: false, status: "PENDING", movieA: null, movieB: null, winnerMovieId: null, winnerTitle: null },
+        { id: "m3", position: 0, isBye: false, status: "PENDING", movieA: null, movieB: null, winnerMovieId: null, winnerTitle: null, resolutionMethod: null },
       ],
     },
   ];
@@ -153,6 +162,18 @@ function resolveNextMatchup(rounds: BracketStateRound[]): BracketStateRound[] {
     };
     if (openMatchup.position === 0) final.movieA = slot;
     else final.movieB = slot;
+  }
+  return next;
+}
+
+function resolveViaCoinFlip(rounds: BracketStateRound[]): BracketStateRound[] {
+  const next = structuredClone(rounds);
+  const openMatchup = next[0].matchups.find((m) => m.status === "OPEN");
+  if (openMatchup?.movieA) {
+    openMatchup.status = "RESOLVED";
+    openMatchup.winnerMovieId = openMatchup.movieA.id;
+    openMatchup.winnerTitle = openMatchup.movieA.title;
+    openMatchup.resolutionMethod = "COIN_FLIP";
   }
   return next;
 }
@@ -193,6 +214,7 @@ export default function AnimationsPreviewPage() {
   const [rounds, setRounds] = useState<BracketStateRound[]>(() => makeBracket());
   const [championKey, setChampionKey] = useState(0);
   const [overlayRounds, setOverlayRounds] = useState<BracketStateRound[]>(() => makeBracket());
+  const [coinFlipRounds, setCoinFlipRounds] = useState<BracketStateRound[]>(() => makeBracket());
   const [swipeKey, setSwipeKey] = useState(0);
   const [swipeResult, setSwipeResult] = useState<string | null>(null);
 
@@ -309,6 +331,28 @@ export default function AnimationsPreviewPage() {
               Advance round
             </button>
             <button type="button" onClick={() => setOverlayRounds(makeBracket())} className={OUTLINE_BUTTON}>
+              Reset
+            </button>
+          </div>
+        </section>
+
+        <section className={SECTION}>
+          <h2 className="mb-3 font-display text-lg tracking-wide text-rose uppercase">
+            Coin flip reveal (TV takeover + voter-page banner)
+          </h2>
+          <p className="text-sm text-cream-dim">
+            The one moment in the tiebreak-escalation ladder that&apos;s a big deal — TV gets the full-screen
+            takeover (fixed full-screen, same caveat as above), voters get a quieter inline card.
+          </p>
+          <CoinFlipOverlay rounds={coinFlipRounds} soundEnabled={false} />
+          <div className="rounded-lg bg-ink p-3">
+            <CoinFlipBanner matchups={coinFlipRounds.flatMap((r) => r.matchups)} />
+          </div>
+          <div className="mt-4 flex gap-2">
+            <button type="button" onClick={() => setCoinFlipRounds((prev) => resolveViaCoinFlip(prev))} className={BUTTON}>
+              Resolve via coin flip
+            </button>
+            <button type="button" onClick={() => setCoinFlipRounds(makeBracket())} className={OUTLINE_BUTTON}>
               Reset
             </button>
           </div>

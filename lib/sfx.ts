@@ -98,6 +98,24 @@ export function playApplause(): void {
   }
 }
 
+// A coin spinning down to a landing "ding" — paired with CoinFlipOverlay's
+// reveal when a tie gets decided by chance. Ticks slow down (quadratic
+// spacing) to sell the deceleration, alternating two close pitches so it
+// reads as a physical spin rather than a repeated beep.
+export function playCoinFlip(): void {
+  const context = getContext();
+  if (!context) return;
+  const spinDuration = 1.4;
+  const tickCount = 14;
+  for (let i = 0; i < tickCount; i++) {
+    const progress = i / (tickCount - 1);
+    const t = progress * progress * spinDuration;
+    playTone(context, i % 2 === 0 ? 1400 : 1100, t, 0.05, 0.08);
+  }
+  playTone(context, 1567.98, spinDuration + 0.05, 0.4, 0.2); // G6
+  playTone(context, 2093.0, spinDuration + 0.05, 0.3, 0.12); // C7
+}
+
 // A rising filtered-noise sweep — the "whoosh" beat before a new round's
 // title card, same beat trailers use for a scene transition.
 export function playRoundWhoosh(): void {

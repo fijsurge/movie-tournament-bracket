@@ -4,6 +4,7 @@ import { getVoterId } from "@/lib/voter-cookie";
 import { VoterIdentify } from "@/components/voting/VoterIdentify";
 import { BracketNav } from "@/components/voting/BracketNav";
 import { VoteForm } from "@/components/voting/VoteForm";
+import { CoinFlipBanner } from "@/components/voting/CoinFlipBanner";
 import { RoundReviewBanner } from "@/components/voting/RoundReviewBanner";
 import { CompletedBracketView } from "@/components/bracket/CompletedBracketView";
 import { FirstTimeTip } from "@/components/shared/FirstTimeTip";
@@ -54,6 +55,7 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
           : null,
         winnerMovieId: m.winnerMovieId,
         winnerTitle: m.winnerMovie?.title ?? null,
+        resolutionMethod: m.resolutionMethod,
       })),
     }));
 
@@ -121,6 +123,16 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
     orderBy: { position: "asc" },
   });
 
+  // Every matchup in the current round, not just the still-open ones —
+  // needed to notice a coin flip landing (CoinFlipBanner), since a
+  // resolved matchup drops out of the openMatchups query above the moment
+  // it's decided.
+  const currentRoundMatchups = await prisma.matchup.findMany({
+    where: { bracketId: bracket.id, round: { roundNumber: bracket.currentRound ?? 1 } },
+    include: { movieA: true, movieB: true },
+    orderBy: { position: "asc" },
+  });
+
   // The voter's most recent deliberately-rated vote anywhere in this
   // bracket (any round) — pre-fills a not-yet-voted matchup's score grid so
   // their usual category weighting carries forward instead of starting
@@ -142,6 +154,23 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
       <h1 className="mb-4 font-display text-2xl tracking-wide text-gold uppercase">
         {bracket.name}: Round {bracket.currentRound} voting
       </h1>
+      <CoinFlipBanner
+        matchups={currentRoundMatchups.map((m) => ({
+          id: m.id,
+          position: m.position,
+          isBye: m.isBye,
+          status: m.status,
+          movieA: m.movieA
+            ? { id: m.movieA.id, title: m.movieA.title, posterUrl: m.movieA.posterUrl, seed: m.movieA.seed, trailerKey: m.movieA.trailerKey }
+            : null,
+          movieB: m.movieB
+            ? { id: m.movieB.id, title: m.movieB.title, posterUrl: m.movieB.posterUrl, seed: m.movieB.seed, trailerKey: m.movieB.trailerKey }
+            : null,
+          winnerMovieId: m.winnerMovieId,
+          winnerTitle: null,
+          resolutionMethod: m.resolutionMethod,
+        }))}
+      />
       {voter ? (
         <div className="flex flex-col gap-4">
           <FirstTimeTip id="vote">
@@ -191,6 +220,7 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
                   initialScoresB={myVote ? JSON.parse(myVote.scoresMovieB) : undefined}
                   baselineScoresA={baselineVote ? JSON.parse(baselineVote.scoresMovieA) : undefined}
                   baselineScoresB={baselineVote ? JSON.parse(baselineVote.scoresMovieB) : undefined}
+                  forceCategoryVoting={m.forceCategoryVoting}
                 />
               );
             })
