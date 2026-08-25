@@ -82,6 +82,7 @@ export function VoteForm({
   initialScoresB,
   baselineScoresA,
   baselineScoresB,
+  forceCategoryVoting,
   onSubmitted,
 }: {
   matchupId: string;
@@ -96,6 +97,10 @@ export function VoteForm({
   // Ignored once initialScoresA is set — that always wins as the real vote.
   baselineScoresA?: Record<string, number>;
   baselineScoresB?: Record<string, number>;
+  // Set on a matchup auto-reopened after tying once already — a second
+  // swipe would almost certainly reproduce the identical tie, so swiping
+  // is disabled here and voters rate deliberately instead.
+  forceCategoryVoting?: boolean;
   onSubmitted?: () => void;
 }) {
   const [scoresA, setScoresA] = useState<Record<string, number>>(initialScoresA ?? baselineScoresA ?? {});
@@ -125,8 +130,8 @@ export function VoteForm({
   // accidental re-swipe from silently overwriting a considered vote. Once
   // swiped this session, the card gives way to the static header + a
   // confirmation line instead of leaving its own reserved space behind.
-  const showSwipeCard = !initialScoresA && !swiped;
-  const showBaselineHint = !initialScoresA && !swiped && Boolean(baselineScoresA);
+  const showSwipeCard = !initialScoresA && !swiped && !forceCategoryVoting;
+  const showBaselineHint = !initialScoresA && !swiped && !forceCategoryVoting && Boolean(baselineScoresA);
 
   function editScoresA(fn: (prev: Record<string, number>) => Record<string, number>) {
     setManuallyEdited(true);
@@ -201,6 +206,12 @@ export function VoteForm({
         <p className="mb-4 text-center text-sm text-cream-dim">
           You picked <span className="font-medium text-gold">{swipedWinnerTitle}</span> — adjust the scores
           below if you&apos;d like.
+        </p>
+      )}
+
+      {forceCategoryVoting && !submitted && (
+        <p className="mb-4 text-center text-sm text-cream-dim">
+          🎯 This one tied last round — rate it category by category to help settle it.
         </p>
       )}
 

@@ -1,4 +1,5 @@
 import "server-only";
+import { randomInt } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { computeSeedOrder, computeSeedOrderFromTmdbRatings } from "@/lib/seeding";
@@ -138,7 +139,38 @@ export async function closeRoundCore(bracketId: string): Promise<void> {
       const outcome = resolveMatchup(votes, tiebreakCategory.key);
 
       if (outcome.winner === "TIE") {
-        await tx.matchup.update({ where: { id: m.id }, data: { status: "NEEDS_MANUAL_TIEBREAK" } });
+        if (m.tiebreakAttempt === 0) {
+          // First tie on this matchup — auto-reopen for a fresh vote
+          // instead of waiting on the admin, same effect as the admin's
+          // manual "reopen for revote" action, just automatic. Swiping is
+          // disabled for this round (forceCategoryVoting) since a second
+          // swipe would almost certainly reproduce the exact same tie —
+          // swipe scores are a fixed 5/2 split per category, so a
+          // coin-flip-close first vote swiped again produces an identical
+          // tally. Forcing deliberate category scoring gives an actual
+          // chance of a different, more considered outcome.
+          await tx.vote.deleteMany({ where: { matchupId: m.id } });
+          await tx.matchup.update({
+            where: { id: m.id },
+            data: { status: "OPEN", forceCategoryVoting: true, tiebreakAttempt: 1 },
+          });
+        } else {
+          // Tied again after a deliberate revote — a coin flip decides it,
+          // automatically, same mechanics as the admin's manual
+          // resolveTiebreakCoinFlip action (still available as an
+          // override, but no longer the only way this gets resolved).
+          const winnerMovieId = randomInt(2) === 0 ? m.movieAId! : m.movieBId!;
+          await tx.matchup.update({
+            where: { id: m.id },
+            data: { status: "RESOLVED", winnerMovieId, resolutionMethod: "COIN_FLIP" },
+          });
+          if (m.nextMatchupId && m.nextMatchupSlot) {
+            await tx.matchup.update({
+              where: { id: m.nextMatchupId },
+              data: m.nextMatchupSlot === "A" ? { movieAId: winnerMovieId } : { movieBId: winnerMovieId },
+            });
+          }
+        }
         continue;
       }
 
@@ -155,8 +187,11 @@ export async function closeRoundCore(bracketId: string): Promise<void> {
       }
     }
 
+    // A freshly auto-reopened matchup is back to OPEN, not RESOLVED — the
+    // round can't close until it (and any matchup still awaiting manual
+    // admin intervention) is actually settled.
     const stillBlocked = await tx.matchup.count({
-      where: { roundId: currentRound.id, status: "NEEDS_MANUAL_TIEBREAK" },
+      where: { roundId: currentRound.id, status: { in: ["OPEN", "NEEDS_MANUAL_TIEBREAK"] } },
     });
     if (stillBlocked > 0) return;
 

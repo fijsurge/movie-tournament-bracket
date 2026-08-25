@@ -51,6 +51,7 @@ export interface BracketStateMatchup {
   movieB: { id: string; title: string; posterUrl: string | null; seed: number | null; trailerKey: string | null } | null;
   winnerMovieId: string | null;
   winnerTitle: string | null;
+  resolutionMethod: "SCORE" | "TIEBREAK_CATEGORY" | "COIN_FLIP" | "REVOTE" | null;
 }
 
 export interface BracketStateRound {

@@ -163,6 +163,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
           : null,
         winnerMovieId: m.winnerMovieId,
         winnerTitle: m.winnerMovie?.title ?? null,
+        resolutionMethod: m.resolutionMethod,
       })),
     })),
   });
