@@ -58,7 +58,14 @@ export function ChampionBanner({
   }, [phase]);
 
   return (
-    <div className="relative flex flex-1 flex-col items-center justify-center gap-6 overflow-hidden p-8 text-center">
+    // No overflow-hidden — a flex-1 item with non-visible overflow gets an
+    // automatic min-height of 0 (CSS flexbox spec), letting it shrink
+    // below its content's real size instead of reporting that size to the
+    // scrollable page around it. With overflow-hidden, that meant this
+    // just clipped (trailer, title, Skip button and all) whenever a
+    // sibling — the completed-bracket toggle above it — left less than a
+    // full screen's height available, instead of letting the page scroll.
+    <div className="relative flex flex-1 flex-col items-center justify-center gap-6 p-8 text-center">
       <AnimatePresence mode="wait">
         {phase === "trailer" && trailerKey ? (
           <motion.div
