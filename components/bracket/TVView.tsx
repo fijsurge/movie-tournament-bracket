@@ -14,6 +14,10 @@ import { unlockAudio } from "@/lib/sfx";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 const SOUND_STORAGE_KEY = "tv-sound-enabled";
+const ZOOM_STORAGE_KEY = "tv-zoom-level";
+const MIN_ZOOM = 0.6;
+const MAX_ZOOM = 1.5;
+const ZOOM_STEP = 0.1;
 
 export function TVView({ slug }: { slug: string }) {
   const { data } = useSWR<BracketState>(`/api/brackets/${slug}/state`, fetcher, {
@@ -25,10 +29,23 @@ export function TVView({ slug }: { slug: string }) {
   // server has no localStorage to read from. The one-time post-mount
   // correction is intentional here, not a synchronization smell.
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSoundEnabled(localStorage.getItem(SOUND_STORAGE_KEY) === "1");
+    const storedZoom = Number(localStorage.getItem(ZOOM_STORAGE_KEY));
+    if (storedZoom >= MIN_ZOOM && storedZoom <= MAX_ZOOM) {
+      setZoomLevel(storedZoom);
+    }
   }, []);
+
+  function adjustZoom(delta: number) {
+    setZoomLevel((prev) => {
+      const next = Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + delta)) * 100) / 100;
+      localStorage.setItem(ZOOM_STORAGE_KEY, String(next));
+      return next;
+    });
+  }
 
   function toggleSound() {
     // Trailer/SFX autoplay-with-sound only has a real chance of working if
@@ -58,6 +75,29 @@ export function TVView({ slug }: { slug: string }) {
       >
         {soundEnabled ? "🔊 Sound on" : "🔈 Tap for sound"}
       </button>
+      {bracket.status === "ACTIVE" && (
+        <div className="fixed bottom-4 right-4 z-40 flex items-center gap-1 rounded-full border border-gold/40 bg-ink/80 px-1.5 py-1 text-sm text-cream backdrop-blur">
+          <button
+            type="button"
+            onClick={() => adjustZoom(-ZOOM_STEP)}
+            disabled={zoomLevel <= MIN_ZOOM}
+            aria-label="Zoom out"
+            className="flex h-7 w-7 items-center justify-center rounded-full transition hover:text-gold active:scale-90 disabled:opacity-30"
+          >
+            −
+          </button>
+          <span className="w-10 text-center text-xs text-cream-dim">{Math.round(zoomLevel * 100)}%</span>
+          <button
+            type="button"
+            onClick={() => adjustZoom(ZOOM_STEP)}
+            disabled={zoomLevel >= MAX_ZOOM}
+            aria-label="Zoom in"
+            className="flex h-7 w-7 items-center justify-center rounded-full transition hover:text-gold active:scale-90 disabled:opacity-30"
+          >
+            +
+          </button>
+        </div>
+      )}
       <PickRevealOverlay movies={movies} soundEnabled={soundEnabled} />
       <RoundTransitionOverlay rounds={rounds} soundEnabled={soundEnabled} />
       {bracket.status === "SETUP" && (
@@ -90,7 +130,12 @@ export function TVView({ slug }: { slug: string }) {
           );
         })()}
       {bracket.status === "ACTIVE" && (
-        <div className="flex flex-1 items-start gap-4 overflow-hidden">
+        // No overflow-hidden here — the TV page's own wrapper
+        // (app/b/[slug]/tv/page.tsx) already scrolls; clipping here just
+        // hid large brackets instead of letting that scroll do its job.
+        // `zoom` (not `transform: scale`) so zooming out actually shrinks
+        // the scrollable area too, not just the visual size.
+        <div className="flex flex-1 items-start gap-4" style={{ zoom: zoomLevel }}>
           <BracketTree rounds={rounds} />
           {leaderboard && (
             <div className="w-64 shrink-0 py-6 pr-6">
