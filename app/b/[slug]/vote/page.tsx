@@ -56,6 +56,7 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
         winnerMovieId: m.winnerMovieId,
         winnerTitle: m.winnerMovie?.title ?? null,
         resolutionMethod: m.resolutionMethod,
+        forceCategoryVoting: m.forceCategoryVoting,
       })),
     }));
 
@@ -169,6 +170,7 @@ export default async function VotePage({ params }: { params: Promise<{ slug: str
           winnerMovieId: m.winnerMovieId,
           winnerTitle: null,
           resolutionMethod: m.resolutionMethod,
+          forceCategoryVoting: m.forceCategoryVoting,
         }))}
       />
       {voter ? (

@@ -24,10 +24,19 @@ export function AdminPhaseWatcher({ slug }: { slug: string }) {
   // trigger a re-render.
   const hasBaseline = useRef(false);
 
+  // forceCategoryVoting has to be in here alongside status — an auto-reopen
+  // after a first tie leaves status at "OPEN" (it was already open), so
+  // this fingerprint would otherwise miss that transition entirely. See the
+  // matching comment on PhaseWatcher's own fingerprint.
   const fingerprint = data
     ? [
         data.bracket.status,
-        data.rounds.map((r) => `${r.roundNumber}:${r.status}:${r.matchups.map((m) => `${m.id}:${m.status}`).join(";")}`).join(","),
+        data.rounds
+          .map(
+            (r) =>
+              `${r.roundNumber}:${r.status}:${r.matchups.map((m) => `${m.id}:${m.status}:${m.forceCategoryVoting}`).join(";")}`,
+          )
+          .join(","),
       ].join("|")
     : "";
 
