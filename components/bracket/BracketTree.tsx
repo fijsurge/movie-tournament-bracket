@@ -68,22 +68,41 @@ function pairUp<T>(items: T[]): T[][] {
 
 export function BracketTree({ rounds }: { rounds: BracketStateRound[] }) {
   return (
-    <div className="flex items-stretch overflow-x-auto p-6">
+    // overflow-y-hidden (not the default "visible") is deliberate: per the
+    // CSS overflow spec, overflow-x set to anything but visible forces the
+    // OTHER axis to compute as auto too if it's visible — there's no way
+    // to just "not have" a vertical overflow behavior here. Leaving it
+    // implicit gave this its own tiny (~12px, from rounding in the pair
+    // spacing below) vertical scroll capacity, which was enough for
+    // browsers to draw a second, redundant scrollbar right next to the
+    // page's real one. Explicitly hidden (not auto/visible) sidesteps the
+    // coercion rule entirely, so there's exactly one vertical scrollbar —
+    // the actual page's.
+    <div className="flex items-stretch overflow-x-auto overflow-y-hidden p-6">
       {rounds.map((round, roundIndex) => {
         const isLastRound = roundIndex === rounds.length - 1;
         const pairs = pairUp(round.matchups);
-        const pairGap = `${Math.pow(2, roundIndex) * 2}rem`;
 
         return (
-          <div key={round.roundNumber} className={isLastRound ? "" : "mr-10"}>
+          <div key={round.roundNumber} className={`flex flex-col ${isLastRound ? "" : "mr-10"}`}>
             <h3 className="mb-4 text-center font-display text-sm tracking-[0.2em] text-gold uppercase">
               {isLastRound ? "Final" : `Round ${round.roundNumber}`}
             </h3>
-            <div className="flex h-full flex-col justify-around" style={{ gap: pairGap }}>
+            {/* Every level here divides its parent's height into equal
+                flex-1 shares, with no manual gaps. That's deliberate: for a
+                balanced bracket, an equal partition at every round makes a
+                round-R slot's center land exactly on the midpoint of its
+                two round-(R-1) feeder slots, at any depth — which is what
+                lets the connector below terminate exactly on the next
+                round's card instead of drifting off it. Reintroducing a
+                fixed or exponential gap here breaks that identity. */}
+            <div className="flex flex-1 flex-col">
               {pairs.map((pair, pairIndex) => (
-                <div key={pairIndex} className="relative flex flex-col justify-around gap-4">
+                <div key={pairIndex} className="relative flex flex-1 flex-col">
                   {pair.map((m) => (
-                    <MatchupCard key={m.id} matchup={m} />
+                    <div key={m.id} className="flex flex-1 items-center justify-center py-2">
+                      <MatchupCard matchup={m} />
+                    </div>
                   ))}
                   {!isLastRound && pair.length === 2 && (
                     <div
