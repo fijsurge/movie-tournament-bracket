@@ -68,25 +68,33 @@ export function TVView({ slug }: { slug: string }) {
         {soundEnabled ? "🔊 Sound on" : "🔈 Tap for sound"}
       </button>
       {bracket.status === "COMPLETE" && (
-        <div className="fixed top-4 left-1/2 z-40 flex -translate-x-1/2 gap-2 rounded-full border border-gold/40 bg-ink/80 p-1 backdrop-blur">
-          {(
-            [
-              { key: "reveal", label: "🏆 Reveal" },
-              { key: "bracket", label: "🗂️ Full bracket" },
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setCompleteView(tab.key)}
-              aria-pressed={completeView === tab.key}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition active:scale-95 ${
-                completeView === tab.key ? "bg-gold text-ink" : "text-cream-dim hover:text-cream"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        // Deliberately not `fixed` — the page's own header (rendered by
+        // the parent, app/b/[slug]/tv/page.tsx) isn't pinned either, and a
+        // fixed-position toggle here just sat at a hardcoded viewport
+        // offset that overlapped the header's title regardless of its
+        // actual height. As a normal flex-col sibling it always lands
+        // right below the header, however tall it ends up being.
+        <div className="flex shrink-0 justify-center py-3">
+          <div className="flex gap-2 rounded-full border border-gold/40 bg-surface p-1">
+            {(
+              [
+                { key: "reveal", label: "🏆 Reveal" },
+                { key: "bracket", label: "🗂️ Full bracket" },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setCompleteView(tab.key)}
+                aria-pressed={completeView === tab.key}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition active:scale-95 ${
+                  completeView === tab.key ? "bg-gold text-ink" : "text-cream-dim hover:text-cream"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
       <PickRevealOverlay movies={movies} soundEnabled={soundEnabled} />
@@ -122,7 +130,7 @@ export function TVView({ slug }: { slug: string }) {
           );
         })()}
       {((bracket.status === "COMPLETE" && completeView === "bracket") || bracket.status === "ACTIVE") && (
-        <div className={`flex flex-1 items-start gap-4 ${bracket.status === "COMPLETE" ? "pt-16" : ""}`}>
+        <div className="flex flex-1 items-start gap-4">
           <ZoomableBracketTree rounds={rounds} floatingControls />
           {leaderboard && (
             <div className="w-64 shrink-0 py-6 pr-6">
