@@ -52,6 +52,10 @@ export interface BracketStateMatchup {
   winnerMovieId: string | null;
   winnerTitle: string | null;
   resolutionMethod: "SCORE" | "TIEBREAK_CATEGORY" | "COIN_FLIP" | "REVOTE" | null;
+  // Auto-reopen after a first tie leaves status at "OPEN" — it was already
+  // open — so PhaseWatcher's status-only fingerprint can't see that
+  // transition happen. Exposed so it can be fingerprinted too.
+  forceCategoryVoting: boolean;
 }
 
 export interface BracketStateRound {

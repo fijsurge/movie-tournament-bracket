@@ -119,6 +119,7 @@ function makeBracket(): BracketStateRound[] {
           winnerMovieId: null,
           winnerTitle: null,
           resolutionMethod: null,
+          forceCategoryVoting: false,
         },
         {
           id: "m2",
@@ -130,6 +131,7 @@ function makeBracket(): BracketStateRound[] {
           winnerMovieId: null,
           winnerTitle: null,
           resolutionMethod: null,
+          forceCategoryVoting: false,
         },
       ],
     },
@@ -139,7 +141,7 @@ function makeBracket(): BracketStateRound[] {
       closesAt: null,
       confirmedVoterIds: [],
       matchups: [
-        { id: "m3", position: 0, isBye: false, status: "PENDING", movieA: null, movieB: null, winnerMovieId: null, winnerTitle: null, resolutionMethod: null },
+        { id: "m3", position: 0, isBye: false, status: "PENDING", movieA: null, movieB: null, winnerMovieId: null, winnerTitle: null, resolutionMethod: null, forceCategoryVoting: false },
       ],
     },
   ];

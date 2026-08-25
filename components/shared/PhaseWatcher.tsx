@@ -62,8 +62,16 @@ export function PhaseWatcher({
   // reload. Fingerprinting the current round's own matchup statuses catches
   // these too, without treating them as a takeover-worthy phase transition —
   // just a quiet re-render so the page reflects reality.
+  //
+  // forceCategoryVoting has to be part of this fingerprint too, not just
+  // status: an auto-reopen after a first tie leaves status at "OPEN" (it
+  // was already open), so a round with only that one matchup open — the
+  // final, or any round down to its last live pairing — would otherwise
+  // see an unchanged fingerprint and never refresh at all.
   const currentRoundMatchups = data?.rounds.find((r) => r.roundNumber === liveRound)?.matchups ?? [];
-  const matchupFingerprint = currentRoundMatchups.map((m) => `${m.id}:${m.status}`).join(",");
+  const matchupFingerprint = currentRoundMatchups
+    .map((m) => `${m.id}:${m.status}:${m.forceCategoryVoting}`)
+    .join(",");
 
   if (data && changed && !transition) {
     const dest = phaseHref({ slug, status: data.bracket.status, nominationMode: data.bracket.nominationMode });
