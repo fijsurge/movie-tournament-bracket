@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { BracketTree } from "@/components/bracket/BracketTree";
+import { ZoomableBracketTree } from "@/components/bracket/ZoomableBracketTree";
 import { ScoreLeaderboard } from "@/components/bracket/ScoreLeaderboard";
 import type { BracketStateRound, BracketStateLeaderboardEntry } from "@/types/bracket";
 
@@ -90,7 +90,7 @@ export function CompletedBracketView({
           <p className="text-lg">
             🏆 Champion: <span className="font-semibold text-gold">{championTitle}</span>
           </p>
-          <BracketTree rounds={rounds} />
+          <ZoomableBracketTree rounds={rounds} />
         </div>
       )}
     </div>

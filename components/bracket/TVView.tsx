@@ -5,7 +5,7 @@ import useSWR from "swr";
 import type { BracketState } from "@/types/bracket";
 import { NominationPool } from "@/components/nominate/NominationPool";
 import { SeedLeaderboard } from "@/components/seed/SeedLeaderboard";
-import { BracketTree } from "@/components/bracket/BracketTree";
+import { ZoomableBracketTree } from "@/components/bracket/ZoomableBracketTree";
 import { ScoreLeaderboard } from "@/components/bracket/ScoreLeaderboard";
 import { ChampionBanner } from "@/components/bracket/ChampionBanner";
 import { PickRevealOverlay } from "@/components/bracket/PickRevealOverlay";
@@ -14,10 +14,8 @@ import { unlockAudio } from "@/lib/sfx";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 const SOUND_STORAGE_KEY = "tv-sound-enabled";
-const ZOOM_STORAGE_KEY = "tv-zoom-level";
-const MIN_ZOOM = 0.6;
-const MAX_ZOOM = 1.5;
-const ZOOM_STEP = 0.1;
+
+type CompleteView = "reveal" | "bracket";
 
 export function TVView({ slug }: { slug: string }) {
   const { data } = useSWR<BracketState>(`/api/brackets/${slug}/state`, fetcher, {
@@ -29,23 +27,17 @@ export function TVView({ slug }: { slug: string }) {
   // server has no localStorage to read from. The one-time post-mount
   // correction is intentional here, not a synchronization smell.
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(1);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSoundEnabled(localStorage.getItem(SOUND_STORAGE_KEY) === "1");
-    const storedZoom = Number(localStorage.getItem(ZOOM_STORAGE_KEY));
-    if (storedZoom >= MIN_ZOOM && storedZoom <= MAX_ZOOM) {
-      setZoomLevel(storedZoom);
-    }
   }, []);
 
-  function adjustZoom(delta: number) {
-    setZoomLevel((prev) => {
-      const next = Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + delta)) * 100) / 100;
-      localStorage.setItem(ZOOM_STORAGE_KEY, String(next));
-      return next;
-    });
-  }
+  // Once a bracket is COMPLETE, TV always used to show only the champion
+  // reveal — there was no way to go back and see the full bracket on the
+  // big screen afterward. Defaults to the reveal (the actual "moment"),
+  // with a toggle to switch over, mirroring the same Winner/Full bracket
+  // choice already offered on the voter's own completed-bracket page.
+  const [completeView, setCompleteView] = useState<CompleteView>("reveal");
 
   function toggleSound() {
     // Trailer/SFX autoplay-with-sound only has a real chance of working if
@@ -75,27 +67,26 @@ export function TVView({ slug }: { slug: string }) {
       >
         {soundEnabled ? "🔊 Sound on" : "🔈 Tap for sound"}
       </button>
-      {bracket.status === "ACTIVE" && (
-        <div className="fixed bottom-4 right-4 z-40 flex items-center gap-1 rounded-full border border-gold/40 bg-ink/80 px-1.5 py-1 text-sm text-cream backdrop-blur">
-          <button
-            type="button"
-            onClick={() => adjustZoom(-ZOOM_STEP)}
-            disabled={zoomLevel <= MIN_ZOOM}
-            aria-label="Zoom out"
-            className="flex h-7 w-7 items-center justify-center rounded-full transition hover:text-gold active:scale-90 disabled:opacity-30"
-          >
-            −
-          </button>
-          <span className="w-10 text-center text-xs text-cream-dim">{Math.round(zoomLevel * 100)}%</span>
-          <button
-            type="button"
-            onClick={() => adjustZoom(ZOOM_STEP)}
-            disabled={zoomLevel >= MAX_ZOOM}
-            aria-label="Zoom in"
-            className="flex h-7 w-7 items-center justify-center rounded-full transition hover:text-gold active:scale-90 disabled:opacity-30"
-          >
-            +
-          </button>
+      {bracket.status === "COMPLETE" && (
+        <div className="fixed top-4 left-1/2 z-40 flex -translate-x-1/2 gap-2 rounded-full border border-gold/40 bg-ink/80 p-1 backdrop-blur">
+          {(
+            [
+              { key: "reveal", label: "🏆 Reveal" },
+              { key: "bracket", label: "🗂️ Full bracket" },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setCompleteView(tab.key)}
+              aria-pressed={completeView === tab.key}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition active:scale-95 ${
+                completeView === tab.key ? "bg-gold text-ink" : "text-cream-dim hover:text-cream"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       )}
       <PickRevealOverlay movies={movies} soundEnabled={soundEnabled} />
@@ -108,6 +99,7 @@ export function TVView({ slug }: { slug: string }) {
       {bracket.status === "NOMINATING" && <NominationPool state={data} />}
       {bracket.status === "SEEDING" && <SeedLeaderboard movies={movies} voterCount={voterNames.length} />}
       {bracket.status === "COMPLETE" &&
+        completeView === "reveal" &&
         (() => {
           const finalMatchup = rounds.at(-1)?.matchups[0];
           return (
@@ -129,14 +121,9 @@ export function TVView({ slug }: { slug: string }) {
             />
           );
         })()}
-      {bracket.status === "ACTIVE" && (
-        // No overflow-hidden here — the TV page's own wrapper
-        // (app/b/[slug]/tv/page.tsx) already scrolls; clipping here just
-        // hid large brackets instead of letting that scroll do its job.
-        // `zoom` (not `transform: scale`) so zooming out actually shrinks
-        // the scrollable area too, not just the visual size.
-        <div className="flex flex-1 items-start gap-4" style={{ zoom: zoomLevel }}>
-          <BracketTree rounds={rounds} />
+      {((bracket.status === "COMPLETE" && completeView === "bracket") || bracket.status === "ACTIVE") && (
+        <div className={`flex flex-1 items-start gap-4 ${bracket.status === "COMPLETE" ? "pt-16" : ""}`}>
+          <ZoomableBracketTree rounds={rounds} floatingControls />
           {leaderboard && (
             <div className="w-64 shrink-0 py-6 pr-6">
               <ScoreLeaderboard entries={leaderboard} />
