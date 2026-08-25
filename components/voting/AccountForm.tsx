@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { saveAccountProfile, type AccountFormState } from "@/app/b/[slug]/account/actions";
 import { SubmitButton } from "@/components/shared/SubmitButton";
 import { AvatarPicker } from "@/components/voting/AvatarPicker";
@@ -14,6 +15,7 @@ export function AccountForm({
   currentAvatar,
   currentEmail,
   isLinked,
+  next,
 }: {
   bracketId: string;
   slug: string;
@@ -21,10 +23,21 @@ export function AccountForm({
   currentAvatar: string | null;
   currentEmail: string | null;
   isLinked: boolean;
+  // Only set when arriving here to finish first-time onboarding (the
+  // admin-invite redirect) — a deliberate profile edit reached via nav
+  // has no `next`, so it keeps today's "stay and show Saved!" behavior.
+  next?: string;
 }) {
   const action = saveAccountProfile.bind(null, bracketId, slug);
   const [state, formAction, pending] = useActionState(action, initialState);
   const [name, setName] = useState(currentName);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state.saved && !state.error && next) {
+      router.push(next);
+    }
+  }, [state.saved, state.error, next, router]);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">

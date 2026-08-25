@@ -5,11 +5,19 @@ import { getVoterId } from "@/lib/voter-cookie";
 import { BracketNav } from "@/components/voting/BracketNav";
 import { AccountForm } from "@/components/voting/AccountForm";
 import { effectiveVoterName, effectiveVoterAvatar } from "@/lib/voter-display";
+import { safeNextPath } from "@/lib/safe-redirect";
 
 export const dynamic = "force-dynamic";
 
-export default async function AccountPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function AccountPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ next?: string }>;
+}) {
   const { slug } = await params;
+  const { next } = await searchParams;
   const bracket = await prisma.bracket.findUnique({ where: { slug } });
   if (!bracket) notFound();
 
@@ -30,6 +38,7 @@ export default async function AccountPage({ params }: { params: Promise<{ slug: 
           currentAvatar={effectiveVoterAvatar(voter)}
           currentEmail={voter.person?.email ?? voter.email}
           isLinked={Boolean(voter.personId)}
+          next={next ? safeNextPath(next, `/b/${bracket.slug}`) : undefined}
         />
       ) : (
         <p className="text-cream-dim">
