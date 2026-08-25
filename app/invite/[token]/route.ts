@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { setVoterCookie } from "@/lib/voter-cookie";
+import { phaseHref } from "@/lib/phase-nav";
 
 export async function GET(request: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -28,7 +29,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   }
 
   if (voter.person && !voter.person.avatar) {
-    return NextResponse.redirect(new URL(`/b/${voter.bracket.slug}/account`, request.url));
+    // Send them to the actual current phase (nomination/voting/etc.) once
+    // they finish setting up their profile, not the generic bracket
+    // landing page that's itself just another click-through — this is
+    // the one entry path (admin email invite) that didn't already thread
+    // a next/redirectTo param, unlike self-serve join and magic-link login.
+    const next = phaseHref(voter.bracket) ?? `/b/${voter.bracket.slug}`;
+    const accountUrl = new URL(`/b/${voter.bracket.slug}/account`, request.url);
+    accountUrl.searchParams.set("next", next);
+    return NextResponse.redirect(accountUrl);
   }
   return NextResponse.redirect(new URL(`/b/${voter.bracket.slug}`, request.url));
 }
