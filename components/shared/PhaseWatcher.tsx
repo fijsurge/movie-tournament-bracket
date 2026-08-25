@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import useSWR from "swr";
@@ -44,12 +44,26 @@ export function PhaseWatcher({
     status,
     round: currentRound,
   });
+  // Ref, not state — this is purely "has the effect below already run once
+  // for the first fingerprint," not a value that should ever drive a
+  // re-render itself.
+  const hasFingerprintBaseline = useRef(false);
 
   const liveRound = data ? (data.rounds.find((r) => r.status === "VOTING_OPEN")?.roundNumber ?? null) : null;
   const liveStatus = data?.bracket.status ?? null;
   const changed =
     liveStatus !== null &&
     (liveStatus !== seen.status || (liveStatus === "ACTIVE" && liveRound !== null && liveRound !== seen.round));
+
+  // A tie entering/leaving NEEDS_MANUAL_TIEBREAK, an auto-reopened revote, a
+  // coin flip landing — none of these move bracket.status or the round
+  // number, so the check above alone never notices them, and a voter's page
+  // just keeps showing a now-stale set of open matchups until they manually
+  // reload. Fingerprinting the current round's own matchup statuses catches
+  // these too, without treating them as a takeover-worthy phase transition —
+  // just a quiet re-render so the page reflects reality.
+  const currentRoundMatchups = data?.rounds.find((r) => r.roundNumber === liveRound)?.matchups ?? [];
+  const matchupFingerprint = currentRoundMatchups.map((m) => `${m.id}:${m.status}`).join(",");
 
   if (data && changed && !transition) {
     const dest = phaseHref({ slug, status: data.bracket.status, nominationMode: data.bracket.nominationMode });
@@ -58,6 +72,26 @@ export function PhaseWatcher({
     setTransition({ href: dest ?? `/b/${slug}`, ...copy });
     setSeen({ status: data.bracket.status, round: liveRound });
   }
+
+  // The effect's own dependency array is the change detector here — it
+  // only re-runs when matchupFingerprint's *value* actually differs from
+  // the previous render, so there's no need to separately track "the last
+  // seen fingerprint" as state. router.refresh() is a real side effect (a
+  // server round-trip), so it belongs in an effect, not render itself —
+  // unlike the setState-during-render above, which is React's documented
+  // pattern for deriving state from props. Skipped while `transition` is
+  // set: a real phase change is already being staged/played this poll,
+  // and skipped on the very first fingerprint — nothing changed *from*
+  // yet, there's just a baseline to record.
+  useEffect(() => {
+    if (!matchupFingerprint || transition) return;
+    if (!hasFingerprintBaseline.current) {
+      hasFingerprintBaseline.current = true;
+      return;
+    }
+    router.refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchupFingerprint]);
 
   useEffect(() => {
     if (!transition) return;
