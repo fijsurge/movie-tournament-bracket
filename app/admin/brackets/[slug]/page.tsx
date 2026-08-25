@@ -4,6 +4,7 @@ import { requireBracketAdmin } from "@/lib/bracket-auth";
 import { prisma } from "@/lib/db";
 import { getBaseUrl } from "@/lib/base-url";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminPhaseWatcher } from "@/components/admin/AdminPhaseWatcher";
 import { SubmitButton } from "@/components/shared/SubmitButton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Avatar } from "@/components/shared/Avatar";
@@ -103,6 +104,7 @@ export default async function AdminBracketDashboard({
   return (
     <main className="mx-auto w-full max-w-2xl p-6">
       <AdminNav bracketSlug={bracket.slug} />
+      <AdminPhaseWatcher slug={bracket.slug} />
       <h1 className="font-display text-3xl tracking-wide text-gold uppercase">{bracket.name}</h1>
       <div className="mt-2 flex flex-wrap items-center gap-3">
         <StatusBadge status={bracket.status} />
