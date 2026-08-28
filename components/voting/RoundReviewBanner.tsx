@@ -11,9 +11,11 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 // Appears once every invited voter has voted on every open matchup in the
 // current round — the round is now in its review window (Round.closesAt)
 // rather than already closed, giving anyone a last look before it does.
-// Polls the same state endpoint PhaseWatcher/TVView already do, so this
-// stays in sync with edits and confirmations from other voters without any
-// new plumbing.
+// Reads the same SWR cache entry PhaseWatcher already polls (identical key,
+// no refreshInterval of its own) rather than running a second independent
+// timer against the same endpoint — two same-key pollers on one page can
+// drift out of each other's dedupe window and roughly double the request
+// rate instead of sharing one.
 export function RoundReviewBanner({
   bracketId,
   slug,
@@ -25,9 +27,7 @@ export function RoundReviewBanner({
   voterId: string;
   currentRound: number;
 }) {
-  const { data } = useSWR<BracketState>(`/api/brackets/${slug}/state`, fetcher, {
-    refreshInterval: 5000,
-  });
+  const { data } = useSWR<BracketState>(`/api/brackets/${slug}/state`, fetcher);
   const [pending, startTransition] = useTransition();
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
