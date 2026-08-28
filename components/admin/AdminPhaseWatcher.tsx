@@ -16,7 +16,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 export function AdminPhaseWatcher({ slug }: { slug: string }) {
   const router = useRouter();
   const { data } = useSWR<BracketState>(`/api/brackets/${slug}/state`, fetcher, {
-    refreshInterval: 5000,
+    refreshInterval: 10000,
   });
   // Ref, not state — the effect's own dependency array (keyed on
   // `fingerprint`'s value) is what detects a change; this only needs to

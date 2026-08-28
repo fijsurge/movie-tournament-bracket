@@ -20,7 +20,7 @@ type CompleteView = "reveal" | "bracket";
 
 export function TVView({ slug }: { slug: string }) {
   const { data } = useSWR<BracketState>(`/api/brackets/${slug}/state`, fetcher, {
-    refreshInterval: 5000,
+    refreshInterval: 10000,
   });
 
   // Starts false and syncs from localStorage in an effect (not read

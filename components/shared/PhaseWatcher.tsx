@@ -32,8 +32,12 @@ export function PhaseWatcher({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  // 10s, not 5s — this is the one poller-of-record per page (see
+  // RoundReviewBanner/OpenNominationPanel/DraftBoard, which share this same
+  // cache entry instead of running their own timer), so its interval alone
+  // sets this page's request rate against the state endpoint.
   const { data } = useSWR<BracketState>(`/api/brackets/${slug}/state`, fetcher, {
-    refreshInterval: 5000,
+    refreshInterval: 10000,
   });
   const [transition, setTransition] = useState<Transition | null>(null);
   // What we've already reacted to — updated the moment we register a

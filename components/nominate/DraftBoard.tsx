@@ -53,9 +53,13 @@ export function DraftBoard({
   slug: string;
   voterName: string;
 }) {
-  const { data, mutate } = useSWR<StateResponse>(`/api/brackets/${slug}/state`, fetcher, {
-    refreshInterval: 4000,
-  });
+  // No refreshInterval here — PhaseWatcher (always mounted alongside this
+  // on the draft page) already polls this identical key on its own timer;
+  // this hook just reads that shared SWR cache entry, and `mutate` below
+  // still updates it directly after a pick. A second independent timer on
+  // the same key can drift out of the other's dedupe window and roughly
+  // double the request rate for no benefit.
+  const { data, mutate } = useSWR<StateResponse>(`/api/brackets/${slug}/state`, fetcher);
   const [error, setError] = useState<string | null>(null);
   const [isPicking, setIsPicking] = useState(false);
 
