@@ -50,7 +50,14 @@ def load_model() -> None:
     global pipe
     with pipe_lock:
         if pipe is None:
-            loaded = AutoPipelineForText2Image.from_pretrained(MODEL_ID, torch_dtype=torch.float32)
+            # variant="fp16" must match the Dockerfile's own build-time
+            # from_pretrained call exactly — that's what actually got baked
+            # into the image's local cache. torch_dtype=torch.float32 still
+            # upcasts everything after loading, so compute is unaffected;
+            # this only picks which on-disk checkpoint files get read.
+            loaded = AutoPipelineForText2Image.from_pretrained(
+                MODEL_ID, variant="fp16", torch_dtype=torch.float32
+            )
             loaded.to("cpu")
             pipe = loaded
 
